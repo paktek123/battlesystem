@@ -545,9 +545,25 @@ screen button:
         vbox xalign 0.1 yalign 0.1:
             textbutton "Show affection points" action ui.callsinnewcontext("aff_screen_label")
             # you can also use an image button:
-            imagebutton:
-                idle "button_idle.png"
-                hover "button_hover.png"
-                action ui.callsinnewcontext("aff_screen_label")
+            #imagebutton:
+            #    idle "button_idle.png"
+            #    hover "button_hover.png"
+            #    action ui.callsinnewcontext("aff_screen_label")
+            
+screen aff_screen:
+    frame:
+        has vbox
+        hbox:
+            label "Bob: " xminimum 100
+            bar range bob_max value bob_points xmaximum 400
+        hbox:
+            label "Larry: " xminimum 100
+            bar range larry_max value larry_points xmaximum 400
+        textbutton "Return" action Return()
+
+label aff_screen_label:
+    call screen aff_screen
+    return     
+
     
     
