@@ -549,21 +549,26 @@ screen button:
             #    idle "button_idle.png"
             #    hover "button_hover.png"
             #    action ui.callsinnewcontext("aff_screen_label")
-            
+                
 screen aff_screen:
     frame:
         has vbox
-        hbox:
-            label "Bob: " xminimum 100
-            bar range bob_max value bob_points xmaximum 400
-        hbox:
-            label "Larry: " xminimum 100
-            bar range larry_max value larry_points xmaximum 400
+        text "Bob: [bob_points] points"
+        text "Larry: [larry_points] points"
         textbutton "Return" action Return()
 
 label aff_screen_label:
     call screen aff_screen
-    return     
+    return
+    
+screen hello_world:
+     tag example
+     zorder 1
+     modal False
+
+     text "Hello, World."
+
+
 
     
     

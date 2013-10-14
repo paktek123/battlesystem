@@ -42,33 +42,33 @@ init -1 python hide:
 
     theme.a_white_tulip(
         ## Theme: A White Tulip
-        ## Scheme Basic Blue
+        ## Scheme A White Tulip
                
         ## The color of an idle widget face.
-        widget = "#003c78",
+        widget = "#c1c6d3",
 
         ## The color of a focused widget face.
-        widget_hover = "#0050a0",
+        widget_hover = "#d7dbe5",
 
         ## The color of the text in a selected widget. (For
         ## example, the current value of a preference.)
-        widget_selected = "#ffffc8",
+        widget_selected = "#c1c6d3",
 
         ## The color of a disabled widget face. 
-        disabled = "#404040",
+        disabled = "#b4b4b4",
 
         ## The color of a frame containing widgets.
-        frame = "#6496c8",
+        frame = "#9391c9",
 
         ## The background of the main menu. This can be a color
         ## beginning with '#', or an image filename. The latter
         ## should take up the full height and width of the screen.
-        mm_root = "#dcebff",
+        mm_root = "#ffffff",
 
         ## The background of the game menu. This can be a color
         ## beginning with '#', or an image filename. The latter
         ## should take up the full height and width of the screen.
-        gm_root = "#dcebff",
+        gm_root = "#ffffff",
 
         ## And we're done with the theme. The theme will customize
         ## various styles, so if we want to change them, we should
@@ -230,7 +230,7 @@ init -1 python hide:
     ## stored. (It needs to be set early, before any other init code
     ## is run, so the persisten information can be found by the init code.)
 python early:
-    config.save_directory = "battlesystem-1381595426"
+    config.save_directory = "battlesystem-1381584222"
 
 init -1 python hide:
     #########################################
