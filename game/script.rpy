@@ -1,4 +1,4 @@
-﻿# You can place the script of your game in this file.
+# You can place the script of your game in this file.
 
 # Declare images below this line, using the image statement.
 # eg. image eileen happy = "eileen_happy.png"
@@ -27,6 +27,8 @@ init:
     $ bob_max = 10 # this variable should be set to bob's maximum affection points
     $ larry_max = 10 # this variable should be set to larry's maximum affection points
     $ variable = False # when false, the affection screen button doesn't appear on the screen
+    
+    $ current_skill = None
     
     image playerpic = im.Scale("player.png", 40, 50)
     image enemypic = im.Scale("enemy.png", 40, 50)
@@ -122,8 +124,10 @@ init python:
             self.stun = stun
             
         def action(self, player, enemy):
-            enemy.hp =- 20
+            enemy.hp -= 20
             #renpy.say(e, "{} lost 20 hp, his hp is now {}".format(enemy.name, enemy.hp))
+            #ui.close()
+            
             #renpy.jump("fight")
             
     #renpy.image('playerpic', Image('player.png'))
@@ -181,7 +185,11 @@ init python:
 screen taiactions(player):
     vbox:
         for skill in player.taiskills:
-            textbutton skill.name action skill.action(player, enemy) xpos 0.4
+            textbutton skill.name action [skill.action(player, enemy), Jump("doskill")]  xpos 0.4
+
+label doskill:
+    e "Hey this is the skill"
+    return
 
 screen battlemenu(player):
     vbox:
@@ -191,6 +199,24 @@ screen battlemenu(player):
         textbutton "Move" action Jump("movemenu")
         textbutton "Items" action Jump("itemselection")
         textbutton "Team" action Jump("teamactions")
+        
+screen battlebars:
+    #frame:
+        #has vbox 
+
+    text "[player.name]" xpos 0.5 ypos 0.15
+    text "[player.chakra]" xpos 0.49 ypos 0.45
+    text "[player.hp]" xpos 0.55 ypos 0.45
+    vbar value player.hp range player.maxhp xpos 0.5 ypos 0.2 ymaximum 150
+    vbar value player.chakra range player.maxchakra xpos 0.55 ypos 0.2 ymaximum 150
+    
+    text "[enemy.name]" xpos 0.65 ypos 0.15
+    text "[enemy.chakra]" xpos 0.64 ypos 0.45
+    text "[enemy.hp]" xpos 0.70 ypos 0.45
+    vbar value enemy.hp range enemy.maxhp xpos 0.7 ypos 0.2 ymaximum 150
+    vbar value enemy.chakra range enemy.maxchakra xpos 0.66 ypos 0.2 ymaximum 150
+        
+        
         
 
 
@@ -207,6 +233,7 @@ label fight:
     scene bg
     
     show screen battlemenu(player)
+    show screen battlebars
     
     "Tiger" "Gao gao! You're strong!"
     "Sample" "Sample...."
