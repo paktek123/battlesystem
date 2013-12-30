@@ -66,6 +66,7 @@ init python:
     
     TILEIDLEPIC = "tile.png"
     TILEHOVERPIC = "tileh.png"
+    TILETRAPPIC = "tiletrap.png"
     
     # Positions
     tile1pos = Position(xpos=TILE1POS+25, ypos=TILEYPOS)
@@ -137,10 +138,37 @@ init python:
                     }
     
     
+    class Limb:
+        def __init__(self, name):
+            self.name = name
+            self.bleeding = False
+            self.crippled = False
+            self.cripple_count = 0
+            
+        def bleed(self):
+            self.bleeding = True
+            self.cripple_count += 1
+            
+        def stop_bleeding(self):
+            self.bleeding = False
+            
+        def cripple(self):
+            if self.cripple_count > 5:
+                self.cripple = True
+            
+    limb_head = Limb('head')
+    limb_torso = Limb('torso')
+    limb_left_arm = Limb('left arm')
+    limb_right_arm = Limb('right arm')
+    limb_left_leg = Limb('left leg')
+    limb_right_leg = Limb('right leg')
+    
+    LIMBS = [limb_head, limb_torso, limb_left_arm, limb_right_arm, limb_left_leg, limb_right_leg]
+    
     class Player:
         def __init__(self, name, picname, character, tilepic, hudpic, hp, maxhp, chakra, maxchakra, 
-                     strength, speed, evasion, defence, stamina, tile, facing,
-                     taiskills=[], ninskills=[], genskills=[], items=[], teamskills=[], bloodlineskills=[]):
+                     strength, speed, evasion, defence, stamina, base_hit_rate, tile, facing,
+                     taiskills=[], ninskills=[], genskills=[], items=[], defensiveskills=[], bloodlineskills=[]):
             self.name = name
             self.picname = picname
             self.character = character
@@ -155,27 +183,47 @@ init python:
             self.evasion = evasion
             self.defence = defence
             self.stamina = stamina
+            self.base_hit_rate = base_hit_rate
             self.tile = tile # position 
             self.facing = facing
             self.taiskills = taiskills
             self.ninskills = ninskills
             self.genskills = genskills
             self.items = items
-            self.teamskills = teamskills
+            self.defensiveskills = defensiveskills
             self.bloodlineskills = bloodlineskills
             self.action_counter = 0
             self.battlescreen = None
             self.stunned = False
+            self.counter_state = False
+            self.head = limb_head
+            self.torso = limb_torso
+            self.left_arm = limb_left_arm
+            self.right_arm = limb_right_arm
+            self.left_leg = limb_left_leg
+            self.right_leg = limb_right_leg
+            self.limbs = [self.head, self.torso, self.left_arm, self.right_arm, self.left_leg, self.right_leg]
+            self.blood = 100
+            self.max_blood = 100
+            self.damage_reduction = False
+            self.chakra_defence = False
+            self.reflect = False
+            self.dampen = False
+            self.ignore_damage = False
             
         def change_direction(self, direction):
             if direction == 'left':
                 self.tilepic = im.Flip(self.tilepic, horizontal=True)
-                
-        def show_screen(self):
-            renpy.show_screen("taiactions")
             
-        def hide_screen(self):
-            renpy.hide_screen("taiactions")
+        def is_bleeding(self):
+            for limb in self.limbs:
+                if limb.bleeding:
+                    return True
+            return False
+            
+        def bleeding_limbs_count(self):
+            bad_limbs = [limb for limb in self.limbs if limb.bleeding]
+            return len(bad_limbs)
                 
         def __repr__(self):
             return "<Player>: {}".format(self.name)
@@ -197,6 +245,7 @@ init python:
             self.position = position
             self.trap = False
             self.active = False
+            self.trap_pic = TILETRAPPIC
             
         def activate(self):
             self.idle = self.hover
@@ -205,6 +254,14 @@ init python:
         def deactivate(self):
             self.idle = TILEIDLEPIC
             self.active = False
+            
+        def activate_trap(self):
+            self.trap = True
+            self.idle = TILETRAPPIC
+            
+        def deactivate_trap(self):
+            self.trap = False
+            self.idle = TILEIDLEPIC
             
     tile1 = Tile(tile1pos, TILEIDLEPIC, TILEHOVERPIC, 1)
     tile2 = Tile(tile2pos, TILEIDLEPIC, TILEHOVERPIC, 2)
@@ -226,49 +283,85 @@ init python:
             if tile.position == position:
                 return tile
     
+    def remove_trap(trap_tile):
+        for tile in TILES:
+            if tile.position == trap_tile.position:
+                tile.deactivate_trap()
+    
     class Skill:
-        def __init__(self, name, skill_type, label, range, chakra_cost=0, damage=0, stun=False):
+        def __init__(self, name, skill_type, label, range, tech, chakra_cost=0, damage=0, stun=False, duration=None):
             self.name = name
             self.skill_type = skill_type
             self.label = label
             self.range = range
+            self.tech = tech
             self.chakra_cost = chakra_cost
             self.damage = damage 
             self.stun = stun
-            self.count = 0
+            self.duration = duration
             
-        def action(self, enemy):
-            enemy.hp -= self.damage
+        def action(self, player, enemy):
+            if self.hit_successful(player, enemy):
+                renpy.say(player.character, "{}".format(self.name))
+                enemy.hp -= (self.damage - enemy.defence)
+                player_bleed(enemy)
+            else:
+                renpy.say(player.character, "{} dodges my attack.".format(enemy.name))
+                
+            player.chakra -= self.chakra_cost
+            self.tech += 1
             return
            
-        def increase(self):
-            self.count += 1
-            return
+        def hit_successful(self, player, enemy):
+            hit_rate = player.base_hit_rate + self.tech - (enemy.evasion * enemy.speed)
+            #renpy.say(player.character, "Hit rate is {}".format(hit_rate))
+            if renpy.random.randint(1, 100) <= hit_rate:
+                return True
+            else:
+                return False
+                
+        def stun(self, player, enemy):
+            enemy.stunned = True
+            return 
     
     # tai skills
-    onetwocombo = Skill('One Two Combo', 'tai', "onetwocombo", 1, 5, 10)
-    lioncombo = Skill('Lion Combo', 'tai', "lioncombo", 2, 10, 20)
+    onetwocombo = Skill('One Two Combo', 'tai', "onetwocombo", 5, 1, 5, 10)
+    lioncombo = Skill('Lion Combo', 'tai', "lioncombo", 5, 2, 10, 20)
     
     # nin skills
-    rasengan = Skill('Rasengan', 'nin', "rasengan", 1, 35, 30)
-    chidori = Skill('Chidori', 'nin', "chidori", 1, 35, 30)
-    raikiri = Skill('Raikiri', 'nin', "raikiri", 1, 50, 50)
+    rasengan = Skill('Rasengan', 'nin', "rasengan", 10, 1, 35, 30)
+    chidori = Skill('Chidori', 'nin', "chidori", 10, 1, 35, 30)
+    raikiri = Skill('Raikiri', 'nin', "raikiri", 10, 1, 50, 50)
     
-    # gen skills
-    substitution = Skill('Substitution', 'gen', "substitution", 12, 15, 0, stun=True)
+    # gen skills # replace with something new
+    substitution = Skill('Substitution', 'gen', "substitution", 8, 20, 15, 0, stun=True)
     
     # tool skills
-    shiruken = Skill('Shiruken', 'tool', "shiruken", 7, 2, 20)
-    kunai = Skill('Kunai', 'tool', "kunai", 4, 3, 20)
+    shiruken = Skill('Shiruken', 'tool', "shiruken", 12, 7, 2, 20)
+    kunai = Skill('Kunai', 'tool', "kunai", 12, 4, 3, 20)
+    trap = Skill('Trap', 'tool', "trap", 3, 1, 2, 30)
     
-    player = Player('Naruto', "playerpic", naruto_c, Image('player.png'), None, 100, 100, 80, 80, 10, 4, 3, 4, 5, tile1, 'right', 
-                    [onetwocombo, lioncombo], [rasengan, chidori], [substitution], [])
-    enemy = Player('Sasuke', "enemypic", sasuke_c, Image('enemy.png'), None, 200, 200, 150, 150, 20, 6, 3, 6, 4, tile12, 'left',
-                    [onetwocombo, lioncombo, shiruken, kunai], [chidori])
+    # defensive skills
+    damage_reduction = Skill('Focus', 'defence', 'damagereduction', 12, 1, 10, duration=2)
+    chakra_defence = Skill('Chakra Defence', 'defence', 'chakradefence', 12, 2, 15, duration=3)
+    substitution = Skill('Substitution', 'defence', "substitution", 8, 20, 15, 0, stun=True)
+    reflect = Skill('Reflect', 'defence', 'reflect', 12, 20, 20, duration=2)
+    dampen = Skill('Dampen', 'defence', 'dampen', 6, 30, 30, duration=3)
+    yata_mirror = Skill('Yata Mirror', 'defence', 'yatamirror', 12, 50, 50, duration=2)
     
-    clearing = Stage('Clearing', 3, 3)
+    player = Player('Naruto', "playerpic", naruto_c, Image('player.png'), None, 100, 100, 80, 80, 10, 4, 3, 4, 5, 80, tile1, 'right', 
+                    [onetwocombo, lioncombo], [rasengan, chidori], [substitution], [shiruken, kunai, trap], 
+                    [damage_reduction, chakra_defence, reflect, dampen, yata_mirror])
+    enemy = Player('Sasuke', "enemypic", sasuke_c, Image('enemy.png'), None, 200, 200, 150, 150, 20, 6, 3, 6, 4, 80, tile12, 'left',
+                    [onetwocombo, lioncombo, shiruken, kunai], [chidori], [], [damage_reduction, chakra_defence, reflect, dampen, yata_mirror])
+    
+    clearing = Stage('Clearing', 1, 1)
     
     def highlight_position(player, enemy):
+        for tile in TILES:
+            if not tile.trap:
+                tile.deactivate()
+            
         player.tile.activate()
         renpy.show(player.picname, [ POSITIONS[player.tile.position] ])
         enemy.tile.activate()
@@ -292,24 +385,80 @@ init python:
             
         renpy.show(player.picname, [ POSITIONS[tile.position] ])
         
+        # Handle traps
+        if tile.trap:
+            renpy.say(player.character, "Oh no there is a trap here!")
+            player.hp -= 30
+            remove_trap(tile)
+        
     def enemy_move(player, enemy, stage):
         skills = enemy.ninskills + enemy.taiskills # add more here
         skill_index = renpy.random.randint(0, (len(skills) - 1))
         current_skill = skills[skill_index]
         if current_skill.range >= abs(player.tile.position - enemy.tile.position):
-            player.hp -= current_skill.damage
-            enemy.chakra -= current_skill.chakra_cost
+            current_skill.action(enemy, player)
         else:
             # move enemy to near player
             enemy_position = player.tile.position + current_skill.range
             enemy.tile = get_tile_from_position(enemy_position)
-            player.hp -= current_skill.damage
-            enemy.chakra -= current_skill.chakra_cost + (current_skill.range * stage.pull) 
+            
+            # Do the attack
+            current_skill.action(enemy, player)
+            
+            # take away movement chakra too
+            enemy.chakra -= (current_skill.range * stage.pull) 
             
         renpy.show(enemy.picname, [ POSITIONS[enemy.tile.position] ])
-        renpy.say(enemy.character, "{}".format(current_skill.name))
+        
+        # bleeding
+        player_bleed(player)
+        
+        # trap
+        if enemy.tile.trap:
+            renpy.say(player.character, "You got stuck in my trap!")
+            renpy.say(enemy.character, "Oh no!")
+            enemy.hp -= 30
+            remove_trap(enemy.tile)
+            
         Jump("fight")
         
+    def player_bleed(player):
+        if player.hp < (0.5 * player.maxhp):
+            if renpy.random.randint(1,2) > 1:
+                limb_index = renpy.random.randint(0, len(player.limbs) - 1)
+                limb = player.limbs[limb_index]
+                renpy.say(player.character, "No my {} is bleeding".format(limb.name))
+                if not limb.bleeding:
+                    limb.bleed()
+        
+    def drain_blood(player):
+        if player.is_bleeding():
+            player.blood -= player.bleeding_limbs_count() * (5 + renpy.random.randint(0, 2))
+            renpy.say(player.character, "I need to end this soon, I am loosing too much blood.")
+        
+    def counter_move(player, enemy):
+        renpy.say(enemy.character, "You left yourself open.")
+        enemy_pos = enemy.tile.position
+        if enemy_pos < 12:
+            player.tile = get_tile_from_position(enemy_pos + 1)
+            player.change_direction(player.facing)
+        else:
+            player.tile = get_tile_from_position(player.tile.position - 1)
+            
+        player.counter_state = False
+        renpy.say(player.character, "Got you!")
+        renpy.show(player.picname, [ POSITIONS[player.tile.position] ])
+        Jump("fight")    
+        
+    def set_trap_at_pos(player, enemy, stage, tile):
+        if not tile.trap:
+            renpy.say(player.character, "I set a trap here.")
+            tile.activate_trap()
+        else:
+            renpy.say(player.character, "A trap is already set there.")
+            set_trap_at_pos(player, enemy, stage, tile)
+            
+        Jump("fight")
                         
 screen taiactions:
     vbox:
@@ -334,45 +483,75 @@ screen genactions:
                 textbutton "[skill.name]" action Jump(skill.label)  xpos 0.6
             else:
                 textbutton "[skill.name]" action Jump(skill.label)  xpos 0.6
+                
+screen itemselection:
+    vbox:
+        for skill in player.items:
+            if skill.range >= abs(player.tile.position - enemy.tile.position):
+                textbutton "[skill.name]" action Jump(skill.label)  xpos 0.6
+            else:
+                textbutton "[skill.name]" action Jump(skill.label)  xpos 0.6
 
 label onetwocombo:
-    $ renpy.say(player.character, "{}".format(onetwocombo.name))
-    $ enemy.hp -= onetwocombo.damage
-    $ player.chakra -= onetwocombo.chakra_cost
+    $ onetwocombo.action(player, enemy)
     jump enemymove
     
 label lioncombo:
-    $ renpy.say(player.character, "{}".format(lioncombo.name))
-    $ enemy.hp -= lioncombo.damage
-    $ player.chakra -= lioncombo.chakra_cost
+    $ lioncombo.action(player, enemy)
     jump enemymove
     
 label rasengan:
-    $ renpy.say(player.character, "{}".format(rasengan.name))
-    $ enemy.hp -= rasengan.damage
-    $ player.chakra -= rasengan.chakra_cost
+    $ rasengan.action(player, enemy)
     jump enemymove
 
 label chidori:
-    $ renpy.say(player.character, "{}".format(chidori.name))
-    $ enemy.hp -= chidori.damage
-    $ player.chakra -= chidori.chakra_cost
+    $ chidori.action(player, enemy)
     jump enemymove
     
 label substitution:
     $ renpy.say(player.character, "{}".format(substitution.name))
-    $ enemy.stunned = True
+    $ player.counter_state = True
     jump enemymove
     
+label shiruken:
+    $ shiruken.action(player, enemy)
+    jump enemymove
+    
+label kunai:
+    $ kunai.action(player, enemy)
+    jump enemymove
+    
+label trap:
+    jump settrap
+    
+label damage_reduction:
+    $ player.damage_reduction = True
+    jump enemymove
+    
+label chakra_defence:
+    $ player.chakra_defence = True
+    jump enemymove
+    
+label reflect:
+    $ player.reflect = True
+    jump enemymove
+    
+label dampen:
+    $ enemy.dampen = True
+    jump enemymove
+    
+label yatamirror:
+    $ player.ignore_damage = True
+    jump enemymove
 
 screen battlemenu(player):
     vbox:
         textbutton "Tai" action [Hide("ninactions"), Hide("genactions"), Hide("movemenu"), Hide("itemselection"), Hide("teamactions"), Show("taiactions")]
         textbutton "Nin" action [Hide("taiactions"), Hide("genactions"), Hide("movemenu"), Hide("itemselection"), Hide("teamactions"), Show("ninactions")]
-        textbutton "Gen" action [Hide("ninactions"), Hide("genactions"), Hide("movemenu"), Hide("itemselection"), Hide("teamactions"), Show("genactions")]
+        textbutton "Gen" action [Hide("ninactions"), Hide("taiactions"), Hide("movemenu"), Hide("itemselection"), Hide("teamactions"), Show("genactions")]
         textbutton "Move" action [Hide("ninactions"), Hide("genactions"), Hide("taiactions"), Hide("itemselection"), Hide("teamactions"), Show("movemenu")]
         textbutton "Items" action [Hide("ninactions"), Hide("genactions"), Hide("movemenu"), Show("itemselection"), Hide("teamactions"), Hide("taiactions")]
-        textbutton "Team" action [Hide("ninactions"), Hide("genactions"), Hide("movemenu"), Hide("itemselection"), Show("teamactions"), Hide("taiactions")]
+        textbutton "Defence" action [Hide("ninactions"), Hide("genactions"), Hide("movemenu"), Hide("itemselection"), Show("teamactions"), Hide("taiactions")]
         textbutton "Standby" action Jump("standby")
         
 screen battlebars:
@@ -385,11 +564,19 @@ screen battlebars:
     vbar value player.chakra range player.maxchakra xpos 0.5 ypos 0.2 ymaximum 150
     vbar value player.hp range player.maxhp xpos 0.55 ypos 0.2 ymaximum 150
     
+    if player.is_bleeding():
+        text "blood" vertical True xpos 0.40 ypos 0.2
+        vbar value player.blood range player.max_blood xpos 0.45 ypos 0.2 ymaximum 150
+    
     text "[enemy.name]" xpos 0.65 ypos 0.15
     text "[enemy.chakra]" xpos 0.64 ypos 0.45
     text "[enemy.hp]" xpos 0.70 ypos 0.45
     vbar value enemy.hp range enemy.maxhp xpos 0.7 ypos 0.2 ymaximum 150
     vbar value enemy.chakra range enemy.maxchakra xpos 0.66 ypos 0.2 ymaximum 150
+    
+    if enemy.is_bleeding():
+        text "blood" vertical True xpos 0.78 ypos 0.2
+        vbar value enemy.blood range enemy.max_blood xpos 0.74 ypos 0.2 ymaximum 150
 
     
 label start:
@@ -401,10 +588,13 @@ label fight:
     
     call showtiles
     hide screen movemenu
+    hide screen settrap
     # initial position
     $ highlight_position(player, enemy)
     #$ show_player_at_pos(player, enemy, clearing, player.tile, initial_movement=True)
     
+    $ drain_blood(player)
+    $ drain_blood(enemy)
     show screen battlemenu(player)
     show screen battlebars
     
@@ -422,7 +612,15 @@ label standby:
     jump enemymove
     
 label enemymove:
-    $ enemy_move(player, enemy, clearing)
+    python:
+        if enemy.stunned:
+            renpy.say(player.character, "The enemy is stunned and cannot move.")
+            enemy.stunned = False
+        else:
+            if player.counter_state:
+                counter_move(player, enemy)
+            else:
+                enemy_move(player, enemy, clearing)
     jump fight
     
 label showtiles:
@@ -460,10 +658,24 @@ label movemenu:
     show screen movemenu
     
 screen movemenu:
-
+    
+    $ highlight_position(player, enemy)
+    
     for tile in TILES:
         imagebutton idle tile.idle hover tile.hover xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos - 0.05) action Jump("move{}".format(tile.position))
+        text "{}".format(tile.idle.split('.')[0]) xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos + 0.15)
     
+label settrap:
+    call hidetiles
+    hide screen movemenu
+    show screen settrap
+    player.character "Where should I place the trap?"
+    
+screen settrap:
+    $ highlight_position(player, enemy)
+    
+    for tile in TILES:
+        imagebutton idle tile.idle hover TILETRAPPIC xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos - 0.05) action Jump("trap{}".format(tile.position))
     
 label move1:
     $ show_player_at_pos(player, enemy, clearing, tile1)
@@ -513,6 +725,54 @@ label move12:
     $ show_player_at_pos(player, enemy, clearing, tile12)
     jump fight
     
+label trap1:
+    $ set_trap_at_pos(player, enemy, clearing, tile1)
+    jump fight
+    
+label trap2:
+    $ set_trap_at_pos(player, enemy, clearing, tile2)
+    jump fight
+    
+label trap3:
+    $ set_trap_at_pos(player, enemy, clearing, tile3)
+    jump fight
+    
+label trap4:
+    $ set_trap_at_pos(player, enemy, clearing, tile4)
+    jump fight
+    
+label trap5:
+    $ set_trap_at_pos(player, enemy, clearing, tile5)
+    jump fight
+    
+label trap6:
+    $ set_trap_at_pos(player, enemy, clearing, tile6)
+    jump fight
+    
+label trap7:
+    $ set_trap_at_pos(player, enemy, clearing, tile7)
+    jump fight
+    
+label trap8:
+    $ set_trap_at_pos(player, enemy, clearing, tile8)
+    jump fight
+    
+label trap9:
+    $ set_trap_at_pos(player, enemy, clearing, tile9)
+    jump fight
+    
+label trap10:
+    $ set_trap_at_pos(player, enemy, clearing, tile10)
+    jump fight
+    
+label trap11:
+    $ set_trap_at_pos(player, enemy, clearing, tile11)
+    jump fight
+    
+label trap12:
+    $ set_trap_at_pos(player, enemy, clearing, tile12)
+    jump fight
+    
 #label movemenu:
     
 #    python:
@@ -533,8 +793,5 @@ label move12:
     #hide playerpic
 #    $ show_player_at_pos(player, enemy, clearing, choice)
 #    jump fight
-
-
-
 
 
