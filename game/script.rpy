@@ -38,7 +38,6 @@ init:
     $ player1currentpos = 1
     $ enemy1currentpos = 12
 
-
 init python:
     
     battle_menu_dict = {"Tai": "taiactions",
@@ -192,7 +191,7 @@ init python:
             self.items = items
             self.defensiveskills = defensiveskills
             self.bloodlineskills = bloodlineskills
-            self.all_skills = [self.taiskills + self.ninskills + self.genskills + self.items + self.defensiveskills + self.bloodlineskills]
+            self.all_skills = self.taiskills + self.ninskills + self.genskills + self.items + self.defensiveskills + self.bloodlineskills
             self.action_counter = 0
             self.battlescreen = None
             self.stunned = False
@@ -206,11 +205,14 @@ init python:
             self.limbs = [self.head, self.torso, self.left_arm, self.right_arm, self.left_leg, self.right_leg]
             self.blood = 100
             self.max_blood = 100
-            self.damage_reduction = False
-            self.chakra_defence = False
-            self.reflect = False
-            self.dampen = False
-            self.ignore_damage = False
+            self.damage_dealt = 0
+            #self.damage_reduction = False
+            #self.chakra_defence = False
+            #self.reflect = False
+            #self.dampen = False
+            #self.ignore_damage = False
+            
+            self.assign_all_skills()
             
         def change_direction(self, direction):
             if direction == 'left':
@@ -227,9 +229,55 @@ init python:
             return len(bad_limbs)
             
         def get_skill(self, name):
-            for skill in all_skills:
+            for skill in self.all_skills:
                 if skill.name == name:
                     return skill
+                    
+        def remove_skill(self, name):
+            for skill in self.all_skills:
+                if skill.name == name:
+                    self.all_skills.remove(skill)
+                    
+        def assign_all_skills(self):
+            for skill in self.all_skills:
+                setattr(self, skill.label, skill)
+                
+        def remove_skill(self, skill):
+            delattr(self, skill.label)
+            
+        def assign_skill(self, skill):
+            setattr(self, skill.label, skill)
+            
+        def apply_skill(self, skill):
+            skill.apply()
+            setattr(self, skill.label, skill)
+            
+        def check_active_skill(self, skill):
+            s = getattr(self, skill.label)
+            if s.active:
+                return True
+            else:
+                return False 
+            
+        def active_defensive_skill(self):
+            defensive_skills = [self.check_active_skill(skill) for skill in self.defensiveskills]
+            if True in defensive_skills:
+                return True
+            else:
+                return False
+            #for skill in self.defensiveskills:
+            #    check = getattr(self, skill.label)
+            #    renpy.say(self.character, "{} {}".format(check.label, check.active))
+            #    if check.active:
+            #        return True
+            #return False
+            
+        def fix_stats(self):
+            if self.hp < 0:
+                self.hp = 0
+            
+            if self.chakra < 0:
+                self.chakra = 0
                 
         def __repr__(self):
             return "<Player>: {}".format(self.name)
@@ -315,68 +363,73 @@ init python:
             self.active = False
             
         def action(self, player, enemy):
+            if player.chakra < self.chakra_cost:
+                renpy.say(player.character, "I don't have enough chakra")
+                Jump("fight")
+            
             if self.hit_successful(player, enemy):
                 renpy.say(player.character, "{}".format(self.name))
                 self.deal_damage(player, enemy)
+                enemy.fix_stats()
                 player_bleed(enemy)
             else:
                 renpy.say(player.character, "{} dodges my attack.".format(enemy.name))
                 
             player.chakra -= self.chakra_cost
+            player.fix_stats()
             self.tech += 1
             return
             
-        def apply(self, player):
-            if self.name == "Focus":
-                player.damage_reduction = True
-            elif self.name == "Chakra Defence":
-                player.chakra_defence = True
-            elif self.name == "Reflect":
-                player.reflect = True
-            elif self.name == "Dampen":
-                player.dampen = True
-            elif self.name == "Yata Mirror":
-                player.ignore_damage = True
+        def apply(self):
+            self.activate()
             
-        def remove(self, player):
-            if self.name == "Focus":
-                player.damage_reduction = False
-            elif self.name == "Chakra Defence":
-                player.chakra_defence = False
-            elif self.name == "Reflect":
-                player.reflect = False
-            elif self.name == "Dampen":
-                player.dampen = False
-            elif self.name == "Yata Mirror":
-                player.ignore_damage = False
-            
-        def deal_damage(self, player, target):
-            
-            if not active:
-                return
-            
+        def remove(self):
+            self.deactivate()
+                
+        def append_to_skill(self):
             self.used += 1
             
-            if target.damage_reduction:
-                target.hp -= (self.damage - target.defence) - (target.hp * 0.1)
+        def deal_damage(self, player, target):
+            #renpy.say(target.character, "{}".format(self.active))
+            #if not self.active:
+            #    return
                 
-            if target.chakra_defence:
-                target.hp -= (self.damage - target.defence) - (target.chakra * 0.1)
+            #renpy.say(target.character, "HELLO2")
+            
+            self.append_to_skill()
+            
+            damage = (self.damage - target.defence)
+            
+            if check_active_skill(target, "damagereduction"):
+                damage = damage - (target.hp * 0.1)
+                target.damagereduction.used += 1
                 
-            if target.reflect:
+            if check_active_skill(target, "chakradefence"):
+                damage = damage - (target.chakra * 0.1)
+                target.chakradefence.used += 1
+                            
+            if check_active_skill(target, "dampen"):
+                damage = damage * 0.5
+                target.dampen.used += 1
+                
+            if check_active_skill(target, "reflect"):
                 renpy.say(target.character, "Reflect!".format(target.name))
                 player.hp -= (self.damage - player.defence) 
+                target.reflect.used += 1
                 
-            if target.dampen:
-                target.hp -= (self.damage - target.defence) * 0.5
+            elif check_active_skill(target, "yatamirror"):
+                renpy.say(target.character, "Your skills won't affect me!".format(target.name))
+                damage = 0
+                target.yatamirror.used += 1
+            else:
+                target.hp -= damage
                 
-            if target.ignore_damage:
-                renpy.say(target.character, "You're skills won't affect me!".format(target.name))
+            player.damage_dealt = damage
             
            
         def hit_successful(self, player, enemy):
             hit_rate = player.base_hit_rate + self.tech - (enemy.evasion * enemy.speed)
-            #renpy.say(player.character, "Hit rate is {}".format(hit_rate))
+            renpy.say(player.character, "Hit rate is {}".format(hit_rate))
             if renpy.random.randint(1, 100) <= hit_rate:
                 return True
             else:
@@ -385,39 +438,57 @@ init python:
         def stun(self, player, enemy):
             enemy.stunned = True
             return 
+            
+        def saysay(self):
+            renpy.say(enemy.character, "Skill: {} {}".format(self.skill_type, self.name))
+            
+        def __repr__(self):
+            return "Skill: {} {}".format(self.skill_type, self.name)
     
     # tai skills
-    onetwocombo = Skill('One Two Combo', 'tai', "onetwocombo", 5, 1, 5, 10)
-    lioncombo = Skill('Lion Combo', 'tai', "lioncombo", 5, 2, 10, 20)
+    onetwocombo = Skill('One Two Combo', 'tai', "onetwocombo", 3, 1, 3, 10)
+    lioncombo = Skill('Lion Combo', 'tai', "lioncombo", 3, 2, 5, 20)
     
     # nin skills
-    rasengan = Skill('Rasengan', 'nin', "rasengan", 10, 1, 35, 30)
-    chidori = Skill('Chidori', 'nin', "chidori", 10, 1, 35, 30)
-    raikiri = Skill('Raikiri', 'nin', "raikiri", 10, 1, 50, 50)
+    rasengan = Skill('Rasengan', 'nin', "rasengan", 2, 1, 25, 30)
+    chidori = Skill('Chidori', 'nin', "chidori", 2, 1, 25, 30)
+    raikiri = Skill('Raikiri', 'nin', "raikiri", 2, 1, 50, 50)
     
     # gen skills # replace with something new
     substitution = Skill('Substitution', 'gen', "substitution", 8, 20, 15, 0, stun=True)
     
     # tool skills
-    shiruken = Skill('Shiruken', 'tool', "shiruken", 12, 7, 2, 20)
-    kunai = Skill('Kunai', 'tool', "kunai", 12, 4, 3, 20)
+    shiruken = Skill('Shiruken', 'tool', "shiruken", 12, 7, 1, 20)
+    kunai = Skill('Kunai', 'tool', "kunai", 12, 4, 1, 20)
     trap = Skill('Trap', 'tool', "trap", 3, 1, 2, 30)
     
     # defensive skills
-    damage_reduction = Skill('Focus', 'defence', 'damagereduction', 12, 1, 10, duration=2)
+    damage_reduction_p = Skill('Focus', 'defence', 'damagereduction', 12, 1, 10, duration=2)
+    damage_reduction_e = Skill('Focus', 'defence', 'damagereduction', 12, 1, 10, duration=2)
     chakra_defence = Skill('Chakra Defence', 'defence', 'chakradefence', 12, 2, 15, duration=3)
+    chakra_defence_e = Skill('Chakra Defence', 'defence', 'chakradefence', 12, 2, 15, duration=3)
     substitution = Skill('Substitution', 'defence', "substitution", 8, 20, 15, 0, stun=True)
     reflect = Skill('Reflect', 'defence', 'reflect', 12, 20, 20, duration=2)
     dampen = Skill('Dampen', 'defence', 'dampen', 6, 30, 30, duration=3)
     yata_mirror = Skill('Yata Mirror', 'defence', 'yatamirror', 12, 50, 50, duration=2)
     
     player = Player('Naruto', "playerpic", naruto_c, Image('player.png'), None, 100, 100, 80, 80, 10, 4, 3, 4, 5, 80, tile1, 'right', 
-                    [onetwocombo, lioncombo], [rasengan, chidori], [substitution], [shiruken, kunai, trap], 
-                    [damage_reduction, chakra_defence, reflect, dampen, yata_mirror])
-    enemy = Player('Sasuke', "enemypic", sasuke_c, Image('enemy.png'), None, 200, 200, 150, 150, 20, 6, 3, 6, 4, 80, tile12, 'left',
-                    [onetwocombo, lioncombo, shiruken, kunai], [chidori], [], [damage_reduction, chakra_defence, reflect, dampen, yata_mirror])
+                    [onetwocombo, lioncombo], [rasengan], [substitution], [shiruken, kunai, trap], 
+                    [damage_reduction_p, chakra_defence, reflect, dampen, yata_mirror])
+    enemy = Player('Sasuke', "enemypic", sasuke_c, Image('enemy.png'), None, 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
+                    [onetwocombo, lioncombo, shiruken, kunai], [chidori], [], [], [damage_reduction_e, chakra_defence_e])
     
     clearing = Stage('Clearing', 1, 1)
+    
+    def check_active_skill(player, skillname):
+        try:
+            skill = getattr(player, skillname)
+            if skill.active:
+                return True
+            else:
+                return False
+        except AttributeError as e:
+            return False
     
     def highlight_position(player, enemy):
         for tile in TILES:
@@ -453,14 +524,26 @@ init python:
             player.hp -= 30
             remove_trap(tile)
         
+    def hide_battle_screen():
+        renpy.hide_screen("battlemenu")
+        renpy.hide_screen("taiactions")
+        renpy.hide_screen("ninactions")
+        renpy.hide_screen("defenceactions")
+        renpy.hide_screen("itemselection")
+        
     def enemy_move(player, enemy, stage):
-        skills = enemy.ninskills + enemy.taiskills + enemy.defensiveskills# add more here
-        skill_index = renpy.random.randint(0, (len(skills) - 1))
+        hide_battle_screen()
+        skills = enemy.all_skills 
+        skill_index = 1 #renpy.random.randint(0, (len(skills) - 1))
         current_skill = skills[skill_index]
         
         if current_skill.skill_type == 'defence':
-            current_skill.apply(enemy)
-            Jump("fight")
+            if not enemy.active_defensive_skill():
+                enemy.apply_skill(current_skill)
+                Jump("fight")
+            else:
+                skill_index = renpy.random.randint(0, (len(enemy.taiskills) - 1))
+                current_skill = enemy.taiskills[skill_index]
         
         if current_skill.range >= abs(player.tile.position - enemy.tile.position):
             current_skill.action(enemy, player)
@@ -476,6 +559,7 @@ init python:
             enemy.chakra -= (current_skill.range * stage.pull) 
             
         renpy.show(enemy.picname, [ POSITIONS[enemy.tile.position] ])
+        renpy.show("show_damage_e", [ Position(xpos=0.45, ypos=200) ], what=show_damage_e)
         
         # bleeding
         player_bleed(player)
@@ -489,19 +573,19 @@ init python:
             
         Jump("fight")
         
-    def player_bleed(player):
-        if player.hp < (0.5 * player.maxhp):
-            if renpy.random.randint(1,2) > 1:
-                limb_index = renpy.random.randint(0, len(player.limbs) - 1)
-                limb = player.limbs[limb_index]
-                renpy.say(player.character, "No my {} is bleeding".format(limb.name))
+    def player_bleed(target):
+        if target.hp < (0.3 * target.maxhp):
+            if renpy.random.randint(1,3) > 2:
+                limb_index = renpy.random.randint(0, len(target.limbs) - 1)
+                limb = target.limbs[limb_index]
+                renpy.say(target.character, "No my {} is bleeding".format(limb.name))
                 if not limb.bleeding:
                     limb.bleed()
         
-    def drain_blood(player):
-        if player.is_bleeding():
-            player.blood -= player.bleeding_limbs_count() * (5 + renpy.random.randint(0, 2))
-            renpy.say(player.character, "I need to end this soon, I am loosing too much blood.")
+    def drain_blood(target):
+        if target.is_bleeding():
+            target.blood -= target.bleeding_limbs_count() * (5 + renpy.random.randint(0, 2))
+            renpy.say(target.character, "I need to end this soon, I am loosing too much blood.")
         
     def counter_move(player, enemy):
         renpy.say(enemy.character, "You left yourself open.")
@@ -527,22 +611,42 @@ init python:
             
         Jump("fight")
         
-    def remove_defensive_affects(player, enemy):
-        for skill in player.defensiveskills:
-            if skill.used == skill.duration:
-                skill.used = 0
-                skill.remove()
+    def remove_all_skill_affects(player, enemy):
+        player.fix_stats()
+        enemy.fix_stats()
+        
+        for skill in player.all_skills:
+            s = getattr(player, skill.label)
+            if s.used == s.duration:
+                s.used = 0
+                s.remove()
+                setattr(player, s.label, s)
                 
-        for skill in enemy.defensiveskills:
-            if skill.used == skill.duration:
-                skill.used = 0
-                skill.remove()
-                        
+        for skill in enemy.all_skills:
+            s = getattr(enemy, skill.label)
+            if s.used == s.duration:
+                s.used = 0
+                s.remove()
+                setattr(enemy, s.label, s)
+
+    def show_damage(st, at, player):
+        return Text("-{}".format(player.damage_dealt), color="#fff", size=20), None
+        
+    show_damage_e = renpy.image('show_damage_e', DynamicDisplayable(show_damage, player=enemy))
+        
+init:
+    # Show damage
+    image show_damage_p = DynamicDisplayable(show_damage, player=player)
+    image show_damage_e = DynamicDisplayable(show_damage, player=enemy)
+
 screen taiactions:
     vbox:
         for skill in player.taiskills:
             if skill.range >= abs(player.tile.position - enemy.tile.position):
-                textbutton "[skill.name]" action Jump(skill.label)  xpos 0.6
+                if player.chakra > skill.chakra_cost:
+                    textbutton "[skill.name]" action Jump(skill.label)  xpos 0.6
+                else:
+                    textbutton "[skill.name]" xpos 0.6
             else:
                 textbutton "[skill.name]" xpos 0.6
         
@@ -550,33 +654,45 @@ screen ninactions:
     vbox:
         for skill in player.ninskills:
             if skill.range >= abs(player.tile.position - enemy.tile.position):
-                textbutton "[skill.name]" action Jump(skill.label)  xpos 0.6
+                if player.chakra > skill.chakra_cost:
+                    textbutton "[skill.name]" action Jump(skill.label)  xpos 0.6
+                else:
+                    textbutton "[skill.name]" xpos 0.6
             else:
-                textbutton "[skill.name]" action Jump(skill.label)  xpos 0.6
+                textbutton "[skill.name]" xpos 0.6
         
 screen genactions:
     vbox:
         for skill in player.genskills:
             if skill.range >= abs(player.tile.position - enemy.tile.position):
-                textbutton "[skill.name]" action Jump(skill.label)  xpos 0.6
+                if player.chakra > skill.chakra_cost:
+                    textbutton "[skill.name]" action Jump(skill.label)  xpos 0.6
+                else:
+                    textbutton "[skill.name]" xpos 0.6
             else:
-                textbutton "[skill.name]" action Jump(skill.label)  xpos 0.6
+                textbutton "[skill.name]" xpos 0.6
                 
 screen defenceactions:
     vbox:
         for skill in player.defensiveskills:
             if skill.range >= abs(player.tile.position - enemy.tile.position):
-                textbutton "[skill.name]" action Jump(skill.label)  xpos 0.6
+                if player.chakra > skill.chakra_cost:
+                    textbutton "[skill.name]" action Jump(skill.label)  xpos 0.6
+                else:
+                    textbutton "[skill.name]" xpos 0.6
             else:
-                textbutton "[skill.name]" action Jump(skill.label)  xpos 0.6
+                textbutton "[skill.name]" xpos 0.6
 
 screen itemselection:
     vbox:
         for skill in player.items:
             if skill.range >= abs(player.tile.position - enemy.tile.position):
-                textbutton "[skill.name]" action Jump(skill.label)  xpos 0.6
+                if player.chakra > skill.chakra_cost:
+                    textbutton "[skill.name]" action Jump(skill.label)  xpos 0.6
+                else:
+                    textbutton "[skill.name]" xpos 0.6
             else:
-                textbutton "[skill.name]" action Jump(skill.label)  xpos 0.6
+                textbutton "[skill.name]" xpos 0.6
 
 label onetwocombo:
     $ onetwocombo.action(player, enemy)
@@ -611,25 +727,25 @@ label trap:
     jump settrap
     
 label damagereduction:
-    $ player.damage_reduction = True
-    $ damage_reduction.activate()########### this needs rework
+    "S" "ENEMY BEFORE DR: [enemy.damagereduction.active]"
+    $ player.damagereduction.apply()
+    "S" "ENEMY AFTER DR: [enemy.damagereduction.active]"
     jump enemymove
     
 label chakradefence:
-    $ player.chakra_defence = True
-    $ chakradefen
+    $ player.chakradefence.apply()
     jump enemymove
     
 label reflect:
-    $ player.reflect = True
+    $ player.reflect.apply()
     jump enemymove
     
 label dampen:
-    $ enemy.dampen = True
+    $ player.dampen.apply()
     jump enemymove
     
 label yatamirror:
-    $ player.ignore_damage = True
+    $ player.yatamirror.apply()
     jump enemymove
 
 screen battlemenu(player):
@@ -642,31 +758,39 @@ screen battlemenu(player):
         textbutton "Defence" action [Hide("ninactions"), Hide("genactions"), Hide("movemenu"), Hide("itemselection"), Show("defenceactions"), Hide("taiactions")]
         textbutton "Standby" action Jump("standby")
         
+screen stats:
+    text "Str: [player.strength] Def: [player.defence] Eva: [player.evasion]" xpos 0.30
+    text "Sta: [player.stamina] Hit: [player.base_hit_rate]" xpos 0.30 ypos 0.05
+    text "Str: [enemy.strength] Def: [enemy.defence] Eva: [enemy.evasion]" xpos 0.65
+    text "Sta: [enemy.stamina] Hit: [enemy.base_hit_rate]" xpos 0.65 ypos 0.05
+        
 screen battlebars:
     #frame:
         #has vbox 
+    $ rel_pos = abs(player.tile.position - enemy.tile.position)
 
     text "[player.name]" xpos 0.5 ypos 0.15
     text "[player.chakra]" xpos 0.49 ypos 0.45
     text "[player.hp]" xpos 0.55 ypos 0.45
     vbar value player.chakra range player.maxchakra xpos 0.5 ypos 0.2 ymaximum 150
     vbar value player.hp range player.maxhp xpos 0.55 ypos 0.2 ymaximum 150
+    if enemy.damage_dealt > 0:
+        text "-[enemy.damage_dealt]" xpos 0.59 ypos 0.3
     
-    
-    text "Reflect  [player.reflect]" xpos 0.3 ypos 0.25
-    if player.damage_reduction:
+    text "[player.facing]" xpos 0.2 ypos 0.25
+    if player.damagereduction.active:
         text "DR" xpos 0.3 ypos 0.15
         
-    if player.chakra_defence:
+    if player.chakradefence.active:
         text "CD" xpos 0.3 ypos 0.15
         
-    if player.reflect:
+    if player.reflect.active:
         text "Ref" xpos 0.3 ypos 0.15
         
-    if player.dampen:
+    if player.dampen.active:
         text "Dam" xpos 0.3 ypos 0.15
         
-    if player.ignore_damage:
+    if player.yatamirror.active:
         text "Yata" xpos 0.3 ypos 0.15
     
     if player.is_bleeding():
@@ -678,25 +802,27 @@ screen battlebars:
     text "[enemy.hp]" xpos 0.70 ypos 0.45
     vbar value enemy.hp range enemy.maxhp xpos 0.7 ypos 0.2 ymaximum 150
     vbar value enemy.chakra range enemy.maxchakra xpos 0.66 ypos 0.2 ymaximum 150
+    if player.damage_dealt > 0:
+        text "-[player.damage_dealt]" xpos 0.75 ypos 0.3
     
     if enemy.is_bleeding():
         text "blood" vertical True xpos 0.78 ypos 0.2
         vbar value enemy.blood range enemy.max_blood xpos 0.74 ypos 0.2 ymaximum 150
         
-    if enemy.damage_reduction:
+    if enemy.damagereduction.active:
         text "DR" xpos 0.75 ypos 0.15
         
-    if enemy.chakra_defence:
+    if enemy.chakradefence.active:
         text "CD" xpos 0.75 ypos 0.15
         
-    if enemy.reflect:
-        text "Ref" xpos 0.75 ypos 0.15
+    #if enemy.reflect.active:
+    #    text "Ref" xpos 0.75 ypos 0.15
         
-    if enemy.dampen:
-        text "Dam" xpos 0.75 ypos 0.15
+    #if enemy.dampen.active:
+    #    text "Dam" xpos 0.75 ypos 0.15
         
-    if enemy.ignore_damage:
-        text "Yata" xpos 0.75 ypos 0.15
+    #if enemy.yatamirror.active:
+    #    text "Yata" xpos 0.75 ypos 0.15
 
     
 label start:
@@ -711,13 +837,14 @@ label fight:
     hide screen settrap
     # initial position
     $ highlight_position(player, enemy)
-    $ remove_defensive_affects(player, enemy)
+    $ remove_all_skill_affects(player, enemy)
     #$ show_player_at_pos(player, enemy, clearing, player.tile, initial_movement=True)
     
     $ drain_blood(player)
     $ drain_blood(enemy)
     show screen battlemenu(player)
     show screen battlebars
+    show screen stats
     
     python:
         ui.imagebutton("tile.png", "tileh.png", clicked=ui.returns(1), xpos=1000, ypos=1000)
@@ -733,6 +860,19 @@ label standby:
     jump enemymove
     
 label enemymove:
+    #hide show_damage_p
+    #show show_damage_p at Position(xpos=0.75, ypos=200)
+    #xpos 0.75
+    #ypos 120
+    #linear 1.0 ypos 200
+    #linear 1.0 alpha 0
+    #pause 1.0
+    #show show_damage_e at Position(xpos=0.45, ypos=200)
+    #xpos 0.45
+    #ypos 120
+    #linear 1.0 ypos 200
+    #linear 1.0 alpha 0
+    #pause 1.0
     python:
         if enemy.stunned:
             renpy.say(player.character, "The enemy is stunned and cannot move.")
@@ -742,6 +882,10 @@ label enemymove:
                 counter_move(player, enemy)
             else:
                 enemy_move(player, enemy, clearing)
+                #renpy.hide(show_damage_e)
+                #renpy.show("show_damage_e", [ Position(xpos=0.45, ypos=200) ], what=show_damage_e)
+    #hide show_damage_e
+    #show show_damage_e at Position(xpos=0.45, ypos=200)
     jump fight
     
 label showtiles:
