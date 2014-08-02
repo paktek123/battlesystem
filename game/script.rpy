@@ -7,7 +7,12 @@
 define e = Character('Eileen', color="#c8ffc8")
 define naruto_c = Character('Naruto',color="#FFFF00") 
 define sasuke_c = Character('Sasuke', color="#3399FF")
+define sakura_c = Character('Sakura', color="#FA58F4")
+define kakashi_c = Character('Kakashi', color="#3399FF")
 image bg = im.Scale("bg.jpg", 800, 600)
+image world_marker = im.Scale("marker.png", 33, 35)
+image leader_pic = im.Scale("leader_pic.png", 100, 150)
+define world_events = Character('World Events', color='#3399FF', window_left_padding=150, show_side_image=Image("leader_pic.png", xpos=0.03, yalign=0.96))
 image tile1im = im.Scale("tile.png", 50, 30)
 image tile2im = im.Scale("tile.png", 50, 30)
 image tile3im = im.Scale("tile.png", 50, 30)
@@ -20,8 +25,14 @@ image tile9im = im.Scale("tile.png", 50, 30)
 image tile10im = im.Scale("tile.png", 50, 30)
 image tile11im = im.Scale("tile.png", 50, 30)
 image tile12im = im.Scale("tile.png", 50, 30)
-
-
+image map = im.Scale("map.png", 800, 600)
+image konoha_map = im.Scale("konoha.png", 800, 600)
+image stones_map = im.Scale("ishigakure.png", 800, 600)
+image mist_map = im.Scale("kirivillage.png", 800, 600)
+image clouds_map = im.Scale("kumogakure.png", 800, 600)
+image sand_map = im.Scale("sunagakure.jpg", 800, 600)
+image training_ground = im.Scale("training.jpg", 800, 600)
+image training_ground evening = im.Scale(im.Recolor("training.jpg", 255, 165, 0, 255), 800, 600)
 
 init:
     $ bob_points = 0 # this is a variable for bob's affection points throughout your game
@@ -32,8 +43,10 @@ init:
     
     $ current_skill = None
     
-    image playerpic = im.Scale("player.png", 40, 50)
-    image enemypic = im.Scale("enemy.png", 40, 50)
+    image playerpic_r = im.Scale("player.png", 40, 50)
+    image enemypic_r = im.Scale("enemy.png", 40, 50)
+    image playerpic_l = im.Flip(im.Scale("player.png", 40, 50), horizontal=True)
+    image enemypic_l = im.Flip(im.Scale("enemy.png", 40, 50), horizontal=True)
     
     $ player1currentpos = 1
     $ enemy1currentpos = 12
@@ -121,6 +134,8 @@ init python:
     player11pos.xpos, player11pos.ypos = TILE11POS+25, PLAYERYPOS
     player12pos.xpos, player12pos.ypos = TILE12POS+25, PLAYERYPOS
     
+    LEADER_POSITION = Position(xpos=0.5, ypos=0.9)
+    
     POSITIONS = {
                         1: player1pos,
                         2: player2pos,
@@ -136,6 +151,133 @@ init python:
                         12: player12pos
                     }
     
+    class Time:
+        def __init__(self, hour, day, month, year):
+            self.hour = hour
+            self.day = day
+            self.month = month
+            self.year = year
+            self.months = ["Stub", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"]
+            
+        def now():
+            minute = renpy.random.randint(0, 59)
+            return "{}:{} {} {} {}".format(self.hour, minute, self.day, self.months[self.month], self.year)
+            
+        #def morning():
+            
+            
+    main_time = Time(9, 1, 1, 1354)
+    
+    class Village:
+        def __init__(self, id, name, leader, marker_xpos, marker_ypos, map, wealth=10000, army=1000, control=100, influence=100, uprising=0, locations=None):
+            self.id = id
+            self.name = name
+            self.leader = leader
+            self.army = army
+            self.wealth = wealth
+            self.marker_xpos = marker_xpos
+            self.marker_ypos = marker_ypos
+            self.marker_position = Position(xpos=marker_xpos, ypos=marker_ypos)
+            self.map = map
+            self.control = control
+            self.influence = influence
+            self.uprising = uprising
+            self.control_change = 0
+            self.influence_change = 0
+            self.waelth_change = 0
+            self.locations = locations
+            
+        def random_wealth_event(self):
+            change = renpy.random.randint(-1000, 1000)
+            add_say = ["Many missions completed", "Taxes are raised", "Feudal Lord is feeling generous", "It rains money!", "Not many expenses",
+                       "Economy is improving", "Wealth is compounding", "Negotiations are increasing", "Merchants are trading more"]
+            minus_say = ["Economy is doing bad", "Not many missions are coming through", "Tax are decreased", "Feudal lord is unhappy", 
+                         "Expenses have gone up", "Bad negotiations are failing", "Recession is underway", "Corrupt leader stole wealth and left"]
+            if change < 0:
+                renpy.say(world_events, minus_say[renpy.random.randint(0, len(minus_say) - 1)])
+            else:
+                renpy.say(world_events, add_say[renpy.random.randint(0, len(add_say) - 1)])
+            self.wealth += change
+            self.wealth_change = change
+            
+        def random_control_event(self):
+            change = renpy.random.randint(-10, 10)
+            add_say = ["Panel is formed", "Negotiations are doing good", "New settlements are formed", "Village expands", "Cooperation between clands increase",
+                       "Economy is improving", "Leader boosts morale", "Moral is high", "Boosting economy"]
+            minus_say = ["Economy is doing bad", "Not many missions are coming through", "Power is falling", "Coup attempt failed", 
+                         "Other nations are increasing in power", "Clan massacarred", "People hate the leaders", "Bad management"]
+            if change < 0:
+                renpy.say(world_events, minus_say[renpy.random.randint(0, len(minus_say) - 1)])
+            else:
+                renpy.say(world_events, add_say[renpy.random.randint(0, len(add_say) - 1)])
+            self.control += change
+            self.control_change = change
+            
+        def random_influence_event(self):
+            change = renpy.random.randint(-10, 10)
+            add_say = ["Other nations are getting weaker", "Spies are executed", "Foriegn policy is working", "Leader has 100th child", "Feudal lords are feeling happier",
+                       "Chance to take over other nation", "Leader boosts morale", "Moral is high", "Spies return successfully"]
+            minus_say = ["Other nations getting stronger", "Influence increases", "Foriegn policy is not working", "Leaders leave", 
+                         "Failed to takeover other nation", "Clan massacarred", "People hate the leaders", "Bad management"]
+            if change < 0:
+                renpy.say(world_events, minus_say[renpy.random.randint(0, len(minus_say) - 1)])
+            else:
+                renpy.say(world_events, add_say[renpy.random.randint(0, len(add_say) - 1)])
+            self.influence += change
+            self.influence_change = change
+            
+        def random_event(self):
+            renpy.show("world_marker", [ self.marker_position ])
+            #renpy.show(self.leader.leader_pic, [ LEADER_POSITION ])
+            self.random_wealth_event()
+            self.random_control_event()
+            self.random_influence_event()
+            
+        def __repr__(self):
+            return "<Village>: {}".format(self.name)
+            
+    class Location:
+        def __init__(self, name, label, special_event=False, map_pic_idle=None, map_pic_hover=None, npc=[], visits=None):
+            self.name = name
+            self.label = label
+            #self.village = village
+            self.special_event = special_event
+            self.map_pic_idle = map_pic_idle
+            self.map_pic_hover = map_pic_hover
+            self.npc = npc
+            self.visits = visits
+            
+        def interact(self, player, village):
+            renpy.call(self.label, player, village)
+            
+    # locations that exist in each village
+    travel = Location('Travel', 'village_travel')
+    level_up = Location('Level Up', 'village_levelup')
+    training_ground = Location('Training', 'village_training')
+    arena = Location('Arena', 'village_arena')
+    hospital = Location('Hospital', 'village_hospital')
+    jounin_station = Location('Jounin Standby Station', 'village_jounin_station')
+    intelligence_division = Location('Intelligence Division', 'village_intelligence_division')
+    ninja_tool_facility = Location('Ninja Tool Facility', 'village_ninja_tool_facility')
+    mission = Location('Mission Assignment Desk', 'village_missions')
+    
+    BASE_LOCATIONS = [travel, level_up, training_ground, arena, hospital, jounin_station, intelligence_division, ninja_tool_facility, mission]
+    
+    # This used to store information about recent actions (since renpy does not have a call action for screens)
+    class CurrentSession:
+        def __init__(self):
+            self.player = None
+            self.location = None
+            self.village = None
+            self.limb = None
+            
+        def clear(self):
+            self.player = None
+            self.location = None
+            self.village = None
+            self.limb = None
+        
+    current_session = CurrentSession()
     
     class Limb:
         def __init__(self, name):
@@ -167,7 +309,8 @@ init python:
     class Player:
         def __init__(self, name, picname, character, tilepic, hudpic, hp, maxhp, chakra, maxchakra, 
                      strength, speed, evasion, defence, stamina, base_hit_rate, tile, facing,
-                     taiskills=[], ninskills=[], genskills=[], items=[], defensiveskills=[], bloodlineskills=[]):
+                     taiskills=[], ninskills=[], genskills=[], items=[], defensiveskills=[], bloodlineskills=[],
+                     leader_pic=None):
             self.name = name
             self.picname = picname
             self.character = character
@@ -206,6 +349,8 @@ init python:
             self.blood = 100
             self.max_blood = 100
             self.damage_dealt = 0
+            self.main = False
+            self.leader_pic = leader_pic
             #self.damage_reduction = False
             #self.chakra_defence = False
             #self.reflect = False
@@ -215,8 +360,12 @@ init python:
             self.assign_all_skills()
             
         def change_direction(self, direction):
+            #renpy.say(self.character, "I was {} : {}".format(direction, self.picname))
             if direction == 'left':
-                self.tilepic = im.Flip(self.tilepic, horizontal=True)
+                self.picname = self.picname.replace("_r", "_l")
+            else:
+                self.picname = self.picname.replace("_l", "_r")
+            #renpy.say(self.character, "Now I am {} : {}".format(direction, self.picname))
             
         def is_bleeding(self):
             for limb in self.limbs:
@@ -253,11 +402,14 @@ init python:
             setattr(self, skill.label, skill)
             
         def check_active_skill(self, skill):
-            s = getattr(self, skill.label)
-            if s.active:
-                return True
+            s = getattr(self, skill.label, None)
+            if s:
+                if s.active:
+                    return True
+                else:
+                    return False 
             else:
-                return False 
+                return False
             
         def active_defensive_skill(self):
             defensive_skills = [self.check_active_skill(skill) for skill in self.defensiveskills]
@@ -472,13 +624,44 @@ init python:
     dampen = Skill('Dampen', 'defence', 'dampen', 6, 30, 30, duration=3)
     yata_mirror = Skill('Yata Mirror', 'defence', 'yatamirror', 12, 50, 50, duration=2)
     
-    player = Player('Naruto', "playerpic", naruto_c, Image('player.png'), None, 100, 100, 80, 80, 10, 4, 3, 4, 5, 80, tile1, 'right', 
+    naruto = Player('Naruto', "playerpic_r", naruto_c, Image('player.png'), None, 100, 100, 80, 80, 10, 4, 3, 4, 5, 80, tile1, 'right', 
                     [onetwocombo, lioncombo], [rasengan], [substitution], [shiruken, kunai, trap], 
-                    [damage_reduction_p, chakra_defence, reflect, dampen, yata_mirror])
-    enemy = Player('Sasuke', "enemypic", sasuke_c, Image('enemy.png'), None, 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
+                    [damage_reduction_p, chakra_defence, reflect, dampen, yata_mirror], [], "leader_pic")
+    sasuke = Player('Sasuke', "enemypic_r", sasuke_c, Image('enemy.png'), None, 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
+                    [onetwocombo, lioncombo, shiruken, kunai], [chidori], [], [], [damage_reduction_e, chakra_defence_e])
+    
+    sakura = Player('Sakura', "enemypic_r", sakura_c, Image('enemy.png'), None, 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
+                    [onetwocombo, lioncombo, shiruken, kunai], [chidori], [], [], [damage_reduction_e, chakra_defence_e])
+    kakashi = Player('Kakashi', "enemypic_r", kakashi_c, Image('enemy.png'), None, 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
                     [onetwocombo, lioncombo, shiruken, kunai], [chidori], [], [], [damage_reduction_e, chakra_defence_e])
     
     clearing = Stage('Clearing', 1, 1)
+    
+    # villages
+    hidden_stone = Village(1, "Hidden Stone", naruto, marker_xpos=0.25, marker_ypos=0.25, map="stones_map", locations=BASE_LOCATIONS)
+    hidden_cloud = Village(2, "Hidden Cloud", naruto, marker_xpos=0.75, marker_ypos=0.20, map="clouds_map", locations=BASE_LOCATIONS)
+    hidden_mist = Village(3, "Hidden Mist", naruto, marker_xpos=0.85, marker_ypos=0.70, map="mist_map", locations=BASE_LOCATIONS)
+    hidden_leaf = Village(4, "Hidden Leaf", naruto, marker_xpos=0.40, marker_ypos=0.60, map="konoha_map", locations=BASE_LOCATIONS)
+    hidden_sand = Village(5, "Hidden Sand", naruto, marker_xpos=0.25, marker_ypos=0.90, map="sand_map", locations=BASE_LOCATIONS)
+    
+    ALL_VILLAGES = [hidden_stone, hidden_cloud, hidden_mist, hidden_leaf, hidden_sand]
+    
+    def show_village_map(village, player):
+        renpy.show(village.map)
+        renpy.show_screen('villagemap', village, player)
+        renpy.say(player.character, "I need to choose an action.")
+        return show_village_map(village, player)
+    
+    def start_world_events():
+        renpy.show("map") #, [ Position(xpos=0, ypos=0) ])
+        for village in ALL_VILLAGES:
+            renpy.show_screen('worldevents', village)
+            village.random_event()
+            renpy.hide_screen('worldevents')
+            #renpy.call('world_update', village)
+            
+        #renpy.say(world_events, "I am here now")
+        renpy.jump('start')
     
     def check_active_skill(player, skillname):
         try:
@@ -490,15 +673,17 @@ init python:
         except AttributeError as e:
             return False
     
-    def highlight_position(player, enemy):
+    def highlight_position(player, enemy, stage):
         for tile in TILES:
             if not tile.trap:
                 tile.deactivate()
             
-        player.tile.activate()
-        renpy.show(player.picname, [ POSITIONS[player.tile.position] ])
-        enemy.tile.activate()
-        renpy.show(enemy.picname, [ POSITIONS[enemy.tile.position] ])
+        #player.tile.activate()
+        show_player_at_pos(player, enemy, stage, player.tile)
+        #renpy.show(player.picname, [ POSITIONS[player.tile.position] ])
+        #enemy.tile.activate()
+        show_player_at_pos(enemy, player, stage, enemy.tile)
+        #renpy.show(enemy.picname, [ POSITIONS[enemy.tile.position] ])
     
     def show_player_at_pos(player, enemy, stage, tile, initial_movement=False):
         
@@ -509,13 +694,15 @@ init python:
         
         if player.tile.position < enemy.tile.position:
             player.facing = 'right'
+            player.change_direction(player.facing)
         else:
             player.facing = 'left'
             player.change_direction(player.facing)
             
-        if not initial_movement:
-            player.chakra -= (stage.remove_chakra() + (difference * stage.pull))
+        #if not initial_movement:
+            #player.chakra -= (stage.remove_chakra() + (difference * stage.pull))
             
+        #renpy.hide(player.picname)
         renpy.show(player.picname, [ POSITIONS[tile.position] ])
         
         # Handle traps
@@ -533,6 +720,7 @@ init python:
         
     def enemy_move(player, enemy, stage):
         hide_battle_screen()
+        show_player_at_pos(enemy, player, stage, enemy.tile)
         skills = enemy.all_skills 
         skill_index = 1 #renpy.random.randint(0, (len(skills) - 1))
         current_skill = skills[skill_index]
@@ -559,7 +747,7 @@ init python:
             enemy.chakra -= (current_skill.range * stage.pull) 
             
         renpy.show(enemy.picname, [ POSITIONS[enemy.tile.position] ])
-        renpy.show("show_damage_e", [ Position(xpos=0.45, ypos=200) ], what=show_damage_e)
+        #renpy.show("show_damage_e", [ Position(xpos=0.45, ypos=200) ], what=show_damage_e)
         
         # bleeding
         player_bleed(player)
@@ -632,12 +820,57 @@ init python:
     def show_damage(st, at, player):
         return Text("-{}".format(player.damage_dealt), color="#fff", size=20), None
         
-    show_damage_e = renpy.image('show_damage_e', DynamicDisplayable(show_damage, player=enemy))
+    def end_match(player, enemy, win_label, lose_label, draw_label):
+        #renpy.say(player.character, "I AM RUNNING {} {} {} {} {}".format(player.hp, enemy.hp, win_label, lose_label, draw_label))
+        if draw_label:
+            renpy.jump(draw_label)
+        elif player.hp == 0:
+            renpy.jump(lose_label)
+        elif enemy.hp == 0:
+            renpy.jump(win_label)
+            
+    def get_tag_info(player, tag_p):
+        one_list = [player] + tag_p
+        info = {}
+        new_tag_p = []
         
-init:
-    # Show damage
-    image show_damage_p = DynamicDisplayable(show_damage, player=player)
-    image show_damage_e = DynamicDisplayable(show_damage, player=enemy)
+        for p in one_list:
+            if not p.main:
+                new_tag_p.append(p)
+            
+        for p in one_list:
+            if p.main:
+                info['main'] = p
+            else:
+                info['tag'] = new_tag_p
+        return info
+
+screen villagemap(village, player):
+    # show player time details here
+    $ LOCATION_XPOS_FIRST = 0.4
+    $ LOCATION_YPOS_FIRST = 0.4
+    $ counter = 0
+    $ start_x = 0.3
+    $ start_y = 0.3
+    $ x_delta = 0.2
+    $ y_delta = 0.07
+    $ grid_place = [(start_x,start_y), (start_x,start_y + y_delta), (start_x, start_y + 2*y_delta), (start_x, start_y + 3*y_delta), (start_x,start_y+4*y_delta), 
+                    (start_x + x_delta,start_y), (start_x + x_delta,start_y + y_delta), (start_x+x_delta, start_y + 2*y_delta), (start_x+x_delta, start_y + 3*y_delta), (start_x+x_delta,start_y+4*y_delta),
+                    (start_x + 2*x_delta,start_y), (start_x + 2*x_delta,start_y + y_delta), (start_x+2*x_delta, start_y + 2*y_delta), (start_x+2*x_delta, start_y + 3*y_delta), (start_x+2*x_delta,start_y+4*y_delta), ]
+    
+    for location in village.locations:
+        textbutton [location.name] action [SetField(current_session, 'player', player), SetField(current_session, 'village', village), SetField(current_session, 'location', location), Jump('location_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
+        $ counter += 1
+
+screen worldevents(village):
+    text "Wealth: [village.wealth]" xpos 0.3 ypos 0.03
+    text "Control:" xpos 0.3 ypos 0.08
+    text "Influence:" xpos 0.3 ypos 0.13
+    text "Uprising:" xpos 0.3 ypos 0.18
+    bar value village.control range 100 xpos 0.45 ypos 0.08 xmaximum 100 ymaximum 30
+    bar value village.influence range 100 xpos 0.45 ypos 0.13 xmaximum 100 ymaximum 30
+    bar value village.uprising range 100 xpos 0.45 ypos 0.18 xmaximum 100 ymaximum 30
+        
 
 screen taiactions:
     vbox:
@@ -748,7 +981,7 @@ label yatamirror:
     $ player.yatamirror.apply()
     jump enemymove
 
-screen battlemenu(player):
+screen battlemenu(player, tag_p):
     vbox:
         textbutton "Tai" action [Hide("ninactions"), Hide("genactions"), Hide("movemenu"), Hide("itemselection"), Hide("defenceactions"), Show("taiactions")]
         textbutton "Nin" action [Hide("taiactions"), Hide("genactions"), Hide("movemenu"), Hide("itemselection"), Hide("defenceactions"), Show("ninactions")]
@@ -757,6 +990,8 @@ screen battlemenu(player):
         textbutton "Items" action [Hide("ninactions"), Hide("genactions"), Hide("movemenu"), Show("itemselection"), Hide("defenceactions"), Hide("taiactions")]
         textbutton "Defence" action [Hide("ninactions"), Hide("genactions"), Hide("movemenu"), Hide("itemselection"), Show("defenceactions"), Hide("taiactions")]
         textbutton "Standby" action Jump("standby")
+        for partner in tag_p:
+            textbutton "Tag [partner.name]" action [SetField(partner, 'main', True), SetField(partner, 'tile', player.tile), SetField(player, 'main', False), Jump('tag_partner')]
         
 screen stats:
     text "Str: [player.strength] Def: [player.defence] Eva: [player.evasion]" xpos 0.30
@@ -778,19 +1013,19 @@ screen battlebars:
         text "-[enemy.damage_dealt]" xpos 0.59 ypos 0.3
     
     text "[player.facing]" xpos 0.2 ypos 0.25
-    if player.damagereduction.active:
+    if player.check_active_skill(damage_reduction_p):
         text "DR" xpos 0.3 ypos 0.15
         
-    if player.chakradefence.active:
+    if player.check_active_skill(chakra_defence):
         text "CD" xpos 0.3 ypos 0.15
         
-    if player.reflect.active:
+    if player.check_active_skill(reflect):
         text "Ref" xpos 0.3 ypos 0.15
         
-    if player.dampen.active:
+    if player.check_active_skill(dampen):
         text "Dam" xpos 0.3 ypos 0.15
         
-    if player.yatamirror.active:
+    if player.check_active_skill(yata_mirror):
         text "Yata" xpos 0.3 ypos 0.15
     
     if player.is_bleeding():
@@ -809,11 +1044,13 @@ screen battlebars:
         text "blood" vertical True xpos 0.78 ypos 0.2
         vbar value enemy.blood range enemy.max_blood xpos 0.74 ypos 0.2 ymaximum 150
         
-    if enemy.damagereduction.active:
+    if enemy.check_active_skill(damage_reduction_e):
         text "DR" xpos 0.75 ypos 0.15
         
-    if enemy.chakradefence.active:
+    if enemy.check_active_skill(chakra_defence_e):
         text "CD" xpos 0.75 ypos 0.15
+        
+    text "[enemy.facing] [enemy.picname]" xpos 0.75 ypos 0.15
         
     #if enemy.reflect.active:
     #    text "Ref" xpos 0.75 ypos 0.15
@@ -824,25 +1061,80 @@ screen battlebars:
     #if enemy.yatamirror.active:
     #    text "Yata" xpos 0.75 ypos 0.15
 
+label world_update(village):
+    scene map
+    $ village.random_event()
+    return
+    
+label location_redirect:
+    hide screen villagemap 
+    $ renpy.call(current_session.location.label, current_session.player, current_session.village)
+    
+label village_travel(player, village):
+    # use "[village.marker_xpos] [village.marker_ypos]") to work out distance between destination
+    # dist = sqrt( (x2 - x1)**2 + (y2 - y1)**2 )
+    # create function to find distance find_time(village1, village2)
+    "SAMPLE" "TRAVEL HERE"
+    jump start
+    
+label village_levelup(player, village):
+    # implement exp system and point allocation
+    "SAMPLE" "TRAVEL HERE"
+    jump start
+
+label village_training(player, village):
+    scene training_ground evening
+    "SAMPLE" "TRAVEL HERE"
+    jump start
+    
+label village_arena(player, village):
+    "SAMPLE" "TRAVEL HERE"
+    jump start
+    
+label village_hospital(player, village):
+    "SAMPLE" "TRAVEL HERE"
+    jump start
+    
+label village_jounin_station(player, village):
+    "SAMPLE" "TRAVEL HERE"
+    jump start
+    
+label village_intelligence_division(player, village):
+    "SAMPLE" "TRAVEL HERE"
+    jump start
+    
+label village_ninja_tool_facility(player, village):
+    "SAMPLE" "TRAVEL HERE"
+    jump start
+    
+label village_missions(player, village):
+    "SAMPLE" "TRAVEL HERE"
+    jump start
+
+label tag_partner:
+    $ info = get_tag_info(player, tag_p)
+    $ renpy.call('fight', info['main'], enemy, info['tag'], tag_e, stage, win_label, lose_label, draw_label)
     
 label start:
-    with None
-    jump fight
+    $ show_village_map(hidden_mist, naruto)
+    #$ start_world_events()
+    call fight(naruto, sasuke, [sakura, kakashi], [], clearing, 'fight1_w', 'fight1_l', None)
     
-label fight:
+label fight(player, enemy, tag_p, tag_e, stage=clearing, win_label, lose_label, draw_label=None):
     scene bg
     
     call showtiles
     hide screen movemenu
     hide screen settrap
     # initial position
-    $ highlight_position(player, enemy)
+    $ highlight_position(player, enemy, stage)
+    $ end_match(player, enemy, win_label, lose_label, draw_label)
     $ remove_all_skill_affects(player, enemy)
     #$ show_player_at_pos(player, enemy, clearing, player.tile, initial_movement=True)
     
-    $ drain_blood(player)
-    $ drain_blood(enemy)
-    show screen battlemenu(player)
+    #$ drain_blood(player)
+    #$ drain_blood(enemy)
+    show screen battlemenu(player, tag_p)
     show screen battlebars
     show screen stats
     
@@ -854,6 +1146,18 @@ label fight:
     "Sample" "Sample...."
     
     call movemenu
+    
+label fight1_w:
+    "Sample" "I WON EVERYTHING"
+    #return
+
+label fight1_l:
+    "Sample" "I LOST EVERYTHING"
+    #return
+    
+label fight1_d:
+    "Sample" "I DRAW EVERYTHING"
+    #return
     
 label standby:
     $ player.chakra += player.stamina * 5
@@ -886,7 +1190,7 @@ label enemymove:
                 #renpy.show("show_damage_e", [ Position(xpos=0.45, ypos=200) ], what=show_damage_e)
     #hide show_damage_e
     #show show_damage_e at Position(xpos=0.45, ypos=200)
-    jump fight
+    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
     
 label showtiles:
     show tile1im at tile1pos
@@ -924,7 +1228,7 @@ label movemenu:
     
 screen movemenu:
     
-    $ highlight_position(player, enemy)
+    $ highlight_position(player, enemy, clearing)
     
     for tile in TILES:
         imagebutton idle tile.idle hover tile.hover xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos - 0.05) action Jump("move{}".format(tile.position))
@@ -937,106 +1241,106 @@ label settrap:
     player.character "Where should I place the trap?"
     
 screen settrap:
-    $ highlight_position(player, enemy)
+    $ highlight_position(player, enemy, clearing)
     
     for tile in TILES:
         imagebutton idle tile.idle hover TILETRAPPIC xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos - 0.05) action Jump("trap{}".format(tile.position))
     
 label move1:
     $ show_player_at_pos(player, enemy, clearing, tile1)
-    jump fight
+    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
     
 label move2:
     $ show_player_at_pos(player, enemy, clearing, tile2)
-    jump fight
+    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
     
 label move3:
     $ show_player_at_pos(player, enemy, clearing, tile3)
-    jump fight
+    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
     
 label move4:
     $ show_player_at_pos(player, enemy, clearing, tile4)
-    jump fight
+    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
 
 label move5:
     $ show_player_at_pos(player, enemy, clearing, tile5)
-    jump fight
+    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
 
 label move6:
     $ show_player_at_pos(player, enemy, clearing, tile6)
-    jump fight
+    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
     
 label move7:
     $ show_player_at_pos(player, enemy, clearing, tile7)
-    jump fight
+    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
     
 label move8:
     $ show_player_at_pos(player, enemy, clearing, tile8)
-    jump fight
+    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
     
 label move9:
     $ show_player_at_pos(player, enemy, clearing, tile9)
-    jump fight
+    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
     
 label move10:
     $ show_player_at_pos(player, enemy, clearing, tile10)
-    jump fight
+    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
     
 label move11:
     $ show_player_at_pos(player, enemy, clearing, tile11)
-    jump fight
+    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
     
 label move12:
     $ show_player_at_pos(player, enemy, clearing, tile12)
-    jump fight
+    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
     
 label trap1:
     $ set_trap_at_pos(player, enemy, clearing, tile1)
-    jump fight
+    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
     
 label trap2:
     $ set_trap_at_pos(player, enemy, clearing, tile2)
-    jump fight
+    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
     
 label trap3:
     $ set_trap_at_pos(player, enemy, clearing, tile3)
-    jump fight
+    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
     
 label trap4:
     $ set_trap_at_pos(player, enemy, clearing, tile4)
-    jump fight
+    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
     
 label trap5:
     $ set_trap_at_pos(player, enemy, clearing, tile5)
-    jump fight
+    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
     
 label trap6:
     $ set_trap_at_pos(player, enemy, clearing, tile6)
-    jump fight
+    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
     
 label trap7:
     $ set_trap_at_pos(player, enemy, clearing, tile7)
-    jump fight
+    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
     
 label trap8:
     $ set_trap_at_pos(player, enemy, clearing, tile8)
-    jump fight
+    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
     
 label trap9:
     $ set_trap_at_pos(player, enemy, clearing, tile9)
-    jump fight
+    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
     
 label trap10:
     $ set_trap_at_pos(player, enemy, clearing, tile10)
-    jump fight
+    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
     
 label trap11:
     $ set_trap_at_pos(player, enemy, clearing, tile11)
-    jump fight
+    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
     
 label trap12:
     $ set_trap_at_pos(player, enemy, clearing, tile12)
-    jump fight
+    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
     
 #label movemenu:
     
@@ -1058,5 +1362,3 @@ label trap12:
     #hide playerpic
 #    $ show_player_at_pos(player, enemy, clearing, choice)
 #    jump fight
-
-
