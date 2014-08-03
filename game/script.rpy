@@ -1,4 +1,4 @@
-# You can place the script of your game in this file.
+﻿# You can place the script of your game in this file.
 
 # Declare images below this line, using the image statement.
 # eg. image eileen happy = "eileen_happy.png"
@@ -135,6 +135,17 @@ init python:
     player12pos.xpos, player12pos.ypos = TILE12POS+25, PLAYERYPOS
     
     LEADER_POSITION = Position(xpos=0.5, ypos=0.9)
+    
+    ### MENU GRIDS ###
+    LOCATION_XPOS_FIRST = 0.4
+    LOCATION_YPOS_FIRST = 0.4
+    start_x = 0.3
+    start_y = 0.3
+    x_delta = 0.2
+    y_delta = 0.07
+    grid_place = [(start_x,start_y), (start_x,start_y + y_delta), (start_x, start_y + 2*y_delta), (start_x, start_y + 3*y_delta), (start_x,start_y+4*y_delta), 
+                  (start_x + x_delta,start_y), (start_x + x_delta,start_y + y_delta), (start_x+x_delta, start_y + 2*y_delta), (start_x+x_delta, start_y + 3*y_delta), (start_x+x_delta,start_y+4*y_delta),
+                  (start_x + 2*x_delta,start_y), (start_x + 2*x_delta,start_y + y_delta), (start_x+2*x_delta, start_y + 2*y_delta), (start_x+2*x_delta, start_y + 3*y_delta), (start_x+2*x_delta,start_y+4*y_delta), ]
     
     POSITIONS = {
                         1: player1pos,
@@ -306,6 +317,8 @@ init python:
     
     LIMBS = [limb_head, limb_torso, limb_left_arm, limb_right_arm, limb_left_leg, limb_right_leg]
     
+    LEVELS = {level: level*100 for level in range(1,100)}
+    
     class Player:
         def __init__(self, name, picname, character, tilepic, hudpic, hp, maxhp, chakra, maxchakra, 
                      strength, speed, evasion, defence, stamina, base_hit_rate, tile, facing,
@@ -350,6 +363,9 @@ init python:
             self.max_blood = 100
             self.damage_dealt = 0
             self.main = False
+            self.exp = 0
+            self.level = 1
+            self.allocation_points = 0
             self.leader_pic = leader_pic
             #self.damage_reduction = False
             #self.chakra_defence = False
@@ -359,6 +375,23 @@ init python:
             
             self.assign_all_skills()
             
+        def level_up(self):
+            difference = self.exp - LEVELS[self.level + 1]
+            if difference < 0:
+                pass
+            else:
+                self.level +=1
+                self.allocation_points += 3
+                self.maxhp += renpy.random.randint(20, 30)
+                self.maxchakra += renpy.random.randint(10, 20)
+                self.exp = 0
+                self.gain_exp(difference)
+                
+        def gain_exp(exp):
+            exp += renpy.random.randint(1,10)
+            self.exp += exp
+            self.level_up()
+        
         def change_direction(self, direction):
             #renpy.say(self.character, "I was {} : {}".format(direction, self.picname))
             if direction == 'left':
@@ -646,7 +679,18 @@ init python:
     
     ALL_VILLAGES = [hidden_stone, hidden_cloud, hidden_mist, hidden_leaf, hidden_sand]
     
+    import math
+    def time_between_village(village1, village2):
+        distance = math.sqrt( (village1.marker_xpos - village2.marker_xpos)**2 + (village1.marker_ypos - village2.marker_ypos)**2 )
+        time_weeks = abs(distance / 0.1)
+        days = time_weeks * 7
+        return int(days)
+        
+    def other_villages(village):
+        return [v for v in ALL_VILLAGES if v.id != village.id]
+    
     def show_village_map(village, player):
+        renpy.hide(village.map) # remove it first otherwise it does not show the new image on top
         renpy.show(village.map)
         renpy.show_screen('villagemap', village, player)
         renpy.say(player.character, "I need to choose an action.")
@@ -845,21 +889,53 @@ init python:
                 info['tag'] = new_tag_p
         return info
 
+screen levelup(village, player):
+    $ STATS = ['strength', 'speed', 'evasion', 'defence', 'stamina']
+    $ counter = 0
+    text "Allocation Points: [player.allocation_points]" xpos 0.1
+    text "Str: [player.strength] Def: [player.defence] Eva: [player.evasion]" xpos 0.50
+    text "Sta: [player.stamina] Speed: [player.speed] Hit: [player.base_hit_rate]" xpos 0.50 ypos 0.05
+    
+    if player.allocation_points:
+        for stat in STATS:
+            textbutton "[stat] +1" action [SetField(player, stat, getattr(player, stat) + 1), 
+                                           SetField(player, 'allocation_points', getattr(player, 'allocation_points') - 1), 
+                                           SetField(current_session, 'village', village), 
+                                           SetField(current_session, 'player', player), 
+                                           SetField(current_session, 'location', level_up), 
+                                           Jump('location_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
+            $ counter +=1 
+    else:
+        text "No allocation points" xpos 0.5 ypos 0.5
+    textbutton "Back to Location select" action [SetField(current_session, 'village', village), 
+                                                 SetField(current_session, 'player', player), 
+                                                 Hide('levelup'), 
+                                                 Jump('village_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
+
+screen villagetravel(village, player):
+    $ counter = 0
+    $ village_time = 0
+    
+    for v in other_villages(village):
+        $ village_time = time_between_village(v, village)
+        textbutton "[v.name] [village_time]" action [SetField(current_session, 'village', v), 
+                                                     SetField(current_session, 'player', player), 
+                                                     Jump('village_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
+        $ counter += 1
+        
+    textbutton "Back to Location select" action [SetField(current_session, 'village', village), 
+                                                 SetField(current_session, 'player', player), 
+                                                 Jump('village_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
+
 screen villagemap(village, player):
     # show player time details here
-    $ LOCATION_XPOS_FIRST = 0.4
-    $ LOCATION_YPOS_FIRST = 0.4
     $ counter = 0
-    $ start_x = 0.3
-    $ start_y = 0.3
-    $ x_delta = 0.2
-    $ y_delta = 0.07
-    $ grid_place = [(start_x,start_y), (start_x,start_y + y_delta), (start_x, start_y + 2*y_delta), (start_x, start_y + 3*y_delta), (start_x,start_y+4*y_delta), 
-                    (start_x + x_delta,start_y), (start_x + x_delta,start_y + y_delta), (start_x+x_delta, start_y + 2*y_delta), (start_x+x_delta, start_y + 3*y_delta), (start_x+x_delta,start_y+4*y_delta),
-                    (start_x + 2*x_delta,start_y), (start_x + 2*x_delta,start_y + y_delta), (start_x+2*x_delta, start_y + 2*y_delta), (start_x+2*x_delta, start_y + 3*y_delta), (start_x+2*x_delta,start_y+4*y_delta), ]
     
     for location in village.locations:
-        textbutton [location.name] action [SetField(current_session, 'player', player), SetField(current_session, 'village', village), SetField(current_session, 'location', location), Jump('location_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
+        textbutton [location.name] action [SetField(current_session, 'player', player), 
+                                           SetField(current_session, 'village', village), 
+                                           SetField(current_session, 'location', location), 
+                                           Jump('location_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
         $ counter += 1
 
 screen worldevents(village):
@@ -1066,21 +1142,24 @@ label world_update(village):
     $ village.random_event()
     return
     
+label village_redirect:
+    hide screen villagetravel
+    $ show_village_map(current_session.village, current_session.player)
+    jump village_redirect
+    
 label location_redirect:
     hide screen villagemap 
     $ renpy.call(current_session.location.label, current_session.player, current_session.village)
     
 label village_travel(player, village):
-    # use "[village.marker_xpos] [village.marker_ypos]") to work out distance between destination
-    # dist = sqrt( (x2 - x1)**2 + (y2 - y1)**2 )
-    # create function to find distance find_time(village1, village2)
-    "SAMPLE" "TRAVEL HERE"
-    jump start
+    show screen villagetravel(village, player)
+    player.character "I need to choose a destination"
+    $ renpy.call('village_travel', player, village)
     
 label village_levelup(player, village):
-    # implement exp system and point allocation
-    "SAMPLE" "TRAVEL HERE"
-    jump start
+    show screen levelup(village, player)
+    player.character "I need to choose level up stats"
+    $ renpy.call('village_levelup', player, village)
 
 label village_training(player, village):
     scene training_ground evening
