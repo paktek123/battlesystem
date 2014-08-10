@@ -1,4 +1,5 @@
-﻿# You can place the script of your game in this file.
+
+# You can place the script of your game in this file.
 
 # Declare images below this line, using the image statement.
 # eg. image eileen happy = "eileen_happy.png"
@@ -317,7 +318,28 @@ init python:
     
     LIMBS = [limb_head, limb_torso, limb_left_arm, limb_right_arm, limb_left_leg, limb_right_leg]
     
+    class Team:
+        def __init__(self, name, sensei=None, members=[], chemistry=0):
+            self.name = name
+            self.sensei = name
+            self.members = members
+            self.chemistry = chemistry
+            
+        def add_member(self, new_member):
+            self.members.append(new_member)
+            
+        def remove_member(self, old_member):
+            self.members.remove(old_member)
+            
+        def increase_chemistry(self, exp):
+            self.chemistry += exp
+            return self.chemistry
+            
+        def decrease_chemistry(self, exp):
+            self.chemistry -= exp
+    
     LEVELS = {level: level*100 for level in range(1,100)}
+    MAX_BOND = 100
     
     class Player:
         def __init__(self, name, picname, character, tilepic, hudpic, hp, maxhp, chakra, maxchakra, 
@@ -367,6 +389,9 @@ init python:
             self.level = 1
             self.allocation_points = 0
             self.leader_pic = leader_pic
+            self.team = None
+            self.sensei = self.team.sensei or None
+            self.bond = 0
             #self.damage_reduction = False
             #self.chakra_defence = False
             #self.reflect = False
@@ -375,10 +400,15 @@ init python:
             
             self.assign_all_skills()
             
+        def increase_bond(self, bond):
+            self.bond += bond + renpy.random.randint(1,3)
+            if self.bond > MAX_BOND:
+                self.bond = MAX_BOND
+            
         def level_up(self):
             difference = self.exp - LEVELS[self.level + 1]
             if difference < 0:
-                pass
+                return
             else:
                 self.level +=1
                 self.allocation_points += 3
@@ -391,6 +421,7 @@ init python:
             exp += renpy.random.randint(1,10)
             self.exp += exp
             self.level_up()
+            return self.exp
         
         def change_direction(self, direction):
             #renpy.say(self.character, "I was {} : {}".format(direction, self.picname))
@@ -528,18 +559,35 @@ init python:
                 tile.deactivate_trap()
     
     class Skill:
-        def __init__(self, name, skill_type, label, range, tech, chakra_cost=0, damage=0, stun=False, duration=None):
+        def __init__(self, name, skill_type, label, range, tech=0, chakra_cost=0, damage=0, stun=False, duration=None, exp=0, unlock_exp=0):
             self.name = name
             self.skill_type = skill_type
             self.label = label
             self.range = range
             self.tech = tech
+            self.exp = exp
+            self.unlock_exp = unlock_exp
             self.chakra_cost = chakra_cost
             self.damage = damage 
             self.stun = stun
             self.duration = duration
             self.used = 0
             self.active = False
+            
+        def set_to_default(self):
+            self.active = False
+            self.tech = 0
+            self.exp = 0
+            
+        def unlock(self, player):
+            new_skill = self
+            player.assign_skill(new_skill)
+            
+        def gain_exp(self, exp):
+            self.exp += exp
+            if self.exp > self.unlock_exp:
+                self.exp = self.unlock_exp
+            return self.exp
             
         def activate(self):
             self.active = True
@@ -583,7 +631,7 @@ init python:
             
             self.append_to_skill()
             
-            damage = (self.damage - target.defence)
+            damage = (self.damage - target.defence) + self.tech
             
             if check_active_skill(target, "damagereduction"):
                 damage = damage - (target.hp * 0.1)
@@ -609,7 +657,7 @@ init python:
             else:
                 target.hp -= damage
                 
-            player.damage_dealt = damage
+            player.damage_dealt = damage + self.tech
             
            
         def hit_successful(self, player, enemy):
@@ -888,6 +936,48 @@ init python:
             else:
                 info['tag'] = new_tag_p
         return info
+        
+    import copy
+    def get_sensei_skill(sensei, student):
+        sensei_skills = [skill.label for skill in sensei.all_skills]
+        student_skills = [skill.label for skill in student.all_skills]
+        skills_to_teach = list(set(sensei_kills) - set(student_skills))
+        if skills_to_teach:
+            skill_index = renpy.random.randint(0, len(skills_to_teach) - 1)
+            new_skill = skills_to_teach[skill_index]
+            learnt_skill = copy.deepcopy(new_skill.set_to_default())
+            student.assign_skill(learnt_skill)
+            return learnt_skill
+        else:
+            return None
+
+screen training(village, player):
+    textbutton "Train skills" action [Hide("training"), Show("train_skills", village, player)] xpos grid_place[0][0] ypos grid_place[0][1]
+    if player.team:
+        # maybe add formation, 
+        text "Team Chemistry: [player.team.chemistry]" xpos 0.1 ypos 0.1
+        textbutton "Train with team" action [SetField(getattr(player, 'team'), 'chemistry', getattr(player, team).increase_chemistry(10),
+                                             Hide("training"), 
+                                             Show("training", village, player)] xpos grid_place[1][0] ypos grid_place[1][1]
+    if player.sensei:
+        textbutton "Learn skills" action [SetField(current_session, 'village', village), 
+                                          SetField(current_session, 'player', player), 
+                                          SetField(current_session, 'location', training_ground),
+                                          Hide("training"), 
+                                          Jump("training_sensei")] xpos grid_place[2][0] ypos grid_place[2][1]
+                                      
+    textbutton "Train (+ exp)" action [SetField(player, 'exp', player.gain_exp(10)),
+                                       Hide("training"), 
+                                       Show("train_skills", village, player)] xpos grid_place[3][0] ypos grid_place[3][1]
+    
+screen train_skills(village, player):
+    $ counter = 0
+    for skill in player.all_skills:
+        if skill.exp < skill.unlock_exp:
+            textbutton "[skill.name] [skill.exp]/[skill.unlock_exp]" action [SetField(getattr(player, skill.label), 'exp', getattr(player, skill.label).gain_exp(10), 
+                                                                             Hide("train_skills"),
+                                                                             Show("training", village, player)] xpos grid_place[counter][0] ypos grid_place[counter][1]
+            $ counter += 1
 
 screen levelup(village, player):
     $ STATS = ['strength', 'speed', 'evasion', 'defence', 'stamina']
@@ -1165,6 +1255,19 @@ label village_training(player, village):
     scene training_ground evening
     "SAMPLE" "TRAVEL HERE"
     jump start
+    
+label training_sensei:
+    $ new_skill = get_sensei_skill(player.sensei, player)
+    player.sensei.character "I am about to teach you is [new_skill.name]."
+    if new_skill.unlock_exp < 300:
+        player.sensei.character "It is a basic skill but fundamental to being a shinobi."
+    elif new_skill.unlock_exp < 600:
+        player.sensei.character "It is an intermediate skill but fundamental to being a shinobi."
+    elif new_skill.unlock_exp < 900:
+        player.sensei.character "It is an advanced skill and hard to master."
+    # some sort of explanation
+    player.character "[new_skill.name] added to skill set."
+    $ renpy.call(current_session.location.label, current_session.player, current_session.village)
     
 label village_arena(player, village):
     "SAMPLE" "TRAVEL HERE"
