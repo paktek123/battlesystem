@@ -1,5 +1,4 @@
-
-# You can place the script of your game in this file.
+﻿# You can place the script of your game in this file.
 
 # Declare images below this line, using the image statement.
 # eg. image eileen happy = "eileen_happy.png"
@@ -34,6 +33,15 @@ image clouds_map = im.Scale("kumogakure.png", 800, 600)
 image sand_map = im.Scale("sunagakure.jpg", 800, 600)
 image training_ground = im.Scale("training.jpg", 800, 600)
 image training_ground evening = im.Scale(im.Recolor("training.jpg", 255, 165, 0, 255), 800, 600)
+
+python:
+    import os
+    for fname in os.listdir(config.gamedir + '/gfx'):
+        if fname.endswith(('.jpg', '.png')):
+            tag = fname[:-4]
+            fname =  'gfx/' + fname
+            im.Scale(renpy.image(tag, fname), 800, 600)
+
 
 init:
     $ bob_points = 0 # this is a variable for bob's affection points throughout your game
@@ -171,14 +179,103 @@ init python:
             self.year = year
             self.months = ["Stub", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"]
             
-        def now():
+        def now(self):
             minute = renpy.random.randint(0, 59)
             return "{}:{} {} {} {}".format(self.hour, minute, self.day, self.months[self.month], self.year)
             
-        #def morning():
+        def dawn(self);
+            minute = renpy.random.randint(0, 59)
+            self.hour = renpy.random.randint(1,5)
+            return "{}:{} {} {} {}".format(self.hour, minute, self.day, self.months[self.month], self.year)
             
+        def morning(self):
+            minute = renpy.random.randint(0, 59)
+            self.hour = renpy.random.randint(6,11)
+            return "{}:{} {} {} {}".format(self.hour, minute, self.day, self.months[self.month], self.year)
+            
+        def afternoon(self):
+            minute = renpy.random.randint(0, 59)
+            self.hour = renpy.random.randint(12,17)
+            return "{}:{} {} {} {}".format(self.hour, minute, self.day, self.months[self.month], self.year)
+            
+        def evening(self):
+            minute = renpy.random.randint(0, 59)
+            self.hour = renpy.random.randint(18,20)
+            return "{}:{} {} {} {}".format(self.hour, minute, self.day, self.months[self.month], self.year)
+            
+        def night(self):
+            minute = renpy.random.randint(0, 59)
+            self.hour = renpy.random.randint(21,0)
+            return "{}:{} {} {} {}".format(self.hour, minute, self.day, self.months[self.month], self.year)
+            
+        def next_month(self):
+            if self.month > 11:
+                self.year += 1
+                self.month = 1
+            else:
+                self.month += 1
+            
+        def next_day():
+            if self.day > 29:
+                self.next_month()
+                self.day = 1
+            else:
+                self.day += 1
+                
+        def next_hour():
+            if self.hour > 23:
+                self.next_day()
+                self.hour = 1
+            else:
+                self.hour += 1
+                
+        def advance_time(hours=0, days=0, months=0, years=0):
+            if hours:
+                [self.next_hour() for i in [0]*hours]
+            
+            if days:
+                [self.next_day() for i in [0]*days]
+                
+            if months:
+                [self.next_month() for i in [0]*hours]
             
     main_time = Time(9, 1, 1, 1354)
+    
+    class Mission:
+        def __init__(self, name, hours=0, days=0, months=0, rank="D", dialogue=[]):
+           self.name = name
+           self.hours = hours
+           self.days = days
+           self.months = months
+           self.dialogue = dialogue
+           self.rank = rank
+           self.REWARDS = {"D": 5000,
+                           "C": 30000,
+                           "B": 150000,
+                           "A": 450000,
+                           "S": 1000000}
+           
+        def reward(self, player):
+            player.ryo += renpy.random.randint(0, self.REWARDS[self.rank]) + self.REWARDS[self.rank]
+    
+    class BasicMission(Mission):
+        """
+        No fighting just advance time with a blank background
+        One line of dialogue, Rank D
+        Mission cannot fail
+        Dialogue Structure = [('character', "I say this")]
+        """
+        def __init__(self, name, hours=0, days=0, months=0, rank="D", dialogue=[("char", " ")]):
+            super(BasicMission, self).__init__(name, hours, days, months, rank, dialogue)
+            
+        def do_mission(player, village):
+            # play clock animation here / black background?
+            for p, d in self.dailogue:
+                renpy.say(player.character, d)
+            player.injury_chance(0.05)
+            main_time.advance_time(self.hours, self.days)
+            self.reward(player)
+            show_village_map(village, player)
     
     class Village:
         def __init__(self, id, name, leader, marker_xpos, marker_ypos, map, wealth=10000, army=1000, control=100, influence=100, uprising=0, locations=None):
@@ -297,6 +394,7 @@ init python:
             self.bleeding = False
             self.crippled = False
             self.cripple_count = 0
+            self.injury = False
             
         def bleed(self):
             self.bleeding = True
@@ -308,6 +406,9 @@ init python:
         def cripple(self):
             if self.cripple_count > 5:
                 self.cripple = True
+                
+        def injure(self):
+            self.injury = True
             
     limb_head = Limb('head')
     limb_torso = Limb('torso')
@@ -341,11 +442,14 @@ init python:
     LEVELS = {level: level*100 for level in range(1,100)}
     MAX_BOND = 100
     
+    import copy
+    import random
+
     class Player:
         def __init__(self, name, picname, character, tilepic, hudpic, hp, maxhp, chakra, maxchakra, 
                      strength, speed, evasion, defence, stamina, base_hit_rate, tile, facing,
                      taiskills=[], ninskills=[], genskills=[], items=[], defensiveskills=[], bloodlineskills=[],
-                     leader_pic=None):
+                     leader_pic=None, taijutsu=1, ninjutsu=1, genjutsu=1):
             self.name = name
             self.picname = picname
             self.character = character
@@ -361,6 +465,9 @@ init python:
             self.defence = defence
             self.stamina = stamina
             self.base_hit_rate = base_hit_rate
+            self.taijutsu = taijutsu
+            self.ninjutsu = ninjutsu
+            self.genjutsu = genjutsu
             self.tile = tile # position 
             self.facing = facing
             self.taiskills = taiskills
@@ -374,12 +481,12 @@ init python:
             self.battlescreen = None
             self.stunned = False
             self.counter_state = False
-            self.head = limb_head
-            self.torso = limb_torso
-            self.left_arm = limb_left_arm
-            self.right_arm = limb_right_arm
-            self.left_leg = limb_left_leg
-            self.right_leg = limb_right_leg
+            self.head = copy.deepcopy(limb_head)
+            self.torso = copy.deepcopy(limb_torso)
+            self.left_arm = copy.deepcopy(limb_left_arm)
+            self.right_arm = copy.deepcopy(limb_right_arm)
+            self.left_leg = copy.deepcopy(limb_left_leg)
+            self.right_leg = copy.deepcopy(limb_right_leg)
             self.limbs = [self.head, self.torso, self.left_arm, self.right_arm, self.left_leg, self.right_leg]
             self.blood = 100
             self.max_blood = 100
@@ -392,6 +499,7 @@ init python:
             self.team = None
             self.sensei = self.team.sensei or None
             self.bond = 0
+            self.ryo = 100
             #self.damage_reduction = False
             #self.chakra_defence = False
             #self.reflect = False
@@ -399,6 +507,21 @@ init python:
             #self.ignore_damage = False
             
             self.assign_all_skills()
+            
+        def is_injured(self):
+            for limb in self.limbs:
+                if limb.injury:
+                    return True
+            return False
+            
+        def injured_limbs(self):
+            injured = [limb for limb in self.limbs if limb.injury]
+            return injured
+            
+        def injury_chance(self, chance=0.00):
+            percent = chance * 100
+            if renpy.random.randint(1,101) > percent:
+                random.choice(self.limbs).injure()
             
         def increase_bond(self, bond):
             self.bond += bond + renpy.random.randint(1,3)
@@ -980,11 +1103,12 @@ screen train_skills(village, player):
             $ counter += 1
 
 screen levelup(village, player):
-    $ STATS = ['strength', 'speed', 'evasion', 'defence', 'stamina']
+    $ STATS = ['strength', 'speed', 'evasion', 'defence', 'stamina', 'taijutsu', 'ninjutsu', 'genjutsu']
     $ counter = 0
     text "Allocation Points: [player.allocation_points]" xpos 0.1
     text "Str: [player.strength] Def: [player.defence] Eva: [player.evasion]" xpos 0.50
     text "Sta: [player.stamina] Speed: [player.speed] Hit: [player.base_hit_rate]" xpos 0.50 ypos 0.05
+    text "Tai: [player.taijutsu] Nin: [player.ninjutsu] Gen: [player.genjutsu]" xpos 0.50 ypos 0.1
     
     if player.allocation_points:
         for stat in STATS:
@@ -1544,3 +1668,5 @@ label trap12:
     #hide playerpic
 #    $ show_player_at_pos(player, enemy, clearing, choice)
 #    jump fight
+
+
