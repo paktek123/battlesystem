@@ -242,21 +242,28 @@ init python:
     main_time = Time(9, 1, 1, 1354)
     
     class Mission:
-        def __init__(self, name, hours=0, days=0, months=0, rank="D", dialogue=[]):
+        def __init__(self, name, hours=0, days=0, months=0, rank="D", dialogue=[], fights=None):
            self.name = name
            self.hours = hours
            self.days = days
            self.months = months
            self.dialogue = dialogue
            self.rank = rank
-           self.REWARDS = {"D": 5000,
-                           "C": 30000,
-                           "B": 150000,
-                           "A": 450000,
-                           "S": 1000000}
+           self.success = False
+           self.fights = fights
+           self.REWARDS = {"D": {'ryo': 5000, 'exp': 50},
+                           "C": {'ryo': 30000, 'exp': 150},
+                           "B": {'ryo': 150000, 'exp': 450},
+                           "A": {'ryo': 450000, 'exp': 1000},
+                           "S": {'ryo': 1000000, 'exp': 10000}
            
-        def reward(self, player):
-            player.ryo += renpy.random.randint(0, self.REWARDS[self.rank]) + self.REWARDS[self.rank]
+        def reward(self, player, half=False):
+            if half:
+                player.gain_exp((renpy.random.randint(0, self.REWARDS[self.rank]['exp']) + self.REWARDS[self.rank]['exp']) / 2)
+                player.ryo += (renpy.random.randint(0, self.REWARDS[self.rank]['ryo']) + self.REWARDS[self.rank]['ryo']) / 2
+            else:
+                player.gain_exp(renpy.random.randint(0, self.REWARDS[self.rank]['exp']) + self.REWARDS[self.rank]['exp'])
+                player.ryo += renpy.random.randint(0, self.REWARDS[self.rank]['ryo']) + self.REWARDS[self.rank]['ryo']
     
     class BasicMission(Mission):
         """
@@ -268,17 +275,168 @@ init python:
         def __init__(self, name, hours=0, days=0, months=0, rank="D", dialogue=[("char", " ")]):
             super(BasicMission, self).__init__(name, hours, days, months, rank, dialogue)
             
-        def do_mission(player, village):
+        def do_mission(self, player, village, dest_village=None):
             # play clock animation here / black background?
             for p, d in self.dailogue:
                 renpy.say(player.character, d)
             player.injury_chance(0.05)
             main_time.advance_time(self.hours, self.days)
+            self.success = True
             self.reward(player)
             show_village_map(village, player)
+            
+    # basic missions
+    m_d1 = BasicMission('Farming', 12)
+    m_d2 = BasicMission('Retrieve Cat', 8)
+    m_d3 = BasicMission('Organise Festival', hours=10, days=2)
+    m_d4 = BasicMission('Construction', hours=20, days=1)
+    m_d5 = BasicMission('Paper Work', hours=14)
+    m_d6 = BasicMission('Clean Academy', hours=5)
+            
+    class LabelMission(Mission):
+        """
+        Jumps to label
+        """
+        def __init__(self, name, label, hours=0, days=0, months=0, rank="D", dialogue=[("char", " ")]):
+            super(BasicMission, self).__init__(name, hours, days, months, rank, dialogue)
+            self.label = label
+            
+        def do_mission(self, player, village, dest_village=None):
+            # show some dialogues between the transaction phases to make it seemless
+            main_time.advance_time(self.hours, self.hours)
+            renpy.call(self.label, player, village)
+            # handle reward and redirect in label ^^^
+            
+    m_label_test = LabelMission('Label Test', 'labelmissiontest', hours=10)
+            
+    class SimpleFightMission(Mission):
+        """
+        Travel to a destination and fight an enemy
+        Many lines of dailogue, Rank C/D
+        Mission can fail / failure is either death or half exp
+        Dialogue Structure = [('character', "I say this")]
+        Fights = ('stage': someplace, 
+                  'win_label': win_label, 
+                  'lose_label': lose_label, 
+                  'enemy': enemy_character, 
+                  'tag': [enemy_tag_1, enemy_tag_2]}
+        """
+        def __init__(self, name, hours=0, days=0, months=0, rank="D", dialogue=[("char", " ")], fights):
+            super(BasicMission, self).__init__(name, hours, days, months, rank, dialogue, fights)
+            
+        def do_mission(self, player, from_village, dest_village):
+            # show some dialogues between the transaction phases to make it seemless
+            if self.days:
+                main_time.advance_time(self.hours, self.days)
+            else:
+                main_time.advance_time(self.hours, time_between_village(from_village, dest_village))
+            if player.team:
+                player_team = player.team.members() 
+            else:
+                player_team = []
+            renpy.show(dest_village.random_mission_location())
+            for p, d in self.dailogue:
+                renpy.say(player.character, d)
+            renpy.call('fight', player, self.fights['enemy'], player_team, self.fights['tag'], self.fights['stage'], self.fights['win_label'], self.fights['lose_label'])
+            
+            # this maybe useless
+            if self.success:
+                self.reward(player)
+            else:
+                self.reward(player, half=True)
+            show_village_map(from_village, player)
+            
+    m_test_fightmission = SimpleFightMission('Fight Itachi', days=10, rank='A', dialogue=[("", "I found you Itachi!")], 
+                                             fights={'stage': clearing, 
+                                                     'win_label': 'generic_win',
+                                                     'lose_label': 'generic_lose',
+                                                     'enemy', itachi,
+                                                     'tag': []})
+            
+    def get_character(name):
+        for player in ALL_PLAYERS:
+            if player.name.lower() == name:
+                return player.character
+                
+    class MultiPartMission(Mission):
+        """
+        Travel to destinations and fight an enemy
+        Many lines of dailogue, Rank C/B/A/S
+        Mission can fail / failure is either death or half exp
+        Dialogue Structure = [('character', 'name', "I say this"),
+                              ('fight', 1),
+                              ('sprite', 'show image name'),
+                              ('scene', "image name"),
+                              ('screen', "call a screen")]
+        Fights = [('stage': someplace, 
+                  'win_label': win_label, 
+                  'lose_label': lose_label, 
+                  'enemy': enemy_character, 
+                  'tag': [enemy_tag_1, enemy_tag_2],
+                  'number': 1}]
+        """
+        def __init__(self, name, hours=0, days=0, months=0, rank="D", dialogue=[("char", " ")], fights):
+            super(BasicMission, self).__init__(name, hours, days, months, rank, dialogue, fights)
+            
+        def evaluate_function(self, function, player, village):
+            if function[0] == 'character':
+                # TODO: get_character does not exist yet
+                renpy.say(get_character(function[1]), function[2])
+            elif function[0] == 'fight':
+                if player.team:
+                    player_team = player.team.members() 
+                else:
+                    player_team = []
+                fight = [f for f in self.fights if f['number'] == function[1]][0]
+                renpy.call('fight', player, fight['enemy'], player_team, fight['tag'], fight['stage'], fight['win_label'], fight['lose_label'])
+                
+            elif function[0] == 'sprite':
+                renpy.show(function[1])
+                
+            elif function[0] == 'scene':
+                renpy.show(function[1])
+                
+            elif function[0] == 'screen':
+                renpy.show_screen(function[1], player, screen)
+            
+        def do_mission(self, player, from_village, dest_village):
+            # show some dialogues between the transaction phases to make it seemless
+            main_time.advance_time(self.hours, time_between_village(from_village, dest_village))
+            for function in dialogue:
+                self.evaluate_function(function)
+            
+            # this maybe useless
+            if self.success:
+                self.reward(player)
+            else:
+                self.reward(player, half=True)
+            show_village_map(from_village, player)
+            
+    m_test_multifight = MultiFightMission('Test Multi Fight', days=5, rank='S', 
+                                          dialogue=[("scene", "sand_2"), 
+                                                    ("naruto", "Testing dialogue"), 
+                                                    ("fight", 1), 
+                                                    ("naruto", "Now for Fight 2"), 
+                                                    ("fight", 2)],
+                                          fights=[{'stage': clearing, 
+                                                   'win_label': 'generic_win',
+                                                   'lose_label': 'generic_lose',
+                                                   'enemy', itachi,
+                                                   'tag': [],
+                                                   'number': 1},
+                                                  {'stage': clearing, 
+                                                   'win_label': 'generic_win',
+                                                   'lose_label': 'generic_lose',
+                                                   'enemy', itachi,
+                                                   'tag': [kakashi],
+                                                   'number': 2}])
+                                                   
+    ALL_MISSIONS = [m_d1, m_d2, m_label_test, m_test_fightmission, m_test_multifight]
     
+    import random
     class Village:
-        def __init__(self, id, name, leader, marker_xpos, marker_ypos, map, wealth=10000, army=1000, control=100, influence=100, uprising=0, locations=None):
+        def __init__(self, id, name, leader, marker_xpos, marker_ypos, map, wealth=10000, army=1000, control=100, influence=100, uprising=0, 
+                     locations=None, village_tag='', mission_locations=1):
             self.id = id
             self.name = name
             self.leader = leader
@@ -295,6 +453,10 @@ init python:
             self.influence_change = 0
             self.waelth_change = 0
             self.locations = locations
+            self.mission_locations = ["{}_{}".format(village_tag, x) for x in range(1,mission_locations+1)]
+
+        def random_mission_location(self):
+            return random.choice(self.mission_locations)
             
         def random_wealth_event(self):
             change = renpy.random.randint(-1000, 1000)
@@ -379,12 +541,14 @@ init python:
             self.location = None
             self.village = None
             self.limb = None
+            self.mission = None
             
         def clear(self):
             self.player = None
             self.location = None
             self.village = None
             self.limb = None
+            self.mission = None
         
     current_session = CurrentSession()
     
@@ -839,14 +1003,17 @@ init python:
     kakashi = Player('Kakashi', "enemypic_r", kakashi_c, Image('enemy.png'), None, 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
                     [onetwocombo, lioncombo, shiruken, kunai], [chidori], [], [], [damage_reduction_e, chakra_defence_e])
     
+    ALL_PLAYERS = [naruto, sasuke, sakura, kakashi]
+    ALL_CHARACTERS = [c.character for c in ALL_PLAYERS]
+    
     clearing = Stage('Clearing', 1, 1)
     
     # villages
-    hidden_stone = Village(1, "Hidden Stone", naruto, marker_xpos=0.25, marker_ypos=0.25, map="stones_map", locations=BASE_LOCATIONS)
-    hidden_cloud = Village(2, "Hidden Cloud", naruto, marker_xpos=0.75, marker_ypos=0.20, map="clouds_map", locations=BASE_LOCATIONS)
-    hidden_mist = Village(3, "Hidden Mist", naruto, marker_xpos=0.85, marker_ypos=0.70, map="mist_map", locations=BASE_LOCATIONS)
-    hidden_leaf = Village(4, "Hidden Leaf", naruto, marker_xpos=0.40, marker_ypos=0.60, map="konoha_map", locations=BASE_LOCATIONS)
-    hidden_sand = Village(5, "Hidden Sand", naruto, marker_xpos=0.25, marker_ypos=0.90, map="sand_map", locations=BASE_LOCATIONS)
+    hidden_stone = Village(1, "Hidden Stone", naruto, marker_xpos=0.25, marker_ypos=0.25, map="stones_map", locations=BASE_LOCATIONS, village_tag="stones", mission_locations=2)
+    hidden_cloud = Village(2, "Hidden Cloud", naruto, marker_xpos=0.75, marker_ypos=0.20, map="clouds_map", locations=BASE_LOCATIONS, village_tag="cloud", mission_locations=2)
+    hidden_mist = Village(3, "Hidden Mist", naruto, marker_xpos=0.85, marker_ypos=0.70, map="mist_map", locations=BASE_LOCATIONS, village_tag="stones", mission_locations=2)
+    hidden_leaf = Village(4, "Hidden Leaf", naruto, marker_xpos=0.40, marker_ypos=0.60, map="konoha_map", locations=BASE_LOCATIONS, village_tag="stones", mission_locations=2)
+    hidden_sand = Village(5, "Hidden Sand", naruto, marker_xpos=0.25, marker_ypos=0.90, map="sand_map", locations=BASE_LOCATIONS, village_tag="sand", mission_locations=4)
     
     ALL_VILLAGES = [hidden_stone, hidden_cloud, hidden_mist, hidden_leaf, hidden_sand]
     
@@ -1073,6 +1240,41 @@ init python:
             return learnt_skill
         else:
             return None
+            
+screen villagemissions(village, player):
+    $ counter = 0
+    $ village_time = 0
+    $ mission_levels = [('D', 10), ('C', 20), ('B', 30), ('A', 40), ('S', 50)]
+    $ avaliable_missions = [mission[0] for mission in mission_levels if player.level > mission[1]]
+    
+    for rank in avaliable_missions:
+        textbutton "[v.name] [village_time]" action [SetField(current_session, 'village', village), 
+                                                     SetField(current_session, 'player', player), 
+                                                     Hide("villagemissions"),
+                                                     Show("missionselect", village, player, rank)] xpos grid_place[counter][0] ypos grid_place[counter][1]
+        $ counter += 1
+        
+    textbutton "Back to Location select" action [SetField(current_session, 'village', village), 
+                                                 SetField(current_session, 'player', player), 
+                                                 Jump('village_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
+    
+screen missionselect(village, player, rank):
+    $ counter = 0
+    $ missions = [mission for mission in ALL_MISSIONS if mission.rank == rank]
+    
+    for mission in missions:
+        textbutton "[mission.name]" action [SetField(current_session, 'village', village), 
+                                            SetField(current_session, 'player', player), 
+                                            SetField(current_session, 'mission', mission),
+                                            Hide("missionselect"),
+                                            Jump("mission_redirect")] xpos grid_place[counter][0] ypos grid_place[counter][1]
+        $ counter += 1
+    
+    textbutton "Back" action [SetField(current_session, 'village', village), 
+                              SetField(current_session, 'player', player),
+                              Hide("missionselect"),
+                              Show('villagemissions', village, player)] xpos grid_place[counter][0] ypos grid_place[counter][1]
+    
 
 screen training(village, player):
     textbutton "Train skills" action [Hide("training"), Show("train_skills", village, player)] xpos grid_place[0][0] ypos grid_place[0][1]
@@ -1365,6 +1567,10 @@ label location_redirect:
     hide screen villagemap 
     $ renpy.call(current_session.location.label, current_session.player, current_session.village)
     
+label mission_redirect:
+    $ import random
+    $ current_session.mission.do_mission(current_session.player, current_session.village, random.choice(ALL_VILLAGES))
+    
 label village_travel(player, village):
     show screen villagetravel(village, player)
     player.character "I need to choose a destination"
@@ -1414,7 +1620,7 @@ label village_ninja_tool_facility(player, village):
     jump start
     
 label village_missions(player, village):
-    "SAMPLE" "TRAVEL HERE"
+    show screen villagemissions(village, player)
     jump start
 
 label tag_partner:
@@ -1668,5 +1874,4 @@ label trap12:
     #hide playerpic
 #    $ show_player_at_pos(player, enemy, clearing, choice)
 #    jump fight
-
 
