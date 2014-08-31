@@ -1,4 +1,4 @@
-﻿# You can place the script of your game in this file.
+# You can place the script of your game in this file.
 
 # Declare images below this line, using the image statement.
 # eg. image eileen happy = "eileen_happy.png"
@@ -34,15 +34,6 @@ image sand_map = im.Scale("sunagakure.jpg", 800, 600)
 image training_ground = im.Scale("training.jpg", 800, 600)
 image training_ground evening = im.Scale(im.Recolor("training.jpg", 255, 165, 0, 255), 800, 600)
 
-python:
-    import os
-    for fname in os.listdir(config.gamedir + '/gfx'):
-        if fname.endswith(('.jpg', '.png')):
-            tag = fname[:-4]
-            fname =  'gfx/' + fname
-            im.Scale(renpy.image(tag, fname), 800, 600)
-
-
 init:
     $ bob_points = 0 # this is a variable for bob's affection points throughout your game
     $ larry_points = 0 # this is a variable for larry's affection points throughout your game 
@@ -61,6 +52,13 @@ init:
     $ enemy1currentpos = 12
 
 init python:
+    
+    import os
+    for fname in os.listdir(config.gamedir + '/gfx'):
+        if fname.endswith(('.jpg', '.png')):
+            tag = fname[:-4]
+            fname =  'gfx/' + fname
+            renpy.image(tag, im.Scale(fname, 800, 600))
     
     battle_menu_dict = {"Tai": "taiactions",
                         "Nin": "ninactions",
@@ -171,41 +169,43 @@ init python:
                         12: player12pos
                     }
     
-    class Time:
+    import random
+    class GameTime:
         def __init__(self, hour, day, month, year):
             self.hour = hour
             self.day = day
             self.month = month
             self.year = year
             self.months = ["Stub", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"]
+            self.current_time = self.now()
             
         def now(self):
-            minute = renpy.random.randint(0, 59)
-            return "{}:{} {} {} {}".format(self.hour, minute, self.day, self.months[self.month], self.year)
+            minute = random.randint(0, 59)
+            return "{}:{} {} {} {}".format(str(self.hour).zfill(2), str(minute).zfill(2), self.day, self.months[self.month], self.year)
             
-        def dawn(self);
-            minute = renpy.random.randint(0, 59)
+        def dawn(self):
+            minute = random.randint(0, 59)
             self.hour = renpy.random.randint(1,5)
-            return "{}:{} {} {} {}".format(self.hour, minute, self.day, self.months[self.month], self.year)
+            return "{0}:{} {} {} {}".format(self.hour, minute, self.day, self.months[self.month], self.year)
             
         def morning(self):
-            minute = renpy.random.randint(0, 59)
-            self.hour = renpy.random.randint(6,11)
+            minute = random.randint(0, 59)
+            self.hour = random.randint(6,11)
             return "{}:{} {} {} {}".format(self.hour, minute, self.day, self.months[self.month], self.year)
             
         def afternoon(self):
-            minute = renpy.random.randint(0, 59)
-            self.hour = renpy.random.randint(12,17)
-            return "{}:{} {} {} {}".format(self.hour, minute, self.day, self.months[self.month], self.year)
+            minute = random.randint(0, 59)
+            self.hour = random.randint(12,17)
+            return "{}:} {} {} {}".format(self.hour, minute, self.day, self.months[self.month], self.year)
             
         def evening(self):
-            minute = renpy.random.randint(0, 59)
-            self.hour = renpy.random.randint(18,20)
+            minute = random.randint(0, 59)
+            self.hour = random.randint(18,20)
             return "{}:{} {} {} {}".format(self.hour, minute, self.day, self.months[self.month], self.year)
             
         def night(self):
-            minute = renpy.random.randint(0, 59)
-            self.hour = renpy.random.randint(21,0)
+            minute = random.randint(0, 59)
+            self.hour = random.randint(21,0)
             return "{}:{} {} {} {}".format(self.hour, minute, self.day, self.months[self.month], self.year)
             
         def next_month(self):
@@ -215,33 +215,44 @@ init python:
             else:
                 self.month += 1
             
-        def next_day():
+        def next_day(self):
             if self.day > 29:
                 self.next_month()
                 self.day = 1
             else:
                 self.day += 1
                 
-        def next_hour():
+        def next_hour(self):
             if self.hour > 23:
                 self.next_day()
                 self.hour = 1
             else:
                 self.hour += 1
                 
-        def advance_time(hours=0, days=0, months=0, years=0):
+        def advance_time(self, hours=0, days=0, months=0, years=0):
+            
+            #renpy.say(current_session.player.character, "{} {} {}".format(hours, days, months))
+            
             if hours:
-                [self.next_hour() for i in [0]*hours]
+                while hours > 0:
+                    hours -= 1
+                    self.next_hour()
             
             if days:
-                [self.next_day() for i in [0]*days]
+                while days > 0:
+                    days -= 1
+                    self.next_day()
                 
             if months:
-                [self.next_month() for i in [0]*hours]
+                while months > 0:
+                    months -= 1
+                    self.next_month()
+                    
+            self.current_time = self.now()
             
-    main_time = Time(9, 1, 1, 1354)
+    main_time = GameTime(9, 1, 1, 1354)
     
-    class Mission:
+    class Mission(object):
         def __init__(self, name, hours=0, days=0, months=0, rank="D", dialogue=[], fights=None):
            self.name = name
            self.hours = hours
@@ -255,7 +266,7 @@ init python:
                            "C": {'ryo': 30000, 'exp': 150},
                            "B": {'ryo': 150000, 'exp': 450},
                            "A": {'ryo': 450000, 'exp': 1000},
-                           "S": {'ryo': 1000000, 'exp': 10000}
+                           "S": {'ryo': 1000000, 'exp': 10000}}
            
         def reward(self, player, half=False):
             if half:
@@ -272,22 +283,23 @@ init python:
         Mission cannot fail
         Dialogue Structure = [('character', "I say this")]
         """
-        def __init__(self, name, hours=0, days=0, months=0, rank="D", dialogue=[("char", " ")]):
-            super(BasicMission, self).__init__(name, hours, days, months, rank, dialogue)
+        def __init__(self, name, hours=0, days=0, months=0, rank="D", dialogue=[("char", "Time to do {}")]):
+            super(self.__class__, self).__init__(name, hours, days, months, rank, dialogue)
             
         def do_mission(self, player, village, dest_village=None):
             # play clock animation here / black background?
-            for p, d in self.dailogue:
-                renpy.say(player.character, d)
+            for p, d in self.dialogue:
+                renpy.say(player.character, d.format(self.name))
             player.injury_chance(0.05)
+            renpy.say(player.character, "{} {}".format(self.hours, self.days))
             main_time.advance_time(self.hours, self.days)
             self.success = True
             self.reward(player)
             show_village_map(village, player)
             
     # basic missions
-    m_d1 = BasicMission('Farming', 12)
-    m_d2 = BasicMission('Retrieve Cat', 8)
+    m_d1 = BasicMission('Farming', hours=12)
+    m_d2 = BasicMission('Retrieve Cat', hours=8)
     m_d3 = BasicMission('Organise Festival', hours=10, days=2)
     m_d4 = BasicMission('Construction', hours=20, days=1)
     m_d5 = BasicMission('Paper Work', hours=14)
@@ -298,7 +310,7 @@ init python:
         Jumps to label
         """
         def __init__(self, name, label, hours=0, days=0, months=0, rank="D", dialogue=[("char", " ")]):
-            super(BasicMission, self).__init__(name, hours, days, months, rank, dialogue)
+            super(self.__class__, self).__init__(name, hours, days, months, rank, dialogue)
             self.label = label
             
         def do_mission(self, player, village, dest_village=None):
@@ -315,14 +327,14 @@ init python:
         Many lines of dailogue, Rank C/D
         Mission can fail / failure is either death or half exp
         Dialogue Structure = [('character', "I say this")]
-        Fights = ('stage': someplace, 
+        Fights = {'stage': someplace, 
                   'win_label': win_label, 
                   'lose_label': lose_label, 
                   'enemy': enemy_character, 
                   'tag': [enemy_tag_1, enemy_tag_2]}
         """
-        def __init__(self, name, hours=0, days=0, months=0, rank="D", dialogue=[("char", " ")], fights):
-            super(BasicMission, self).__init__(name, hours, days, months, rank, dialogue, fights)
+        def __init__(self, name, hours=0, days=0, months=0, rank="D", dialogue=[("char", " ")], fights={}):
+            super(self.__class__, self).__init__(name, hours, days, months, rank, dialogue, fights)
             
         def do_mission(self, player, from_village, dest_village):
             # show some dialogues between the transaction phases to make it seemless
@@ -335,7 +347,7 @@ init python:
             else:
                 player_team = []
             renpy.show(dest_village.random_mission_location())
-            for p, d in self.dailogue:
+            for p, d in self.dialogue:
                 renpy.say(player.character, d)
             renpy.call('fight', player, self.fights['enemy'], player_team, self.fights['tag'], self.fights['stage'], self.fights['win_label'], self.fights['lose_label'])
             
@@ -345,13 +357,6 @@ init python:
             else:
                 self.reward(player, half=True)
             show_village_map(from_village, player)
-            
-    m_test_fightmission = SimpleFightMission('Fight Itachi', days=10, rank='A', dialogue=[("", "I found you Itachi!")], 
-                                             fights={'stage': clearing, 
-                                                     'win_label': 'generic_win',
-                                                     'lose_label': 'generic_lose',
-                                                     'enemy', itachi,
-                                                     'tag': []})
             
     def get_character(name):
         for player in ALL_PLAYERS:
@@ -375,8 +380,8 @@ init python:
                   'tag': [enemy_tag_1, enemy_tag_2],
                   'number': 1}]
         """
-        def __init__(self, name, hours=0, days=0, months=0, rank="D", dialogue=[("char", " ")], fights):
-            super(BasicMission, self).__init__(name, hours, days, months, rank, dialogue, fights)
+        def __init__(self, name, hours=0, days=0, months=0, rank="D", dialogue=[("char", " ")], fights=[]):
+            super(self.__class__, self).__init__(name, hours, days, months, rank, dialogue, fights)
             
         def evaluate_function(self, function, player, village):
             if function[0] == 'character':
@@ -411,27 +416,6 @@ init python:
             else:
                 self.reward(player, half=True)
             show_village_map(from_village, player)
-            
-    m_test_multifight = MultiFightMission('Test Multi Fight', days=5, rank='S', 
-                                          dialogue=[("scene", "sand_2"), 
-                                                    ("naruto", "Testing dialogue"), 
-                                                    ("fight", 1), 
-                                                    ("naruto", "Now for Fight 2"), 
-                                                    ("fight", 2)],
-                                          fights=[{'stage': clearing, 
-                                                   'win_label': 'generic_win',
-                                                   'lose_label': 'generic_lose',
-                                                   'enemy', itachi,
-                                                   'tag': [],
-                                                   'number': 1},
-                                                  {'stage': clearing, 
-                                                   'win_label': 'generic_win',
-                                                   'lose_label': 'generic_lose',
-                                                   'enemy', itachi,
-                                                   'tag': [kakashi],
-                                                   'number': 2}])
-                                                   
-    ALL_MISSIONS = [m_d1, m_d2, m_label_test, m_test_fightmission, m_test_multifight]
     
     import random
     class Village:
@@ -530,9 +514,9 @@ init python:
     jounin_station = Location('Jounin Standby Station', 'village_jounin_station')
     intelligence_division = Location('Intelligence Division', 'village_intelligence_division')
     ninja_tool_facility = Location('Ninja Tool Facility', 'village_ninja_tool_facility')
-    mission = Location('Mission Assignment Desk', 'village_missions')
+    villagemission = Location('Mission Assignment Desk', 'village_missions')
     
-    BASE_LOCATIONS = [travel, level_up, training_ground, arena, hospital, jounin_station, intelligence_division, ninja_tool_facility, mission]
+    BASE_LOCATIONS = [travel, level_up, training_ground, arena, hospital, jounin_station, intelligence_division, ninja_tool_facility, villagemission]
     
     # This used to store information about recent actions (since renpy does not have a call action for screens)
     class CurrentSession:
@@ -542,6 +526,7 @@ init python:
             self.village = None
             self.limb = None
             self.mission = None
+            self.mission_rank = None
             
         def clear(self):
             self.player = None
@@ -549,6 +534,7 @@ init python:
             self.village = None
             self.limb = None
             self.mission = None
+            self.mission_rank = None
         
     current_session = CurrentSession()
     
@@ -661,7 +647,7 @@ init python:
             self.allocation_points = 0
             self.leader_pic = leader_pic
             self.team = None
-            self.sensei = self.team.sensei or None
+            self.sensei = None
             self.bond = 0
             self.ryo = 100
             #self.damage_reduction = False
@@ -671,6 +657,11 @@ init python:
             #self.ignore_damage = False
             
             self.assign_all_skills()
+            self.set_sensei()
+            
+        def set_sensei(self):
+            if self.team:
+                self.sensei = self.team.sensei
             
         def is_injured(self):
             for limb in self.limbs:
@@ -704,7 +695,7 @@ init python:
                 self.exp = 0
                 self.gain_exp(difference)
                 
-        def gain_exp(exp):
+        def gain_exp(self, exp):
             exp += renpy.random.randint(1,10)
             self.exp += exp
             self.level_up()
@@ -1002,6 +993,7 @@ init python:
                     [onetwocombo, lioncombo, shiruken, kunai], [chidori], [], [], [damage_reduction_e, chakra_defence_e])
     kakashi = Player('Kakashi', "enemypic_r", kakashi_c, Image('enemy.png'), None, 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
                     [onetwocombo, lioncombo, shiruken, kunai], [chidori], [], [], [damage_reduction_e, chakra_defence_e])
+    itachi = copy.deepcopy(sasuke)
     
     ALL_PLAYERS = [naruto, sasuke, sakura, kakashi]
     ALL_CHARACTERS = [c.character for c in ALL_PLAYERS]
@@ -1011,11 +1003,39 @@ init python:
     # villages
     hidden_stone = Village(1, "Hidden Stone", naruto, marker_xpos=0.25, marker_ypos=0.25, map="stones_map", locations=BASE_LOCATIONS, village_tag="stones", mission_locations=2)
     hidden_cloud = Village(2, "Hidden Cloud", naruto, marker_xpos=0.75, marker_ypos=0.20, map="clouds_map", locations=BASE_LOCATIONS, village_tag="cloud", mission_locations=2)
-    hidden_mist = Village(3, "Hidden Mist", naruto, marker_xpos=0.85, marker_ypos=0.70, map="mist_map", locations=BASE_LOCATIONS, village_tag="stones", mission_locations=2)
-    hidden_leaf = Village(4, "Hidden Leaf", naruto, marker_xpos=0.40, marker_ypos=0.60, map="konoha_map", locations=BASE_LOCATIONS, village_tag="stones", mission_locations=2)
+    hidden_mist = Village(3, "Hidden Mist", naruto, marker_xpos=0.85, marker_ypos=0.70, map="mist_map", locations=BASE_LOCATIONS, village_tag="mist", mission_locations=2)
+    hidden_leaf = Village(4, "Hidden Leaf", naruto, marker_xpos=0.40, marker_ypos=0.60, map="konoha_map", locations=BASE_LOCATIONS, village_tag="leaf", mission_locations=2)
     hidden_sand = Village(5, "Hidden Sand", naruto, marker_xpos=0.25, marker_ypos=0.90, map="sand_map", locations=BASE_LOCATIONS, village_tag="sand", mission_locations=4)
     
     ALL_VILLAGES = [hidden_stone, hidden_cloud, hidden_mist, hidden_leaf, hidden_sand]
+    
+    m_test_fightmission = SimpleFightMission('Fight Itachi', days=10, rank='C', dialogue=[("", "I found you Itachi!")], 
+                                             fights={'stage': clearing, 
+                                                     'win_label': 'generic_win',
+                                                     'lose_label': 'generic_lose',
+                                                     'enemy': itachi,
+                                                     'tag': []})
+            
+    m_test_multifight = MultiPartMission('Test Multi Fight', days=5, rank='B', 
+                                          dialogue=[("scene", "sand_2"), 
+                                                    ("naruto", "Testing dialogue"), 
+                                                    ("fight", 1), 
+                                                    ("naruto", "Now for Fight 2"), 
+                                                    ("fight", 2)],
+                                          fights=[{'stage': clearing, 
+                                                   'win_label': 'generic_win',
+                                                   'lose_label': 'generic_lose',
+                                                   'enemy': itachi,
+                                                   'tag': [],
+                                                   'number': 1},
+                                                  {'stage': clearing, 
+                                                   'win_label': 'generic_win',
+                                                   'lose_label': 'generic_lose',
+                                                   'enemy': itachi,
+                                                   'tag': [kakashi],
+                                                   'number': 2}])
+                                                   
+    ALL_MISSIONS = [m_d1, m_d2, m_label_test, m_test_fightmission, m_test_multifight]
     
     import math
     def time_between_village(village1, village2):
@@ -1245,17 +1265,20 @@ screen villagemissions(village, player):
     $ counter = 0
     $ village_time = 0
     $ mission_levels = [('D', 10), ('C', 20), ('B', 30), ('A', 40), ('S', 50)]
+    $ player.level = 40
     $ avaliable_missions = [mission[0] for mission in mission_levels if player.level > mission[1]]
     
     for rank in avaliable_missions:
-        textbutton "[v.name] [village_time]" action [SetField(current_session, 'village', village), 
-                                                     SetField(current_session, 'player', player), 
-                                                     Hide("villagemissions"),
-                                                     Show("missionselect", village, player, rank)] xpos grid_place[counter][0] ypos grid_place[counter][1]
+        textbutton "[rank]" action [SetField(current_session, 'village', village), 
+                                    SetField(current_session, 'player', player), 
+                                    SetField(current_session, 'mission_rank', rank),
+                                    Hide("villagemissions"),
+                                    Jump("missionselect_redirect")] xpos grid_place[counter][0] ypos grid_place[counter][1]
         $ counter += 1
         
     textbutton "Back to Location select" action [SetField(current_session, 'village', village), 
                                                  SetField(current_session, 'player', player), 
+                                                 Hide("villagemissions"),
                                                  Jump('village_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
     
 screen missionselect(village, player, rank):
@@ -1273,7 +1296,8 @@ screen missionselect(village, player, rank):
     textbutton "Back" action [SetField(current_session, 'village', village), 
                               SetField(current_session, 'player', player),
                               Hide("missionselect"),
-                              Show('villagemissions', village, player)] xpos grid_place[counter][0] ypos grid_place[counter][1]
+                              SetField(current_session, 'location', villagemission), 
+                              Jump('location_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
     
 
 screen training(village, player):
@@ -1281,7 +1305,7 @@ screen training(village, player):
     if player.team:
         # maybe add formation, 
         text "Team Chemistry: [player.team.chemistry]" xpos 0.1 ypos 0.1
-        textbutton "Train with team" action [SetField(getattr(player, 'team'), 'chemistry', getattr(player, team).increase_chemistry(10),
+        textbutton "Train with team" action [SetField(getattr(player, 'team'), 'chemistry', getattr(player, team).increase_chemistry(10)),
                                              Hide("training"), 
                                              Show("training", village, player)] xpos grid_place[1][0] ypos grid_place[1][1]
     if player.sensei:
@@ -1299,7 +1323,7 @@ screen train_skills(village, player):
     $ counter = 0
     for skill in player.all_skills:
         if skill.exp < skill.unlock_exp:
-            textbutton "[skill.name] [skill.exp]/[skill.unlock_exp]" action [SetField(getattr(player, skill.label), 'exp', getattr(player, skill.label).gain_exp(10), 
+            textbutton "[skill.name] [skill.exp]/[skill.unlock_exp]" action [SetField(getattr(player, skill.label), 'exp', getattr(player, skill.label).gain_exp(10)), 
                                                                              Hide("train_skills"),
                                                                              Show("training", village, player)] xpos grid_place[counter][0] ypos grid_place[counter][1]
             $ counter += 1
@@ -1347,10 +1371,13 @@ screen villagemap(village, player):
     # show player time details here
     $ counter = 0
     
+    text "[main_time.current_time]" xpos 0.1 ypos 0.1
+    
     for location in village.locations:
         textbutton [location.name] action [SetField(current_session, 'player', player), 
                                            SetField(current_session, 'village', village), 
                                            SetField(current_session, 'location', location), 
+                                           Hide("villagemap"), 
                                            Jump('location_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
         $ counter += 1
 
@@ -1567,7 +1594,14 @@ label location_redirect:
     hide screen villagemap 
     $ renpy.call(current_session.location.label, current_session.player, current_session.village)
     
+label missionselect_redirect:
+    hide screen villagemissions
+    show screen missionselect(current_session.village, current_session.player, current_session.mission_rank)
+    current_session.player.character "I need to select a mission"
+    jump missionselect_redirect
+    
 label mission_redirect:
+    hide screen villagemap
     $ import random
     $ current_session.mission.do_mission(current_session.player, current_session.village, random.choice(ALL_VILLAGES))
     
@@ -1621,7 +1655,8 @@ label village_ninja_tool_facility(player, village):
     
 label village_missions(player, village):
     show screen villagemissions(village, player)
-    jump start
+    player.character "I need to choose mission."
+    $ renpy.call('village_missions', player, village)
 
 label tag_partner:
     $ info = get_tag_info(player, tag_p)
@@ -1633,7 +1668,7 @@ label start:
     call fight(naruto, sasuke, [sakura, kakashi], [], clearing, 'fight1_w', 'fight1_l', None)
     
 label fight(player, enemy, tag_p, tag_e, stage=clearing, win_label, lose_label, draw_label=None):
-    scene bg
+    #scene bg
     
     call showtiles
     hide screen movemenu
@@ -1874,4 +1909,3 @@ label trap12:
     #hide playerpic
 #    $ show_player_at_pos(player, enemy, clearing, choice)
 #    jump fight
-
