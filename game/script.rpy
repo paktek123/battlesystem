@@ -252,6 +252,42 @@ init python:
             
     main_time = GameTime(9, 1, 1, 1354)
     
+    class Event:
+        """
+        start = (day, month)
+        finish = (day, month)
+        frequency = (day1, day2, day3) e.g. (1, 14, 30) event will happen on 1st, 14th and 30th of month
+        chance = 0.1 (10% chance of event happening)
+        """
+        def __init__(self, name, start=None, finish=None, frequency=None, chance=None, label=None):
+            self.name = name
+            self.start = start
+            self.finish = finish
+            self.frequency = frequency
+            self.chance = chance
+            self.label = label
+            self.location = None
+            self.character = None
+            self.active = False
+            
+        def check_active(self, game_time):
+            if self.start and self.finish:
+                if self.start < (game_time.day, game_time.month) < self.finish:
+                    self.active = True
+                    renpy.call(self.label)
+                else:
+                    self.active = False
+            elif game_time.day in self.frequency:
+                self.active = True
+                renpy.call(self.label)
+            else:
+                if renpy.random.randint(1, 100) < 100 * self.chance:
+                    renpy.call(self.label)
+                    
+    e_chunin_exams = Event("Chunin Exams", start=(15, 5), finish=(14, 7), label="chunin_exam")
+    e_jounin_training = Event("Jounin Training", frequency=(1, ), label="jounin_training")
+    e_jinchurri_attack = Event("Jinchurri Attack", chance=0.05, label="jinchurri_attack")
+    
     class Mission(object):
         def __init__(self, name, hours=0, days=0, months=0, rank="D", dialogue=[], fights=None):
            self.name = name
@@ -506,17 +542,17 @@ init python:
             renpy.call(self.label, player, village)
             
     # locations that exist in each village
-    travel = Location('Travel', 'village_travel')
-    level_up = Location('Level Up', 'village_levelup')
-    training_ground = Location('Training', 'village_training')
-    arena = Location('Arena', 'village_arena')
-    hospital = Location('Hospital', 'village_hospital')
-    jounin_station = Location('Jounin Standby Station', 'village_jounin_station')
-    intelligence_division = Location('Intelligence Division', 'village_intelligence_division')
-    ninja_tool_facility = Location('Ninja Tool Facility', 'village_ninja_tool_facility')
-    villagemission = Location('Mission Assignment Desk', 'village_missions')
+    l_travel = Location('Travel', 'village_travel')
+    l_level_up = Location('Level Up', 'village_levelup')
+    l_training_ground = Location('Training', 'village_training')
+    l_arena = Location('Arena', 'village_arena')
+    l_hospital = Location('Hospital', 'village_hospital')
+    l_jounin_station = Location('Jounin Standby Station', 'village_jounin_station')
+    l_intelligence_division = Location('Intelligence Division', 'village_intelligence_division')
+    l_ninja_tool_facility = Location('Ninja Tool Facility', 'village_ninja_tool_facility')
+    l_villagemission = Location('Mission Assignment Desk', 'village_missions')
     
-    BASE_LOCATIONS = [travel, level_up, training_ground, arena, hospital, jounin_station, intelligence_division, ninja_tool_facility, villagemission]
+    BASE_LOCATIONS = [l_travel, l_level_up, l_training_ground, l_arena, l_hospital, l_jounin_station, l_intelligence_division, l_ninja_tool_facility, l_villagemission]
     
     # This used to store information about recent actions (since renpy does not have a call action for screens)
     class CurrentSession:
@@ -527,6 +563,7 @@ init python:
             self.limb = None
             self.mission = None
             self.mission_rank = None
+            self.item = None
             
         def clear(self):
             self.player = None
@@ -535,6 +572,7 @@ init python:
             self.limb = None
             self.mission = None
             self.mission_rank = None
+            self.item = None
         
     current_session = CurrentSession()
     
@@ -599,7 +637,7 @@ init python:
         def __init__(self, name, picname, character, tilepic, hudpic, hp, maxhp, chakra, maxchakra, 
                      strength, speed, evasion, defence, stamina, base_hit_rate, tile, facing,
                      taiskills=[], ninskills=[], genskills=[], items=[], defensiveskills=[], bloodlineskills=[],
-                     leader_pic=None, taijutsu=1, ninjutsu=1, genjutsu=1):
+                     leader_pic=None, taijutsu=1, ninjutsu=1, genjutsu=1, weapons=[]):
             self.name = name
             self.picname = picname
             self.character = character
@@ -624,9 +662,10 @@ init python:
             self.ninskills = ninskills
             self.genskills = genskills
             self.items = items
+            self.weapons = weapons
             self.defensiveskills = defensiveskills
             self.bloodlineskills = bloodlineskills
-            self.all_skills = self.taiskills + self.ninskills + self.genskills + self.items + self.defensiveskills + self.bloodlineskills
+            self.all_skills = self.taiskills + self.ninskills + self.genskills + self.items + self.defensiveskills + self.bloodlineskills + self.weapons
             self.action_counter = 0
             self.battlescreen = None
             self.stunned = False
@@ -649,7 +688,7 @@ init python:
             self.team = None
             self.sensei = None
             self.bond = 0
-            self.ryo = 100
+            self.ryo = 1000
             #self.damage_reduction = False
             #self.chakra_defence = False
             #self.reflect = False
@@ -658,6 +697,72 @@ init python:
             
             self.assign_all_skills()
             self.set_sensei()
+            
+        def buy_item(self, item):
+            if self.ryo >= item.price:
+                self.ryo -= item.price
+                if self.has_item(item):
+                    current_inventory_item = self.get_item(item)
+                    current_inventory_item.quantity += 1
+                    self.remove_item(item)
+                    self.items.append(current_inventory_item)
+                    #renpy.say(self.character, "I buy a {}".format(item.name))
+                    return self.items
+                else:
+                    item.quantity += 1
+                    self.items.append(copy.deepcopy(item))
+                    #renpy.say(self.character, "I buy a {}".format(item.name))
+                    return self.items
+                
+            else:
+                #renpy.say(self.character, "I don't have enough money")
+                return self.items
+                
+        def remove_item(self, item):
+            self.items = [i for i in self.items if i.name != item.name]
+                
+        def get_item(self, item):
+            for i in self.items:
+                if i.name == item.name:
+                    return i
+            
+        def has_item(self, item):
+            if item.name in [i.name for i in self.items]:
+                return True
+            return False
+            
+        def buy_weapon(self, weapon):
+            if self.ryo >= weapon.price:
+                self.ryo -= weapon.price
+                if self.has_weapon(weapon):
+                    current_inventory_weapon = self.get_weapon(weapon)
+                    current_inventory_weapon.quantity += 1
+                    self.remove_weapon(weapon)
+                    self.weapons.append(current_inventory_weapon)
+                    #renpy.say(self.character, "I buy a {}".format(weapon.name))
+                    return self.weapons
+                else:
+                    weapon.quantity += 1
+                    self.weapons.append(copy.deepcopy(weapon))
+                    #renpy.say(self.character, "I buy a {}".format(weapon.name))
+                    return self.weapons
+                
+            else:
+                #renpy.say(self.character, "I don't have enough money")
+                return self.weapons
+                
+        def remove_weapon(self, weapon):
+            self.weapons = [w for w in self.weapons if w.name != weapon.name]
+                
+        def get_weapon(self, weapon):
+            for w in self.weapons:
+                if w.name == weapon.name:
+                    return w
+            
+        def has_weapon(self, weapon):
+            if weapon.name in [w.name for w in self.weapons]:
+                return True
+            return False
             
         def set_sensei(self):
             if self.team:
@@ -677,6 +782,16 @@ init python:
             percent = chance * 100
             if renpy.random.randint(1,101) > percent:
                 random.choice(self.limbs).injure()
+                
+        def increase_hp(self, health):
+            self.hp += health
+            if self.hp > self.maxhp:
+                self.hp = self.maxhp
+                
+        def increase_chakra(self, chakra):
+            self.chakra += chakra
+            if self.chakra > self.maxchakra:
+                self.chakra = self.maxchakra
             
         def increase_bond(self, bond):
             self.bond += bond + renpy.random.randint(1,3)
@@ -836,7 +951,7 @@ init python:
             if tile.position == trap_tile.position:
                 tile.deactivate_trap()
     
-    class Skill:
+    class Skill(object):
         def __init__(self, name, skill_type, label, range, tech=0, chakra_cost=0, damage=0, stun=False, duration=None, exp=0, unlock_exp=0):
             self.name = name
             self.skill_type = skill_type
@@ -955,6 +1070,58 @@ init python:
             
         def __repr__(self):
             return "Skill: {} {}".format(self.skill_type, self.name)
+            
+    class Weapon(Skill):
+        def __init__(self, name, price, range, chakra_cost,  damage=0, stun=False, duration=None, element=None, tech=0, quantity=0):
+            super(self.__class__, self).__init__(name, 'weapon', name, range, tech, chakra_cost, damage, stun, duration)
+            self.price = price
+            self.element = element
+            self.tech = tech
+            self.quantity = quantity
+            
+            # maybe apply element, electric etc
+            
+        def __repr__(self):
+            return "<Weapon: {} {}>".format(self.name, self.quantity)
+            
+    w_kunai = Weapon("Kunai", price=50, range=4, chakra_cost=4, damage=20)
+    w_paper_bomb = Weapon("Paper Bomb", price=100, range=2, chakra_cost=5, damage=50)
+    
+    class ShopItem:
+        def __init__(self, name, price, health=0, chakra=0, quantity=0):
+            self.name = name
+            self.price = price
+            self.quantity = quantity
+            self.health = health
+            self.chakra = chakra
+            
+        def consume(self, player):
+            if self.health and self.chakra:
+                player.increase_hp(self.health)
+                player.increase_chakra(self.chakra)
+                return
+                
+            if self.health:
+                player.increase_hp(self.health)
+            elif self.chakra:
+                player.increase_chakra(self.chakra)
+                
+        def __repr__(self):
+            return "<Item: {} {}>".format(self.name, self.quantity)
+            
+    i_heal_paste = ShopItem("Heal Paste", 300, 30)
+    i_chakra_paste = ShopItem("Chakra Paste", 300, 40)
+    
+    class Shop:
+        def __init__(self, name, background, keeper=None, items=[]):
+            self.name = name
+            self.items = items
+            self.discount = 0
+            self.keeper = keeper
+            self.background = background
+            
+    hospital_shop = Shop("Hospital", 'leaf_hospital_1', items=[i_heal_paste, i_chakra_paste])
+    weapon_shop = Shop("Weapons", 'leaf_shrine', items=[w_kunai, w_paper_bomb])
     
     # tai skills
     onetwocombo = Skill('One Two Combo', 'tai', "onetwocombo", 3, 1, 3, 10)
@@ -984,8 +1151,8 @@ init python:
     yata_mirror = Skill('Yata Mirror', 'defence', 'yatamirror', 12, 50, 50, duration=2)
     
     naruto = Player('Naruto', "playerpic_r", naruto_c, Image('player.png'), None, 100, 100, 80, 80, 10, 4, 3, 4, 5, 80, tile1, 'right', 
-                    [onetwocombo, lioncombo], [rasengan], [substitution], [shiruken, kunai, trap], 
-                    [damage_reduction_p, chakra_defence, reflect, dampen, yata_mirror], [], "leader_pic")
+                    [onetwocombo, lioncombo], [rasengan], [substitution], [],
+                    [damage_reduction_p, chakra_defence, reflect, dampen, yata_mirror], [], "leader_pic", weapons=[])
     sasuke = Player('Sasuke', "enemypic_r", sasuke_c, Image('enemy.png'), None, 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
                     [onetwocombo, lioncombo, shiruken, kunai], [chidori], [], [], [damage_reduction_e, chakra_defence_e])
     
@@ -1260,6 +1427,42 @@ init python:
             return learnt_skill
         else:
             return None
+            
+screen hospitalshop(village, player):
+    $ counter = 0
+    text "Ryo: [player.ryo]" xpos 0.1
+    text "Items: [player.items]" xpos 0.1 ypos 0.2
+    
+    for item in hospital_shop.items:
+        textbutton "[item.name] ([item.price])" action [SetField(current_session, 'village', village), 
+                                                        SetField(current_session, 'player', player),
+                                                        SetField(current_session, 'location', l_hospital),
+                                                        SetField(current_session, 'item', item),
+                                                        Jump("purchase_item_redirect")] xpos grid_place[counter][0] ypos grid_place[counter][1]
+        $ counter += 1
+                                         
+    textbutton "Back to Location select" action [SetField(current_session, 'village', village), 
+                                                 SetField(current_session, 'player', player), 
+                                                 Hide("hospitalshop"),
+                                                 Jump('village_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
+    
+screen weaponshop(village, player):
+    $ counter = 0
+    text "Ryo: [player.ryo]" xpos 0.1
+    text "Weapons: [player.weapons]" xpos 0.1 ypos 0.2
+    
+    for weapon in weapon_shop.items:
+        textbutton "[weapon.name] ([weapon.price])" action [SetField(current_session, 'village', village), 
+                                                            SetField(current_session, 'player', player),
+                                                            SetField(current_session, 'location', l_ninja_tool_facility),
+                                                            SetField(current_session, 'item', weapon),
+                                                            Jump("purchase_weapon_redirect")] xpos grid_place[counter][0] ypos grid_place[counter][1]
+        $ counter += 1
+                                         
+    textbutton "Back to Location select" action [SetField(current_session, 'village', village), 
+                                                 SetField(current_session, 'player', player), 
+                                                 Hide("weaponshop"),
+                                                 Jump('village_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
             
 screen villagemissions(village, player):
     $ counter = 0
@@ -1605,6 +1808,14 @@ label mission_redirect:
     $ import random
     $ current_session.mission.do_mission(current_session.player, current_session.village, random.choice(ALL_VILLAGES))
     
+label purchase_item_redirect:
+    $ current_session.player.buy_item(current_session.item)
+    jump location_redirect
+    
+label purchase_weapon_redirect:
+    $ current_session.player.buy_weapon(current_session.item)
+    jump location_redirect
+    
 label village_travel(player, village):
     show screen villagetravel(village, player)
     player.character "I need to choose a destination"
@@ -1638,8 +1849,10 @@ label village_arena(player, village):
     jump start
     
 label village_hospital(player, village):
-    "SAMPLE" "TRAVEL HERE"
-    jump start
+    # maybe show hospital for each village here
+    show screen hospitalshop(village, player)
+    player.character "I need to choose items to buy."
+    $ renpy.call('village_hospital', player, village)
     
 label village_jounin_station(player, village):
     "SAMPLE" "TRAVEL HERE"
@@ -1650,8 +1863,10 @@ label village_intelligence_division(player, village):
     jump start
     
 label village_ninja_tool_facility(player, village):
-    "SAMPLE" "TRAVEL HERE"
-    jump start
+    # maybe show different weapon shop here
+    show screen weaponshop(village, player)
+    player.character "I need to choose weapons to buy."
+    $ renpy.call('village_ninja_tool_facility', player, village)
     
 label village_missions(player, village):
     show screen villagemissions(village, player)
@@ -1909,3 +2124,4 @@ label trap12:
     #hide playerpic
 #    $ show_player_at_pos(player, enemy, clearing, choice)
 #    jump fight
+
