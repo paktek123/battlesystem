@@ -33,6 +33,20 @@ image clouds_map = im.Scale("kumogakure.png", 800, 600)
 image sand_map = im.Scale("sunagakure.jpg", 800, 600)
 image training_ground = im.Scale("training.jpg", 800, 600)
 image training_ground evening = im.Scale(im.Recolor("training.jpg", 255, 165, 0, 255), 800, 600)
+image stats_idle = im.Scale("gfx/stats_idle.png", 300, 150)
+image body = im.Scale("gfx/body.png", 100, 150)
+image left_arm_normal = "gfx/arm.png"
+image right_arm_normal = im.Flip("gfx/arm.png", horizontal=True)
+image left_leg_normal = "gfx/leg.png"
+image right_leg_normal = im.Flip("gfx/leg.png", horizontal=True)
+image torso_normal = "gfx/torso.png"
+image head_normal = "gfx/head.png"
+image left_arm_injured = LiveComposite((25, 55), (0, 0), anim.Blink(im.Scale("gfx/arm.png", 25, 55)))
+image right_arm_injured = LiveComposite((25, 55), (0, 0), anim.Blink(im.Flip(im.Scale("gfx/arm.png", 25, 55), horizontal=True)))
+image left_leg_injured = LiveComposite((30, 60), (0, 0), anim.Blink(im.Scale("gfx/leg.png", 30, 60)))
+image right_leg_injured = LiveComposite((30, 60), (0, 0), anim.Blink(im.Flip(im.Scale("gfx/leg.png", 30, 60), horizontal=True)))
+image torso_injured = LiveComposite((35, 55), (0, 0), anim.Blink(im.Scale("gfx/torso.png", 35, 55)))
+image head_injured = LiveComposite((45, 30), (0, 0), anim.Blink(im.Scale("gfx/head.png", 45, 30)))
 
 init:
     $ bob_points = 0 # this is a variable for bob's affection points throughout your game
@@ -1204,6 +1218,8 @@ init python:
                                                    
     ALL_MISSIONS = [m_d1, m_d2, m_label_test, m_test_fightmission, m_test_multifight]
     
+    screen_on = False
+    
     import math
     def time_between_village(village1, village2):
         distance = math.sqrt( (village1.marker_xpos - village2.marker_xpos)**2 + (village1.marker_ypos - village2.marker_ypos)**2 )
@@ -1218,7 +1234,7 @@ init python:
         renpy.hide(village.map) # remove it first otherwise it does not show the new image on top
         renpy.show(village.map)
         renpy.show_screen('villagemap', village, player)
-        renpy.say(player.character, "I need to choose an action.")
+        renpy.say(player.character, "I need to choose a location.")
         return show_village_map(village, player)
     
     def start_world_events():
@@ -1582,7 +1598,54 @@ screen villagemap(village, player):
                                            SetField(current_session, 'location', location), 
                                            Hide("villagemap"), 
                                            Jump('location_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
-        $ counter += 1
+        $ counter += 1 
+        
+screen stats_screen(player):
+    
+    python:
+        screen_on = screen_on
+    
+    if screen_on:
+        imagebutton idle "stats_idle" hover "stats_idle" xpos 0.62 ypos 0.0
+        imagebutton idle "body" hover "body" xpos 0.62 ypos 0.00
+    
+        if player.head.injury:
+            imagebutton idle "head_injured" hover "head_injured" xpos 0.655 ypos 0.01
+        
+        if player.torso.injury:
+            imagebutton idle "torso_injured" hover "torso_injured" xpos 0.662 ypos 0.055
+        
+        if player.left_arm.injury:
+            imagebutton idle "left_arm_injured" hover "left_arm_injured" xpos 0.634 ypos 0.05
+        
+        if player.right_arm.injury:
+            imagebutton idle "right_arm_injured" hover "right_arm_injured" xpos 0.701 ypos 0.05
+        
+        if player.left_leg.injury:
+            imagebutton idle "left_leg_injured" hover "left_leg_injured" xpos 0.645 ypos 0.145
+        
+        if player.right_leg.injury:
+            imagebutton idle "right_leg_injured" hover "right_leg_injured" xpos 0.685 ypos 0.145
+    
+        text "{size=-5}[player.name]{/size}" xpos 0.75 ypos 0.05
+        text "{size=-5}Str: [player.strength]{/size}" xpos 0.735 ypos 0.12
+        text "{size=-5}Def: [player.defence]{/size}" xpos 0.735 ypos 0.16
+        text "{size=-5}Eva: [player.evasion]{/size}" xpos 0.735 ypos 0.20
+        text "{size=-5}Sta: [player.stamina]{/size}" xpos 0.83 ypos 0.12
+        text "{size=-5}Spd: [player.speed]{/size}" xpos 0.83 ypos 0.16
+        text "{size=-5}Hit: [player.base_hit_rate]{size=-5}" xpos 0.83 ypos 0.20
+        text "{size=-5}Tai: [player.taijutsu]{/size}" xpos 0.915 ypos 0.12
+        text "{size=-5}Nin: [player.ninjutsu]{/size}" xpos 0.915 ypos 0.16
+        text "{size=-5}Gen: [player.genjutsu]{/size}" xpos 0.915 ypos 0.20
+    
+        textbutton "Hide Stats [screen_on]" action [ToggleVariable('screen_on'), Hide("stats_screen")] xpos 0.3 ypos 0.0
+    
+screen player_stats:
+    python:
+        screen_on = screen_on
+    
+    if not screen_on:
+        textbutton "Show Stats [screen_on]" action [ToggleVariable('screen_on')] xpos 0.5 ypos 0.0
 
 screen worldevents(village):
     text "Wealth: [village.wealth]" xpos 0.3 ypos 0.03
@@ -1790,7 +1853,9 @@ label world_update(village):
     
 label village_redirect:
     hide screen villagetravel
+    show screen player_stats
     $ show_village_map(current_session.village, current_session.player)
+    current_session.player.character "I need to choose an action."
     jump village_redirect
     
 label location_redirect:
@@ -1815,6 +1880,15 @@ label purchase_item_redirect:
 label purchase_weapon_redirect:
     $ current_session.player.buy_weapon(current_session.item)
     jump location_redirect
+    
+label statscreen_show_redirect:
+    hide screen player_stats
+    show screen stats_screen(current_session.player)
+    jump village_redirect
+    
+label statscreen_hide_redirect:
+    hide screen stats_screen
+    jump village_redirect
     
 label village_travel(player, village):
     show screen villagetravel(village, player)
@@ -1878,6 +1952,10 @@ label tag_partner:
     $ renpy.call('fight', info['main'], enemy, info['tag'], tag_e, stage, win_label, lose_label, draw_label)
     
 label start:
+    $ current_session.player = naruto
+    $ current_session.village = hidden_mist
+    show screen player_stats
+    show screen stats_screen(current_session.player)
     $ show_village_map(hidden_mist, naruto)
     #$ start_world_events()
     call fight(naruto, sasuke, [sakura, kakashi], [], clearing, 'fight1_w', 'fight1_l', None)
@@ -2124,4 +2202,5 @@ label trap12:
     #hide playerpic
 #    $ show_player_at_pos(player, enemy, clearing, choice)
 #    jump fight
+
 
