@@ -1,4 +1,4 @@
-# You can place the script of your game in this file.
+﻿# You can place the script of your game in this file.
 
 # Declare images below this line, using the image statement.
 # eg. image eileen happy = "eileen_happy.png"
@@ -26,11 +26,11 @@ image tile10im = im.Scale("tile.png", 50, 30)
 image tile11im = im.Scale("tile.png", 50, 30)
 image tile12im = im.Scale("tile.png", 50, 30)
 image map = im.Scale("map.png", 800, 600)
-image konoha_map = im.Scale("konoha.png", 800, 600)
-image stones_map = im.Scale("ishigakure.png", 800, 600)
-image mist_map = im.Scale("kirivillage.png", 800, 600)
-image clouds_map = im.Scale("kumogakure.png", 800, 600)
-image sand_map = im.Scale("sunagakure.jpg", 800, 600)
+#image konoha_map = im.Scale("konoha.png", 800, 600)
+#image stones_map = im.Scale("ishigakure.png", 800, 600)
+#image mist_map = im.Scale("kirivillage.png", 800, 600)
+#image clouds_map = im.Scale("kumogakure.png", 800, 600)
+#image sand_map = im.Scale("sunagakure.jpg", 800, 600)
 image training_ground = im.Scale("training.jpg", 800, 600)
 image training_ground evening = im.Scale(im.Recolor("training.jpg", 255, 165, 0, 255), 800, 600)
 image stats_idle = im.Scale("gfx/stats_idle.png", 300, 150)
@@ -73,6 +73,13 @@ init python:
             tag = fname[:-4]
             fname =  'gfx/' + fname
             renpy.image(tag, im.Scale(fname, 800, 600))
+            for t in ['morning', 'afternoon', 'evening', 'night']:
+                if t == 'evening':
+                    renpy.image((tag, t), im.Scale(im.Recolor(fname, 255, 165, 0, 255), 800, 600))
+                elif t == 'night':
+                    renpy.image((tag, t), im.Scale(im.Recolor(fname, 0, 0, 153, 255), 800, 600))
+                else:
+                    renpy.image((tag, t), im.Scale(fname, 800, 600))
     
     battle_menu_dict = {"Tai": "taiactions",
                         "Nin": "ninactions",
@@ -485,7 +492,7 @@ init python:
             self.uprising = uprising
             self.control_change = 0
             self.influence_change = 0
-            self.waelth_change = 0
+            self.wealth_change = 0
             self.locations = locations
             self.mission_locations = ["{}_{}".format(village_tag, x) for x in range(1,mission_locations+1)]
 
@@ -577,7 +584,9 @@ init python:
             self.limb = None
             self.mission = None
             self.mission_rank = None
+            self.skill = None
             self.item = None
+            self.time_to_advance = {'hours': 0, 'days': 0, 'months': 0, 'years': 0}
             
         def clear(self):
             self.player = None
@@ -587,6 +596,10 @@ init python:
             self.mission = None
             self.mission_rank = None
             self.item = None
+            self.skill = None
+            
+        def clear_time_to_advance(self):
+            self.time_to_advance = {'hours': 0, 'days': 0, 'months': 0, 'years': 0}
         
     current_session = CurrentSession()
     
@@ -1139,10 +1152,10 @@ init python:
     
     # tai skills
     onetwocombo = Skill('One Two Combo', 'tai', "onetwocombo", 3, 1, 3, 10)
-    lioncombo = Skill('Lion Combo', 'tai', "lioncombo", 3, 2, 5, 20)
+    lioncombo = Skill('Lion Combo', 'tai', "lioncombo", 3, 2, 5, 20, unlock_exp=300)
     
     # nin skills
-    rasengan = Skill('Rasengan', 'nin', "rasengan", 2, 1, 25, 30)
+    rasengan = Skill('Rasengan', 'nin', "rasengan", 2, 1, 25, 30, unlock_exp=500)
     chidori = Skill('Chidori', 'nin', "chidori", 2, 1, 25, 30)
     raikiri = Skill('Raikiri', 'nin', "raikiri", 2, 1, 50, 50)
     
@@ -1225,14 +1238,24 @@ init python:
         distance = math.sqrt( (village1.marker_xpos - village2.marker_xpos)**2 + (village1.marker_ypos - village2.marker_ypos)**2 )
         time_weeks = abs(distance / 0.1)
         days = time_weeks * 7
-        return int(days)
+        return int(days/4)
         
     def other_villages(village):
         return [v for v in ALL_VILLAGES if v.id != village.id]
     
+    def time_tag_show(image_name):
+        if main_time.hours in (6, 7, 8, 9, 10, 11):
+            renpy.show((image_name, 'morning'))
+        elif main_time.hours in (12, 13, 14, 15, 16, 17):
+            renpy.show((image_name, 'afternoon'))
+        elif main_time.hours in (18, 19, 20, 21):
+            renpy.show((image_name, 'evening'))
+        elif main_time.hours in (21, 22, 23, 0, 1, 2, 3, 4, 5):
+            renpy.show((image_name, 'night'))
+    
     def show_village_map(village, player):
         renpy.hide(village.map) # remove it first otherwise it does not show the new image on top
-        renpy.show(village.map)
+        time_tag_show(village.map)
         renpy.show_screen('villagemap', village, player)
         renpy.say(player.character, "I need to choose a location.")
         return show_village_map(village, player)
@@ -1520,32 +1543,46 @@ screen missionselect(village, player, rank):
     
 
 screen training(village, player):
-    textbutton "Train skills" action [Hide("training"), Show("train_skills", village, player)] xpos grid_place[0][0] ypos grid_place[0][1]
+    textbutton "Train skills" action [Hide("training"), Show("train_skills", village=village, player=player)] xpos grid_place[0][0] ypos grid_place[0][1]
     if player.team:
-        # maybe add formation, 
+        # maybe add formation, TODO
         text "Team Chemistry: [player.team.chemistry]" xpos 0.1 ypos 0.1
         textbutton "Train with team" action [SetField(getattr(player, 'team'), 'chemistry', getattr(player, team).increase_chemistry(10)),
                                              Hide("training"), 
-                                             Show("training", village, player)] xpos grid_place[1][0] ypos grid_place[1][1]
+                                             Show("training", village=village, player=player)] xpos grid_place[2][0] ypos grid_place[2][1]
     if player.sensei:
         textbutton "Learn skills" action [SetField(current_session, 'village', village), 
                                           SetField(current_session, 'player', player), 
-                                          SetField(current_session, 'location', training_ground),
+                                          SetField(current_session, 'location', l_training_ground),
                                           Hide("training"), 
-                                          Jump("training_sensei")] xpos grid_place[2][0] ypos grid_place[2][1]
+                                          Jump("training_sensei")] xpos grid_place[3][0] ypos grid_place[3][1]
                                       
     textbutton "Train (+ exp)" action [SetField(player, 'exp', player.gain_exp(10)),
                                        Hide("training"), 
-                                       Show("train_skills", village, player)] xpos grid_place[3][0] ypos grid_place[3][1]
+                                       Show("training", village=village, player=player)] xpos grid_place[1][0] ypos grid_place[1][1]
+    
+    textbutton "Back to Location select" action [SetField(current_session, 'village', village), 
+                                                 SetField(current_session, 'player', player), 
+                                                 Hide('training'), 
+                                                 Jump('village_redirect')] xpos grid_place[4][0] ypos grid_place[4][1]
     
 screen train_skills(village, player):
     $ counter = 0
+    #text "[player.all_skills[0]]" xpos 0.5 ypos 0.5
     for skill in player.all_skills:
         if skill.exp < skill.unlock_exp:
-            textbutton "[skill.name] [skill.exp]/[skill.unlock_exp]" action [SetField(getattr(player, skill.label), 'exp', getattr(player, skill.label).gain_exp(10)), 
+            textbutton "[skill.name] [skill.exp]/[skill.unlock_exp]" action [SetField(current_session, 'village', village), 
+                                                                             SetField(current_session, 'player', player), 
+                                                                             SetField(current_session, 'skill', skill), 
                                                                              Hide("train_skills"),
-                                                                             Show("training", village, player)] xpos grid_place[counter][0] ypos grid_place[counter][1]
+                                                                             Jump("train_skill_label")] xpos grid_place[counter][0] ypos grid_place[counter][1]
             $ counter += 1
+            
+    textbutton "Back" action [SetField(current_session, 'village', village), 
+                              SetField(current_session, 'player', player),
+                              Hide("train_skills"),
+                              SetField(current_session, 'location', l_training_ground), 
+                              Jump('location_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
 
 screen levelup(village, player):
     $ STATS = ['strength', 'speed', 'evasion', 'defence', 'stamina', 'taijutsu', 'ninjutsu', 'genjutsu']
@@ -1561,7 +1598,7 @@ screen levelup(village, player):
                                            SetField(player, 'allocation_points', getattr(player, 'allocation_points') - 1), 
                                            SetField(current_session, 'village', village), 
                                            SetField(current_session, 'player', player), 
-                                           SetField(current_session, 'location', level_up), 
+                                           SetField(current_session, 'location', l_level_up), 
                                            Jump('location_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
             $ counter +=1 
     else:
@@ -1579,6 +1616,7 @@ screen villagetravel(village, player):
         $ village_time = time_between_village(v, village)
         textbutton "[v.name] [village_time]" action [SetField(current_session, 'village', v), 
                                                      SetField(current_session, 'player', player), 
+                                                     SetField(current_session, 'time_to_advance', {'days': village_time}),
                                                      Jump('village_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
         $ counter += 1
         
@@ -1590,7 +1628,7 @@ screen villagemap(village, player):
     # show player time details here
     $ counter = 0
     
-    text "[main_time.current_time]" xpos 0.1 ypos 0.1
+    text "{color=#000}[main_time.current_time]{/color}" xpos 0.1 ypos 0.1
     
     for location in village.locations:
         textbutton [location.name] action [SetField(current_session, 'player', player), 
@@ -1602,8 +1640,8 @@ screen villagemap(village, player):
         
 screen stats_screen(player):
     
-    python:
-        screen_on = screen_on
+    #python:
+     #   screen_on = screen_on
     
     if screen_on:
         imagebutton idle "stats_idle" hover "stats_idle" xpos 0.62 ypos 0.0
@@ -1628,6 +1666,10 @@ screen stats_screen(player):
             imagebutton idle "right_leg_injured" hover "right_leg_injured" xpos 0.685 ypos 0.145
     
         text "{size=-5}[player.name]{/size}" xpos 0.75 ypos 0.05
+        text "{size=-5}Lv.[player.level]{/size}" xpos 0.85 ypos 0.05
+        # TODO: this needs to be bar
+        $ next_level_exp = LEVELS[player.level + 1]
+        text "{size=-5}Exp [player.exp]/[next_level_exp]{/size}" xpos 0.75 ypos 0.08
         text "{size=-5}Str: [player.strength]{/size}" xpos 0.735 ypos 0.12
         text "{size=-5}Def: [player.defence]{/size}" xpos 0.735 ypos 0.16
         text "{size=-5}Eva: [player.evasion]{/size}" xpos 0.735 ypos 0.20
@@ -1638,14 +1680,30 @@ screen stats_screen(player):
         text "{size=-5}Nin: [player.ninjutsu]{/size}" xpos 0.915 ypos 0.16
         text "{size=-5}Gen: [player.genjutsu]{/size}" xpos 0.915 ypos 0.20
     
-        textbutton "Hide Stats [screen_on]" action [ToggleVariable('screen_on'), Hide("stats_screen")] xpos 0.3 ypos 0.0
+        textbutton "Hide Stats" action Jump("toggle_screen_off") xpos 0.4 ypos 0.0
     
 screen player_stats:
-    python:
-        screen_on = screen_on
+    #python:
+    #    screen_on = screen_on
     
     if not screen_on:
-        textbutton "Show Stats [screen_on]" action [ToggleVariable('screen_on')] xpos 0.5 ypos 0.0
+        textbutton "Show Stats" action Jump("toggle_screen_on") xpos 0.4 ypos 0.0
+
+label toggle_screen_on:
+    $ screen_on = True
+    python:
+        if current_session.location:
+            renpy.jump("location_redirect")
+        else:
+            renpy.jump("village_redirect")
+    
+label toggle_screen_off:
+    $ screen_on = False
+    python:
+        if current_session.location:
+            renpy.jump("location_redirect")
+        else:
+            renpy.jump("village_redirect")
 
 screen worldevents(village):
     text "Wealth: [village.wealth]" xpos 0.3 ypos 0.03
@@ -1854,6 +1912,8 @@ label world_update(village):
 label village_redirect:
     hide screen villagetravel
     show screen player_stats
+    $ main_time.advance_time(days=current_session.time_to_advance['days'])
+    $ current_session.clear_time_to_advance()
     $ show_village_map(current_session.village, current_session.player)
     current_session.player.character "I need to choose an action."
     jump village_redirect
@@ -1902,8 +1962,9 @@ label village_levelup(player, village):
 
 label village_training(player, village):
     scene training_ground evening
-    "SAMPLE" "TRAVEL HERE"
-    jump start
+    show screen training(village, player)
+    player.character "What should I do?"
+    $ renpy.call('village_training', player, village)
     
 label training_sensei:
     $ new_skill = get_sensei_skill(player.sensei, player)
@@ -1917,6 +1978,12 @@ label training_sensei:
     # some sort of explanation
     player.character "[new_skill.name] added to skill set."
     $ renpy.call(current_session.location.label, current_session.player, current_session.village)
+    
+label train_skill_label:
+    python:
+        setattr(getattr(current_session.player, current_session.skill.label), current_session.skill.label,  current_session.skill.gain_exp(10))
+    current_session.player.character "I have gained 10 exp for [current_session.skill.name]"
+    jump location_redirect
     
 label village_arena(player, village):
     "SAMPLE" "TRAVEL HERE"
@@ -2202,5 +2269,6 @@ label trap12:
     #hide playerpic
 #    $ show_player_at_pos(player, enemy, clearing, choice)
 #    jump fight
+
 
 
