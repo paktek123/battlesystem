@@ -1,4 +1,4 @@
-﻿# You can place the script of your game in this file.
+# You can place the script of your game in this file.
 
 # Declare images below this line, using the image statement.
 # eg. image eileen happy = "eileen_happy.png"
@@ -31,8 +31,8 @@ image map = im.Scale("map.png", 800, 600)
 #image mist_map = im.Scale("kirivillage.png", 800, 600)
 #image clouds_map = im.Scale("kumogakure.png", 800, 600)
 #image sand_map = im.Scale("sunagakure.jpg", 800, 600)
-image training_ground = im.Scale("training.jpg", 800, 600)
-image training_ground evening = im.Scale(im.Recolor("training.jpg", 255, 165, 0, 255), 800, 600)
+#image training_ground = im.Scale("training.jpg", 800, 600)
+#image training_ground evening = im.Scale(im.Recolor("training.jpg", 255, 165, 0, 255), 800, 600)
 image stats_idle = im.Scale("gfx/stats_idle.png", 300, 150)
 image body = im.Scale("gfx/body.png", 100, 150)
 image left_arm_normal = "gfx/arm.png"
@@ -75,9 +75,9 @@ init python:
             renpy.image(tag, im.Scale(fname, 800, 600))
             for t in ['morning', 'afternoon', 'evening', 'night']:
                 if t == 'evening':
-                    renpy.image((tag, t), im.Scale(im.Recolor(fname, 255, 165, 0, 255), 800, 600))
+                    renpy.image((tag, t), im.Scale(im.Recolor(fname, 255, 178, 102, 255), 800, 600))
                 elif t == 'night':
-                    renpy.image((tag, t), im.Scale(im.Recolor(fname, 0, 0, 153, 255), 800, 600))
+                    renpy.image((tag, t), im.Scale(im.Recolor(fname, 51, 153, 255, 255), 800, 600))
                 else:
                     renpy.image((tag, t), im.Scale(fname, 800, 600))
     
@@ -193,20 +193,26 @@ init python:
     import random
     class GameTime:
         def __init__(self, hour, day, month, year):
+            self.minute = 5
             self.hour = hour
             self.day = day
             self.month = month
             self.year = year
             self.months = ["Stub", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"]
+            self.counter = 0
             self.current_time = self.now()
             
         def now(self):
-            minute = random.randint(0, 59)
-            return "{}:{} {} {} {}".format(str(self.hour).zfill(2), str(minute).zfill(2), self.day, self.months[self.month], self.year)
+            if self.counter == 2:
+                self.counter = 0
+                self.advance_time(minutes=1)
+            else:
+                self.counter += 1
+            return "{}:{} {} {} {}".format(str(self.hour).zfill(2), str(self.minute).zfill(2), self.day, self.months[self.month], self.year)
             
         def dawn(self):
             minute = random.randint(0, 59)
-            self.hour = renpy.random.randint(1,5)
+            self.hour = random.randint(1,5)
             return "{0}:{} {} {} {}".format(self.hour, minute, self.day, self.months[self.month], self.year)
             
         def morning(self):
@@ -250,9 +256,21 @@ init python:
             else:
                 self.hour += 1
                 
-        def advance_time(self, hours=0, days=0, months=0, years=0):
+        def next_minute(self):
+            if self.minute > 59:
+                self.next_hour()
+                self.minute = 1
+            else:
+                self.minute += 1
+                
+        def advance_time(self, minutes=0, hours=0, days=0, months=0, years=0):
             
             #renpy.say(current_session.player.character, "{} {} {}".format(hours, days, months))
+            
+            if minutes:
+                while minutes > 0:
+                    minutes -= 1
+                    self.next_minute()
             
             if hours:
                 while hours > 0:
@@ -349,7 +367,7 @@ init python:
                 renpy.say(player.character, d.format(self.name))
             player.injury_chance(0.05)
             renpy.say(player.character, "{} {}".format(self.hours, self.days))
-            main_time.advance_time(self.hours, self.days)
+            main_time.advance_time(hours=self.hours, days=self.days)
             self.success = True
             self.reward(player)
             show_village_map(village, player)
@@ -372,7 +390,7 @@ init python:
             
         def do_mission(self, player, village, dest_village=None):
             # show some dialogues between the transaction phases to make it seemless
-            main_time.advance_time(self.hours, self.hours)
+            main_time.advance_time(hours=self.hours, days=self.days)
             renpy.call(self.label, player, village)
             # handle reward and redirect in label ^^^
             
@@ -396,9 +414,9 @@ init python:
         def do_mission(self, player, from_village, dest_village):
             # show some dialogues between the transaction phases to make it seemless
             if self.days:
-                main_time.advance_time(self.hours, self.days)
+                main_time.advance_time(hours=self.hours, days=self.days)
             else:
-                main_time.advance_time(self.hours, time_between_village(from_village, dest_village))
+                main_time.advance_time(hours=self.hours, days=time_between_village(from_village, dest_village))
             if player.team:
                 player_team = player.team.members() 
             else:
@@ -463,7 +481,7 @@ init python:
             
         def do_mission(self, player, from_village, dest_village):
             # show some dialogues between the transaction phases to make it seemless
-            main_time.advance_time(self.hours, time_between_village(from_village, dest_village))
+            main_time.advance_time(hours=self.hours, days=time_between_village(from_village, dest_village))
             for function in dialogue:
                 self.evaluate_function(function)
             
@@ -549,9 +567,10 @@ init python:
             return "<Village>: {}".format(self.name)
             
     class Location:
-        def __init__(self, name, label, special_event=False, map_pic_idle=None, map_pic_hover=None, npc=[], visits=None):
+        def __init__(self, name, label, background=None, special_event=False, map_pic_idle=None, map_pic_hover=None, npc=[], visits=0):
             self.name = name
             self.label = label
+            self.background = background
             #self.village = village
             self.special_event = special_event
             self.map_pic_idle = map_pic_idle
@@ -565,7 +584,7 @@ init python:
     # locations that exist in each village
     l_travel = Location('Travel', 'village_travel')
     l_level_up = Location('Level Up', 'village_levelup')
-    l_training_ground = Location('Training', 'village_training')
+    l_training_ground = Location('Training', 'village_training', 'training')
     l_arena = Location('Arena', 'village_arena')
     l_hospital = Location('Hospital', 'village_hospital')
     l_jounin_station = Location('Jounin Standby Station', 'village_jounin_station')
@@ -1244,13 +1263,13 @@ init python:
         return [v for v in ALL_VILLAGES if v.id != village.id]
     
     def time_tag_show(image_name):
-        if main_time.hours in (6, 7, 8, 9, 10, 11):
+        if main_time.hour in (6, 7, 8, 9, 10, 11):
             renpy.show((image_name, 'morning'))
-        elif main_time.hours in (12, 13, 14, 15, 16, 17):
+        elif main_time.hour in (12, 13, 14, 15, 16, 17):
             renpy.show((image_name, 'afternoon'))
-        elif main_time.hours in (18, 19, 20, 21):
+        elif main_time.hour in (18, 19, 20, 21):
             renpy.show((image_name, 'evening'))
-        elif main_time.hours in (21, 22, 23, 0, 1, 2, 3, 4, 5):
+        elif main_time.hour in (21, 22, 23, 0, 1, 2, 3, 4, 5):
             renpy.show((image_name, 'night'))
     
     def show_village_map(village, player):
@@ -1325,6 +1344,21 @@ init python:
         renpy.hide_screen("ninactions")
         renpy.hide_screen("defenceactions")
         renpy.hide_screen("itemselection")
+        
+    # d = defensive skill
+    # f = range attack
+    # a = attack (use any attack)
+    # t = set trap
+    # c = use team combo (formation attacks)
+    # tai = use taijutsu skills
+    # nin = use ninjustsu skills
+    # gen = use genjutsu skills
+    # healing items and tagging will be in enemy_move itself
+    defensive_enemy_pattern = 2*['d'] + 2*['f'] + 2*['a'] + 2*['t']
+    attack_enemy_pattern = 3*['a'] + 2*['f']
+    tai_enemy_pattern = 3*['tai'] + 2*['d']
+    nin_enemy_pattern = 3*['nin'] + ['d'] + ['a']
+    gen_enemy_pattern = 3*['gen'] + 2*['d'] + ['f']
         
     def enemy_move(player, enemy, stage):
         hide_battle_screen()
@@ -1477,6 +1511,7 @@ screen hospitalshop(village, player):
                                                         SetField(current_session, 'player', player),
                                                         SetField(current_session, 'location', l_hospital),
                                                         SetField(current_session, 'item', item),
+                                                        SetField(current_session, 'time_to_advance', {'hours': 2}),
                                                         Jump("purchase_item_redirect")] xpos grid_place[counter][0] ypos grid_place[counter][1]
         $ counter += 1
                                          
@@ -1495,6 +1530,7 @@ screen weaponshop(village, player):
                                                             SetField(current_session, 'player', player),
                                                             SetField(current_session, 'location', l_ninja_tool_facility),
                                                             SetField(current_session, 'item', weapon),
+                                                            SetField(current_session, 'time_to_advance', {'hours': 2}),
                                                             Jump("purchase_weapon_redirect")] xpos grid_place[counter][0] ypos grid_place[counter][1]
         $ counter += 1
                                          
@@ -1538,7 +1574,7 @@ screen missionselect(village, player, rank):
     textbutton "Back" action [SetField(current_session, 'village', village), 
                               SetField(current_session, 'player', player),
                               Hide("missionselect"),
-                              SetField(current_session, 'location', villagemission), 
+                              SetField(current_session, 'location', l_villagemission), 
                               Jump('location_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
     
 
@@ -1548,8 +1584,12 @@ screen training(village, player):
         # maybe add formation, TODO
         text "Team Chemistry: [player.team.chemistry]" xpos 0.1 ypos 0.1
         textbutton "Train with team" action [SetField(getattr(player, 'team'), 'chemistry', getattr(player, team).increase_chemistry(10)),
+                                             SetField(current_session, 'time_to_advance', {'hours': 4}),
+                                             SetField(current_session, 'village', village), 
+                                             SetField(current_session, 'player', player), 
+                                             SetField(current_session, 'location', l_training_ground),
                                              Hide("training"), 
-                                             Show("training", village=village, player=player)] xpos grid_place[2][0] ypos grid_place[2][1]
+                                             Jump('location_redirect')] xpos grid_place[2][0] ypos grid_place[2][1]
     if player.sensei:
         textbutton "Learn skills" action [SetField(current_session, 'village', village), 
                                           SetField(current_session, 'player', player), 
@@ -1558,8 +1598,12 @@ screen training(village, player):
                                           Jump("training_sensei")] xpos grid_place[3][0] ypos grid_place[3][1]
                                       
     textbutton "Train (+ exp)" action [SetField(player, 'exp', player.gain_exp(10)),
+                                       SetField(current_session, 'time_to_advance', {'hours': 4}),
+                                       SetField(current_session, 'village', village), 
+                                       SetField(current_session, 'player', player), 
+                                       SetField(current_session, 'location', l_training_ground),
                                        Hide("training"), 
-                                       Show("training", village=village, player=player)] xpos grid_place[1][0] ypos grid_place[1][1]
+                                       Jump('location_redirect')] xpos grid_place[1][0] ypos grid_place[1][1]
     
     textbutton "Back to Location select" action [SetField(current_session, 'village', village), 
                                                  SetField(current_session, 'player', player), 
@@ -1573,7 +1617,8 @@ screen train_skills(village, player):
         if skill.exp < skill.unlock_exp:
             textbutton "[skill.name] [skill.exp]/[skill.unlock_exp]" action [SetField(current_session, 'village', village), 
                                                                              SetField(current_session, 'player', player), 
-                                                                             SetField(current_session, 'skill', skill), 
+                                                                             SetField(current_session, 'skill', skill),
+                                                                             SetField(current_session, 'time_to_advance', {'hours': 4}),
                                                                              Hide("train_skills"),
                                                                              Jump("train_skill_label")] xpos grid_place[counter][0] ypos grid_place[counter][1]
             $ counter += 1
@@ -1628,7 +1673,7 @@ screen villagemap(village, player):
     # show player time details here
     $ counter = 0
     
-    text "{color=#000}[main_time.current_time]{/color}" xpos 0.1 ypos 0.1
+    #text "{color=#000}[main_time.current_time]{/color}" xpos 0.1 ypos 0.1
     
     for location in village.locations:
         textbutton [location.name] action [SetField(current_session, 'player', player), 
@@ -1637,6 +1682,9 @@ screen villagemap(village, player):
                                            Hide("villagemap"), 
                                            Jump('location_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
         $ counter += 1 
+        
+screen time_screen:
+    text "{color=#000}[main_time.current_time]{/color}" xpos 0.1 ypos 0.1
         
 screen stats_screen(player):
     
@@ -1920,6 +1968,12 @@ label village_redirect:
     
 label location_redirect:
     hide screen villagemap 
+    $ main_time.advance_time(hours=current_session.time_to_advance['hours'])
+    $ current_session.clear_time_to_advance()
+    python:
+        if current_session.location.background:
+            renpy.hide(current_session.location.background)
+            time_tag_show(current_session.location.background)
     $ renpy.call(current_session.location.label, current_session.player, current_session.village)
     
 label missionselect_redirect:
@@ -1961,7 +2015,7 @@ label village_levelup(player, village):
     $ renpy.call('village_levelup', player, village)
 
 label village_training(player, village):
-    scene training_ground evening
+    #scene training
     show screen training(village, player)
     player.character "What should I do?"
     $ renpy.call('village_training', player, village)
@@ -2023,6 +2077,7 @@ label start:
     $ current_session.village = hidden_mist
     show screen player_stats
     show screen stats_screen(current_session.player)
+    show screen time_screen
     $ show_village_map(hidden_mist, naruto)
     #$ start_world_events()
     call fight(naruto, sasuke, [sakura, kakashi], [], clearing, 'fight1_w', 'fight1_l', None)
@@ -2269,6 +2324,4 @@ label trap12:
     #hide playerpic
 #    $ show_player_at_pos(player, enemy, clearing, choice)
 #    jump fight
-
-
 
