@@ -1,4 +1,4 @@
-# You can place the script of your game in this file.
+﻿# You can place the script of your game in this file.
 
 # Declare images below this line, using the image statement.
 # eg. image eileen happy = "eileen_happy.png"
@@ -606,6 +606,12 @@ init python:
             self.skill = None
             self.item = None
             self.time_to_advance = {'hours': 0, 'days': 0, 'months': 0, 'years': 0}
+            self.enemy_tag = []
+            self.player_tag = []
+            self.stage = None
+            self.win_label = None
+            self.lose_label = None
+            self.draw_label = None
             
         def clear(self):
             self.player = None
@@ -616,6 +622,12 @@ init python:
             self.mission_rank = None
             self.item = None
             self.skill = None
+            self.enemy_tag = []
+            self.player_tag = []
+            self.stage = None
+            self.win_label = None
+            self.lose_label = None
+            self.draw_label = None
             
         def clear_time_to_advance(self):
             self.time_to_advance = {'hours': 0, 'days': 0, 'months': 0, 'years': 0}
@@ -683,7 +695,7 @@ init python:
         def __init__(self, name, picname, character, tilepic, hudpic, hp, maxhp, chakra, maxchakra, 
                      strength, speed, evasion, defence, stamina, base_hit_rate, tile, facing,
                      taiskills=[], ninskills=[], genskills=[], items=[], defensiveskills=[], bloodlineskills=[],
-                     leader_pic=None, taijutsu=1, ninjutsu=1, genjutsu=1, weapons=[]):
+                     leader_pic=None, taijutsu=1, ninjutsu=1, genjutsu=1, weapons=[], battle_ai=[]):
             self.name = name
             self.picname = picname
             self.character = character
@@ -735,6 +747,7 @@ init python:
             self.sensei = None
             self.bond = 0
             self.ryo = 1000
+            self.battle_ai = battle_ai
             #self.damage_reduction = False
             #self.chakra_defence = False
             #self.reflect = False
@@ -1134,9 +1147,10 @@ init python:
     w_paper_bomb = Weapon("Paper Bomb", price=100, range=2, chakra_cost=5, damage=50)
     
     class ShopItem:
-        def __init__(self, name, price, health=0, chakra=0, quantity=0):
+        def __init__(self, name, price, role='heal', health=0, chakra=0, quantity=0):
             self.name = name
             self.price = price
+            self.role = role
             self.quantity = quantity
             self.health = health
             self.chakra = chakra
@@ -1155,8 +1169,8 @@ init python:
         def __repr__(self):
             return "<Item: {} {}>".format(self.name, self.quantity)
             
-    i_heal_paste = ShopItem("Heal Paste", 300, 30)
-    i_chakra_paste = ShopItem("Chakra Paste", 300, 40)
+    i_heal_paste = ShopItem("Heal Paste", 300, 30, health=30)
+    i_chakra_paste = ShopItem("Chakra Paste", 300, 40, chakra=30)
     
     class Shop:
         def __init__(self, name, background, keeper=None, items=[]):
@@ -1196,19 +1210,26 @@ init python:
     dampen = Skill('Dampen', 'defence', 'dampen', 6, 30, 30, duration=3)
     yata_mirror = Skill('Yata Mirror', 'defence', 'yatamirror', 12, 50, 50, duration=2)
     
+    #defensive_enemy_pattern = 2*['d'] + 2*['f'] + 2*['a'] + 2*['t']
+    #attack_enemy_pattern = 3*['a'] + 2*['f']
+    #ranged_attack_pattern = 4*['f'] + 2*['d']
+    #tai_enemy_pattern = 3*['tai'] + 2*['d']
+    nin_enemy_pattern = 3*['nin'] + ['d'] + ['a']
+    #gen_enemy_pattern = 3*['gen'] + 2*['d'] + ['f']
+    
     naruto = Player('Naruto', "playerpic_r", naruto_c, Image('player.png'), None, 100, 100, 80, 80, 10, 4, 3, 4, 5, 80, tile1, 'right', 
                     [onetwocombo, lioncombo], [rasengan], [substitution], [],
                     [damage_reduction_p, chakra_defence, reflect, dampen, yata_mirror], [], "leader_pic", weapons=[])
     sasuke = Player('Sasuke', "enemypic_r", sasuke_c, Image('enemy.png'), None, 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
-                    [onetwocombo, lioncombo, shiruken, kunai], [chidori], [], [], [damage_reduction_e, chakra_defence_e])
+                    [onetwocombo, lioncombo, shiruken, kunai], [chidori], [], [], [damage_reduction_e, chakra_defence_e], battle_ai=nin_enemy_pattern)
     
-    sakura = Player('Sakura', "enemypic_r", sakura_c, Image('enemy.png'), None, 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
+    sakura = Player('Sakura', "enemypic_r", sakura_c, Image('sakura.png'), None, 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
                     [onetwocombo, lioncombo, shiruken, kunai], [chidori], [], [], [damage_reduction_e, chakra_defence_e])
-    kakashi = Player('Kakashi', "enemypic_r", kakashi_c, Image('enemy.png'), None, 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
-                    [onetwocombo, lioncombo, shiruken, kunai], [chidori], [], [], [damage_reduction_e, chakra_defence_e])
+    kakashi = Player('Kakashi', "enemypic_r", kakashi_c, Image('kakashi.png'), None, 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
+                    [onetwocombo, lioncombo, shiruken, kunai], [raikiri], [], [], [damage_reduction_e, chakra_defence_e], battle_ai=nin_enemy_pattern)
     itachi = copy.deepcopy(sasuke)
     
-    ALL_PLAYERS = [naruto, sasuke, sakura, kakashi]
+    ALL_PLAYERS = [naruto, sasuke, sakura, kakashi, itachi]
     ALL_CHARACTERS = [c.character for c in ALL_PLAYERS]
     
     clearing = Stage('Clearing', 1, 1)
@@ -1346,7 +1367,7 @@ init python:
         renpy.hide_screen("itemselection")
         
     # d = defensive skill
-    # f = range attack
+    # f = range attack (weapon)
     # a = attack (use any attack)
     # t = set trap
     # c = use team combo (formation attacks)
@@ -1356,40 +1377,106 @@ init python:
     # healing items and tagging will be in enemy_move itself
     defensive_enemy_pattern = 2*['d'] + 2*['f'] + 2*['a'] + 2*['t']
     attack_enemy_pattern = 3*['a'] + 2*['f']
+    ranged_attack_pattern = 4*['f'] + 2*['d']
     tai_enemy_pattern = 3*['tai'] + 2*['d']
-    nin_enemy_pattern = 3*['nin'] + ['d'] + ['a']
+    nin_enemy_pattern = 3*['nin'] + ['d'] + ['a'] + ['f']
     gen_enemy_pattern = 3*['gen'] + 2*['d'] + ['f']
+    
+    def enemy_tag_move(enemy, player):
+        
+        if enemy.hp < (enemy.maxhp*0.4) and current_session.enemy_tag:
+            
+            partner = [p for p in current_session.enemy_tag if p.hp > 0][0]
+            partner.main = True
+            partner.tile = enemy.tile
+            
+            renpy.hide(enemy.picname)
+        
+            info = get_tag_info(enemy, current_session.enemy_tag)
+        
+            renpy.call('fight', 
+                       player, 
+                       info['main'],
+                       current_session.player_tag, 
+                       info['tag'],
+                       current_session.stage, 
+                       current_session.win_label,
+                       current_session.lose_label,
+                       current_session.draw_label)
+    
+    def enemy_pattern(enemy):
+        PATTERN_HASH = {'d': enemy.defensiveskills,
+                        'f': enemy.weapons,
+                        'a': enemy.taiskills + enemy.ninskills + enemy.genskills,
+                        #'t': None, # need logic for trap here
+                        #'c': None, # need logic for team combinations
+                        'tai': enemy.taiskills,
+                        'nin': enemy.ninskills,
+                        'gen': enemy.genskills}
+        
+        current_skill = random.choice(PATTERN_HASH[random.choice(enemy.battle_ai)])
+        
+        return current_skill
+        
+    def enemy_move_back(enemy, player, spaces=0):
+        relative_position = enemy.tile.position - player.tile.position
+        if relative_position > 0:
+            enemy.tile.position += spaces
+            if enemy.tile.position > 12:
+                enemy.tile.position = 12
+        else:
+            enemy.tile.position -= spaces
+            if enemy.tile.position < 1:
+                enemy.tile.position = 1
+                
+        renpy.show(enemy.picname, [ POSITIONS[enemy.tile.position] ])
+        
+    def enemy_use_item(enemy, player):
+        if enemy.hp < (enemy.maxhp*0.3):
+            enemy_move_back(enemy, player, 3)
+            if random.randint(1, 100) < 40:
+                renpy.say(enemy.character, "I heal using health paste.")
+                i_health_paste.consume(enemy)
+                Jump("fight")
+                
+        if enemy.chakra < (enemy.maxchakra*0.2):
+            enemy_move_back(enemy, player, 3)
+            if random.randint(1, 100) < 40:
+                renpy.say(enemy.character, "I am resting now to heal chakra.")
+                enemy.increase_chakra(25)
+                Jump("fight")
         
     def enemy_move(player, enemy, stage):
         hide_battle_screen()
         show_player_at_pos(enemy, player, stage, enemy.tile)
-        skills = enemy.all_skills 
-        skill_index = 1 #renpy.random.randint(0, (len(skills) - 1))
-        current_skill = skills[skill_index]
+        
+        enemy_tag_move(enemy, player)
+        
+        enemy_use_item(enemy, player)
+        
+        current_skill = enemy_pattern(enemy)
         
         if current_skill.skill_type == 'defence':
             if not enemy.active_defensive_skill():
                 enemy.apply_skill(current_skill)
                 Jump("fight")
-            else:
-                skill_index = renpy.random.randint(0, (len(enemy.taiskills) - 1))
-                current_skill = enemy.taiskills[skill_index]
-        
+            #else:
+            #    current_skill = random.choice(enemy.taiskills)
+                
         if current_skill.range >= abs(player.tile.position - enemy.tile.position):
+            renpy.show(enemy.picname, [ POSITIONS[enemy.tile.position] ])
             current_skill.action(enemy, player)
         else:
             # move enemy to near player
             enemy_position = player.tile.position + current_skill.range
             enemy.tile = get_tile_from_position(enemy_position)
+            renpy.show(enemy.picname, [ POSITIONS[enemy.tile.position] ])
             
             # Do the attack
             current_skill.action(enemy, player)
             
             # take away movement chakra too
             enemy.chakra -= (current_skill.range * stage.pull) 
-            
-        renpy.show(enemy.picname, [ POSITIONS[enemy.tile.position] ])
-        #renpy.show("show_damage_e", [ Position(xpos=0.45, ypos=200) ], what=show_damage_e)
         
         # bleeding
         player_bleed(player)
@@ -1464,6 +1551,11 @@ init python:
         
     def end_match(player, enemy, win_label, lose_label, draw_label):
         #renpy.say(player.character, "I AM RUNNING {} {} {} {} {}".format(player.hp, enemy.hp, win_label, lose_label, draw_label))
+        
+        # tear down
+        current_session.enemy_tag = None
+        current_session.player_tag = None
+        
         if draw_label:
             renpy.jump(draw_label)
         elif player.hp == 0:
@@ -2070,20 +2162,31 @@ label village_missions(player, village):
 
 label tag_partner:
     $ info = get_tag_info(player, tag_p)
+    $ renpy.hide(player.picname)
     $ renpy.call('fight', info['main'], enemy, info['tag'], tag_e, stage, win_label, lose_label, draw_label)
     
 label start:
     $ current_session.player = naruto
     $ current_session.village = hidden_mist
+    scene dream_2
+    call fight(naruto, sasuke, [sakura], [kakashi], clearing, 'fight1_w', 'fight1_l', None)
     show screen player_stats
     show screen stats_screen(current_session.player)
     show screen time_screen
     $ show_village_map(hidden_mist, naruto)
     #$ start_world_events()
-    call fight(naruto, sasuke, [sakura, kakashi], [], clearing, 'fight1_w', 'fight1_l', None)
+    call fight(naruto, sasuke, [sakura], [kakashi], clearing, 'fight1_w', 'fight1_l', None)
     
 label fight(player, enemy, tag_p, tag_e, stage=clearing, win_label, lose_label, draw_label=None):
     #scene bg
+    
+    # set current_session
+    $ current_session.enemy_tag = tag_e
+    $ current_session.player_tag = tag_p
+    $ current_session.stage = stage
+    $ current_session.win_label = win_label
+    $ current_session.lose_label = lose_label
+    $ current_session.draw_label = draw_label
     
     call showtiles
     hide screen movemenu
