@@ -59,8 +59,12 @@ init:
     
     image playerpic_r = im.Scale("player.png", 40, 50)
     image enemypic_r = im.Scale("enemy.png", 40, 50)
+    image sakurapic_r = im.Scale("sakura.png", 40, 50)
+    image kakashipic_r = im.Scale("kakashi.png", 40, 50)
     image playerpic_l = im.Flip(im.Scale("player.png", 40, 50), horizontal=True)
     image enemypic_l = im.Flip(im.Scale("enemy.png", 40, 50), horizontal=True)
+    image sakurapic_l = im.Flip(im.Scale("sakura.png", 40, 50), horizontal=True)
+    image kakashipic_l = im.Flip(im.Scale("kakashi.png", 40, 50), horizontal=True)
     
     $ player1currentpos = 1
     $ enemy1currentpos = 12
@@ -943,9 +947,15 @@ init python:
         def fix_stats(self):
             if self.hp < 0:
                 self.hp = 0
+                
+            if self.hp > self.maxhp:
+                self.hp = self.maxhp
             
             if self.chakra < 0:
                 self.chakra = 0
+                
+            if self.chakra > self.maxchakra:
+                self.chakra = self.maxchakra
                 
         def __repr__(self):
             return "<Player>: {}".format(self.name)
@@ -1050,7 +1060,8 @@ init python:
         def action(self, player, enemy):
             if player.chakra < self.chakra_cost:
                 renpy.say(player.character, "I don't have enough chakra")
-                Jump("fight")
+                return
+                #renpy.jump("fight")
             
             if self.hit_successful(player, enemy):
                 renpy.say(player.character, "{}".format(self.name))
@@ -1219,13 +1230,13 @@ init python:
     
     naruto = Player('Naruto', "playerpic_r", naruto_c, Image('player.png'), None, 100, 100, 80, 80, 10, 4, 3, 4, 5, 80, tile1, 'right', 
                     [onetwocombo, lioncombo], [rasengan], [substitution], [],
-                    [damage_reduction_p, chakra_defence, reflect, dampen, yata_mirror], [], "leader_pic", weapons=[])
+                    [damage_reduction_p, chakra_defence, reflect, dampen, yata_mirror], [], "leader_pic", weapons=[shiruken, kunai])
     sasuke = Player('Sasuke', "enemypic_r", sasuke_c, Image('enemy.png'), None, 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
                     [onetwocombo, lioncombo, shiruken, kunai], [chidori], [], [], [damage_reduction_e, chakra_defence_e], battle_ai=nin_enemy_pattern)
     
-    sakura = Player('Sakura', "enemypic_r", sakura_c, Image('sakura.png'), None, 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
+    sakura = Player('Sakura', "sakurapic_r", sakura_c, Image('sakura.png'), None, 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
                     [onetwocombo, lioncombo, shiruken, kunai], [chidori], [], [], [damage_reduction_e, chakra_defence_e])
-    kakashi = Player('Kakashi', "enemypic_r", kakashi_c, Image('kakashi.png'), None, 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
+    kakashi = Player('Kakashi', "kakashipic_r", kakashi_c, Image('kakashi.png'), None, 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
                     [onetwocombo, lioncombo, shiruken, kunai], [raikiri], [], [], [damage_reduction_e, chakra_defence_e], battle_ai=nin_enemy_pattern)
     itachi = copy.deepcopy(sasuke)
     
@@ -1340,6 +1351,8 @@ init python:
         player.tile = tile
         player.tile.activate()
         
+        renpy.hide(player.picname)
+        
         if player.tile.position < enemy.tile.position:
             player.facing = 'right'
             player.change_direction(player.facing)
@@ -1350,7 +1363,6 @@ init python:
         #if not initial_movement:
             #player.chakra -= (stage.remove_chakra() + (difference * stage.pull))
             
-        #renpy.hide(player.picname)
         renpy.show(player.picname, [ POSITIONS[tile.position] ])
         
         # Handle traps
@@ -1382,22 +1394,21 @@ init python:
     nin_enemy_pattern = 3*['nin'] + ['d'] + ['a'] + ['f']
     gen_enemy_pattern = 3*['gen'] + 2*['d'] + ['f']
     
-    def enemy_tag_move(enemy, player):
-        
-        if enemy.hp < (enemy.maxhp*0.4) and current_session.enemy_tag:
-            
-            partner = [p for p in current_session.enemy_tag if p.hp > 0][0]
+    def enemy_tag_move(enemy, player, tag_p, tag_e):
+        if (enemy.hp < (enemy.maxhp*0.4) and tag_e) or (enemy.chakra < (enemy.maxchakra*0.4) and tag_e):
+            partner = [p for p in tag_e if p.hp > 0][0]
             partner.main = True
+            enemy.main = False
             partner.tile = enemy.tile
             
             renpy.hide(enemy.picname)
         
-            info = get_tag_info(enemy, current_session.enemy_tag)
+            info = get_tag_info(enemy, tag_e)
         
             renpy.call('fight', 
                        player, 
                        info['main'],
-                       current_session.player_tag, 
+                       tag_p, 
                        info['tag'],
                        current_session.stage, 
                        current_session.win_label,
@@ -1436,7 +1447,7 @@ init python:
             enemy_move_back(enemy, player, 3)
             if random.randint(1, 100) < 40:
                 renpy.say(enemy.character, "I heal using health paste.")
-                i_health_paste.consume(enemy)
+                enemy.increase_hp(30)
                 Jump("fight")
                 
         if enemy.chakra < (enemy.maxchakra*0.2):
@@ -1445,12 +1456,27 @@ init python:
                 renpy.say(enemy.character, "I am resting now to heal chakra.")
                 enemy.increase_chakra(25)
                 Jump("fight")
+                
+    def enemy_move_around(enemy, player):
+        move_to = random.randint(1, 11)
+        if player.tile.position == move_to:
+            # TODO: this may lead to player going off grid
+            enemy.tile = get_tile_from_position(player.tile.position + 1)
+        else:
+            enemy.tile = get_tile_from_position(move_to)
+            
+        renpy.show(enemy.picname, [ POSITIONS[enemy.tile.position] ])
         
-    def enemy_move(player, enemy, stage):
+    def enemy_move(player, enemy, stage, tag_p, tag_e):
         hide_battle_screen()
         show_player_at_pos(enemy, player, stage, enemy.tile)
         
-        enemy_tag_move(enemy, player)
+        enemy_move_around(enemy, player)
+        
+        # enemy only needs to tag if partner has enough hp
+        for partner in tag_e:
+            if partner.hp > enemy.hp:
+                enemy_tag_move(enemy, player, tag_p, tag_e)
         
         enemy_use_item(enemy, player)
         
@@ -1549,8 +1575,37 @@ init python:
     def show_damage(st, at, player):
         return Text("-{}".format(player.damage_dealt), color="#fff", size=20), None
         
-    def end_match(player, enemy, win_label, lose_label, draw_label):
-        #renpy.say(player.character, "I AM RUNNING {} {} {} {} {}".format(player.hp, enemy.hp, win_label, lose_label, draw_label))
+    def end_match(player, enemy, tag_p, tag_e, win_label, lose_label, draw_label):
+        # if player hp reaches zero force tag to partner with good hp
+        if player.hp == 0 and tag_p:
+            for partner in tag_p:
+                if partner.hp > 0:
+                    partner.main = True
+                    player.main = False
+                    partner.tile = player.tile
+                    renpy.jump('tag_partner')
+        
+        if enemy.hp == 0 and tag_e:
+            for partner in tag_p:
+                if partner.hp > 0:
+                    partner.main = True
+                    enemy.main = False
+                    partner.tile = enemy.tile
+            
+                    renpy.hide(enemy.picname)
+        
+                    info = get_tag_info(enemy, tag_e)
+        
+                    renpy.call('fight', 
+                               player, 
+                               info['main'],
+                               tag_p, 
+                               info['tag'],
+                               current_session.stage, 
+                               current_session.win_label,
+                               current_session.lose_label,
+                               current_session.draw_label)
+                
         
         # tear down
         current_session.enemy_tag = None
@@ -1899,9 +1954,9 @@ screen defenceactions:
             else:
                 textbutton "[skill.name]" xpos 0.6
 
-screen itemselection:
+screen weaponselection:
     vbox:
-        for skill in player.items:
+        for skill in player.weapons:
             if skill.range >= abs(player.tile.position - enemy.tile.position):
                 if player.chakra > skill.chakra_cost:
                     textbutton "[skill.name]" action Jump(skill.label)  xpos 0.6
@@ -1966,12 +2021,13 @@ label yatamirror:
 
 screen battlemenu(player, tag_p):
     vbox:
-        textbutton "Tai" action [Hide("ninactions"), Hide("genactions"), Hide("movemenu"), Hide("itemselection"), Hide("defenceactions"), Show("taiactions")]
-        textbutton "Nin" action [Hide("taiactions"), Hide("genactions"), Hide("movemenu"), Hide("itemselection"), Hide("defenceactions"), Show("ninactions")]
-        textbutton "Gen" action [Hide("ninactions"), Hide("taiactions"), Hide("movemenu"), Hide("itemselection"), Hide("defenceactions"), Show("genactions")]
-        textbutton "Move" action [Hide("ninactions"), Hide("genactions"), Hide("taiactions"), Hide("itemselection"), Hide("defenceactions"), Show("movemenu")]
-        textbutton "Items" action [Hide("ninactions"), Hide("genactions"), Hide("movemenu"), Show("itemselection"), Hide("defenceactions"), Hide("taiactions")]
-        textbutton "Defence" action [Hide("ninactions"), Hide("genactions"), Hide("movemenu"), Hide("itemselection"), Show("defenceactions"), Hide("taiactions")]
+        # TODO: Add items menu
+        textbutton "Tai" action [Hide("ninactions"), Hide("genactions"), Hide("movemenu"), Hide("weaponselection"), Hide("defenceactions"), Show("taiactions")]
+        textbutton "Nin" action [Hide("taiactions"), Hide("genactions"), Hide("movemenu"), Hide("weaponselection"), Hide("defenceactions"), Show("ninactions")]
+        textbutton "Gen" action [Hide("ninactions"), Hide("taiactions"), Hide("movemenu"), Hide("weaponselection"), Hide("defenceactions"), Show("genactions")]
+        textbutton "Move" action [Hide("ninactions"), Hide("genactions"), Hide("taiactions"), Hide("weaponselection"), Hide("defenceactions"), Show("movemenu")]
+        textbutton "Weapons" action [Hide("ninactions"), Hide("genactions"), Hide("movemenu"), Show("weaponselection"), Hide("defenceactions"), Hide("taiactions")]
+        textbutton "Defence" action [Hide("ninactions"), Hide("genactions"), Hide("movemenu"), Hide("weaponselection"), Show("defenceactions"), Hide("taiactions")]
         textbutton "Standby" action Jump("standby")
         for partner in tag_p:
             textbutton "Tag [partner.name]" action [SetField(partner, 'main', True), SetField(partner, 'tile', player.tile), SetField(player, 'main', False), Jump('tag_partner')]
@@ -1982,7 +2038,7 @@ screen stats:
     text "Str: [enemy.strength] Def: [enemy.defence] Eva: [enemy.evasion]" xpos 0.65
     text "Sta: [enemy.stamina] Hit: [enemy.base_hit_rate]" xpos 0.65 ypos 0.05
         
-screen battlebars:
+screen battlebars(tag_p, tag_e):
     #frame:
         #has vbox 
     $ rel_pos = abs(player.tile.position - enemy.tile.position)
@@ -1995,7 +2051,7 @@ screen battlebars:
     if enemy.damage_dealt > 0:
         text "-[enemy.damage_dealt]" xpos 0.59 ypos 0.3
     
-    text "[player.facing]" xpos 0.2 ypos 0.25
+    #text "[player.facing]" xpos 0.2 ypos 0.25
     if player.check_active_skill(damage_reduction_p):
         text "DR" xpos 0.3 ypos 0.15
         
@@ -2033,16 +2089,19 @@ screen battlebars:
     if enemy.check_active_skill(chakra_defence_e):
         text "CD" xpos 0.75 ypos 0.15
         
-    text "[enemy.facing] [enemy.picname]" xpos 0.75 ypos 0.15
+    #text "[enemy.facing] [enemy.picname]" xpos 0.75 ypos 0.15
         
-    #if enemy.reflect.active:
-    #    text "Ref" xpos 0.75 ypos 0.15
+    # show tag partners health here
+    for partner in tag_p:
+        text "[partner.name]" xpos 0.15 ypos 0.75
+        vbar value partner.hp range partner.maxhp xpos 0.18 ypos 0.8 ymaximum 100 xmaximum 20
+        vbar value partner.chakra range partner.maxchakra xpos 0.15 ypos 0.8 ymaximum 100 xmaximum 20
         
-    #if enemy.dampen.active:
-    #    text "Dam" xpos 0.75 ypos 0.15
-        
-    #if enemy.yatamirror.active:
-    #    text "Yata" xpos 0.75 ypos 0.15
+    # show tag partners health here
+    for partner in tag_e:
+        text "[partner.name]" xpos 0.65 ypos 0.75
+        vbar value partner.hp range partner.maxhp xpos 0.68 ypos 0.8 ymaximum 100 xmaximum 20
+        vbar value partner.chakra range partner.maxchakra xpos 0.65 ypos 0.8 ymaximum 100 xmaximum 20
 
 label world_update(village):
     scene map
@@ -2169,6 +2228,7 @@ label start:
     $ current_session.player = naruto
     $ current_session.village = hidden_mist
     scene dream_2
+    $ renpy.notify("hello")
     call fight(naruto, sasuke, [sakura], [kakashi], clearing, 'fight1_w', 'fight1_l', None)
     show screen player_stats
     show screen stats_screen(current_session.player)
@@ -2193,14 +2253,14 @@ label fight(player, enemy, tag_p, tag_e, stage=clearing, win_label, lose_label, 
     hide screen settrap
     # initial position
     $ highlight_position(player, enemy, stage)
-    $ end_match(player, enemy, win_label, lose_label, draw_label)
+    $ end_match(player, enemy, tag_p, tag_e, win_label, lose_label, draw_label)
     $ remove_all_skill_affects(player, enemy)
     #$ show_player_at_pos(player, enemy, clearing, player.tile, initial_movement=True)
     
     #$ drain_blood(player)
     #$ drain_blood(enemy)
     show screen battlemenu(player, tag_p)
-    show screen battlebars
+    show screen battlebars(tag_p, tag_e)
     show screen stats
     
     python:
@@ -2229,19 +2289,7 @@ label standby:
     jump enemymove
     
 label enemymove:
-    #hide show_damage_p
-    #show show_damage_p at Position(xpos=0.75, ypos=200)
-    #xpos 0.75
-    #ypos 120
-    #linear 1.0 ypos 200
-    #linear 1.0 alpha 0
-    #pause 1.0
-    #show show_damage_e at Position(xpos=0.45, ypos=200)
-    #xpos 0.45
-    #ypos 120
-    #linear 1.0 ypos 200
-    #linear 1.0 alpha 0
-    #pause 1.0
+    # damage movement??
     python:
         if enemy.stunned:
             renpy.say(player.character, "The enemy is stunned and cannot move.")
@@ -2250,12 +2298,12 @@ label enemymove:
             if player.counter_state:
                 counter_move(player, enemy)
             else:
-                enemy_move(player, enemy, clearing)
+                enemy_move(player, enemy, clearing, tag_p, tag_e)
                 #renpy.hide(show_damage_e)
                 #renpy.show("show_damage_e", [ Position(xpos=0.45, ypos=200) ], what=show_damage_e)
     #hide show_damage_e
     #show show_damage_e at Position(xpos=0.45, ypos=200)
-    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
+    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
 label showtiles:
     show tile1im at tile1pos
@@ -2313,99 +2361,99 @@ screen settrap:
     
 label move1:
     $ show_player_at_pos(player, enemy, clearing, tile1)
-    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
+    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
 label move2:
     $ show_player_at_pos(player, enemy, clearing, tile2)
-    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
+    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
 label move3:
     $ show_player_at_pos(player, enemy, clearing, tile3)
-    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
+    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
 label move4:
     $ show_player_at_pos(player, enemy, clearing, tile4)
-    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
+    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
 
 label move5:
     $ show_player_at_pos(player, enemy, clearing, tile5)
-    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
+    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
 
 label move6:
     $ show_player_at_pos(player, enemy, clearing, tile6)
-    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
+    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
 label move7:
     $ show_player_at_pos(player, enemy, clearing, tile7)
-    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
+    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
 label move8:
     $ show_player_at_pos(player, enemy, clearing, tile8)
-    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
+    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
 label move9:
     $ show_player_at_pos(player, enemy, clearing, tile9)
-    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
+    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
 label move10:
     $ show_player_at_pos(player, enemy, clearing, tile10)
-    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
+    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
 label move11:
     $ show_player_at_pos(player, enemy, clearing, tile11)
-    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
+    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
 label move12:
     $ show_player_at_pos(player, enemy, clearing, tile12)
-    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
+    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
 label trap1:
     $ set_trap_at_pos(player, enemy, clearing, tile1)
-    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
+    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
 label trap2:
     $ set_trap_at_pos(player, enemy, clearing, tile2)
-    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
+    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
 label trap3:
     $ set_trap_at_pos(player, enemy, clearing, tile3)
-    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
+    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
 label trap4:
     $ set_trap_at_pos(player, enemy, clearing, tile4)
-    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
+    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
 label trap5:
     $ set_trap_at_pos(player, enemy, clearing, tile5)
-    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
+    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
 label trap6:
     $ set_trap_at_pos(player, enemy, clearing, tile6)
-    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
+    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
 label trap7:
     $ set_trap_at_pos(player, enemy, clearing, tile7)
-    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
+    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
 label trap8:
     $ set_trap_at_pos(player, enemy, clearing, tile8)
-    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
+    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
 label trap9:
     $ set_trap_at_pos(player, enemy, clearing, tile9)
-    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
+    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
 label trap10:
     $ set_trap_at_pos(player, enemy, clearing, tile10)
-    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
+    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
 label trap11:
     $ set_trap_at_pos(player, enemy, clearing, tile11)
-    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
+    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
 label trap12:
     $ set_trap_at_pos(player, enemy, clearing, tile12)
-    call fight(player, enemy, tag_p, tag_p, clearing, win_label, lose_label, draw_label)
+    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
 #label movemenu:
     
@@ -2427,4 +2475,5 @@ label trap12:
     #hide playerpic
 #    $ show_player_at_pos(player, enemy, clearing, choice)
 #    jump fight
+
 
