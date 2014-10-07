@@ -920,6 +920,7 @@ init python:
         def apply_skill(self, skill):
             skill.apply()
             setattr(self, skill.label, skill)
+            setattr(getattr(self, skill.label), 'active', True)
             
         def check_active_skill(self, skill):
             s = getattr(self, skill.label, None)
@@ -1110,7 +1111,7 @@ init python:
                 
             if check_active_skill(target, "reflect"):
                 renpy.say(target.character, "Reflect!".format(target.name))
-                player.hp -= (self.damage - player.defence) 
+                player.hp -= int((self.damage - player.defence)) 
                 target.reflect.used += 1
                 
             elif check_active_skill(target, "yatamirror"):
@@ -1118,14 +1119,14 @@ init python:
                 damage = 0
                 target.yatamirror.used += 1
             else:
-                target.hp -= damage
+                target.hp -= int(damage)
                 
-            player.damage_dealt = damage + self.tech
+            player.damage_dealt = int(damage) + self.tech
             
            
         def hit_successful(self, player, enemy):
             hit_rate = player.base_hit_rate + self.tech - (enemy.evasion * enemy.speed)
-            renpy.say(player.character, "Hit rate is {}".format(hit_rate))
+            #renpy.say(player.character, "Hit rate is {}".format(hit_rate))
             if renpy.random.randint(1, 100) <= hit_rate:
                 return True
             else:
@@ -1459,12 +1460,16 @@ init python:
                 
     def enemy_move_around(enemy, player):
         move_to = random.randint(1, 11)
+        old_tile = enemy.tile
         if player.tile.position == move_to:
             # TODO: this may lead to player going off grid
             enemy.tile = get_tile_from_position(player.tile.position + 1)
         else:
             enemy.tile = get_tile_from_position(move_to)
             
+        # this is to prevent error where tile is None
+        if not enemy.tile:
+            enemy.tile = old_tile
         renpy.show(enemy.picname, [ POSITIONS[enemy.tile.position] ])
         
     def enemy_move(player, enemy, stage, tag_p, tag_e):
@@ -1485,17 +1490,22 @@ init python:
         if current_skill.skill_type == 'defence':
             if not enemy.active_defensive_skill():
                 enemy.apply_skill(current_skill)
+                 
                 Jump("fight")
-            #else:
-            #    current_skill = random.choice(enemy.taiskills)
+            else:
+                current_skill = random.choice(enemy.taiskills)
                 
         if current_skill.range >= abs(player.tile.position - enemy.tile.position):
             renpy.show(enemy.picname, [ POSITIONS[enemy.tile.position] ])
             current_skill.action(enemy, player)
         else:
             # move enemy to near player
+            old_tile = enemy.tile
             enemy_position = player.tile.position + current_skill.range
             enemy.tile = get_tile_from_position(enemy_position)
+            
+            if not enemy.tile:
+                enemy.tile = old_tile
             renpy.show(enemy.picname, [ POSITIONS[enemy.tile.position] ])
             
             # Do the attack
@@ -1586,7 +1596,7 @@ init python:
                     renpy.jump('tag_partner')
         
         if enemy.hp == 0 and tag_e:
-            for partner in tag_p:
+            for partner in tag_e:
                 if partner.hp > 0:
                     partner.main = True
                     enemy.main = False
@@ -1595,6 +1605,8 @@ init python:
                     renpy.hide(enemy.picname)
         
                     info = get_tag_info(enemy, tag_e)
+                    
+                    #renpy.say(enemy.character, "Info is {}".format(info.keys()))
         
                     renpy.call('fight', 
                                player, 
@@ -2089,7 +2101,7 @@ screen battlebars(tag_p, tag_e):
     if enemy.check_active_skill(chakra_defence_e):
         text "CD" xpos 0.75 ypos 0.15
         
-    #text "[enemy.facing] [enemy.picname]" xpos 0.75 ypos 0.15
+    #text "[tag_e]" xpos 0.75 ypos 0.15
         
     # show tag partners health here
     for partner in tag_p:
@@ -2228,7 +2240,7 @@ label start:
     $ current_session.player = naruto
     $ current_session.village = hidden_mist
     scene dream_2
-    $ renpy.notify("hello")
+    #$ renpy.notify("hello")
     call fight(naruto, sasuke, [sakura], [kakashi], clearing, 'fight1_w', 'fight1_l', None)
     show screen player_stats
     show screen stats_screen(current_session.player)
@@ -2290,6 +2302,9 @@ label standby:
     
 label enemymove:
     # damage movement??
+    $ end_match(player, enemy, tag_p, tag_e, win_label, lose_label, draw_label)
+    $ remove_all_skill_affects(player, enemy)
+    
     python:
         if enemy.stunned:
             renpy.say(player.character, "The enemy is stunned and cannot move.")
@@ -2299,10 +2314,7 @@ label enemymove:
                 counter_move(player, enemy)
             else:
                 enemy_move(player, enemy, clearing, tag_p, tag_e)
-                #renpy.hide(show_damage_e)
-                #renpy.show("show_damage_e", [ Position(xpos=0.45, ypos=200) ], what=show_damage_e)
-    #hide show_damage_e
-    #show show_damage_e at Position(xpos=0.45, ypos=200)
+
     call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
 label showtiles:
@@ -2475,5 +2487,6 @@ label trap12:
     #hide playerpic
 #    $ show_player_at_pos(player, enemy, clearing, choice)
 #    jump fight
+
 
 
