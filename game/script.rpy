@@ -1,4 +1,4 @@
-﻿# You can place the script of your game in this file.
+# You can place the script of your game in this file.
 
 # Declare images below this line, using the image statement.
 # eg. image eileen happy = "eileen_happy.png"
@@ -9,6 +9,8 @@ define naruto_c = Character('Naruto',color="#FFFF00")
 define sasuke_c = Character('Sasuke', color="#3399FF")
 define sakura_c = Character('Sakura', color="#FA58F4")
 define kakashi_c = Character('Kakashi', color="#3399FF")
+define itachi_c = Character('Itachi', color="#FFFFFF")
+define ori_c = Character('Orichimaru', color="#FF0000")
 image bg = im.Scale("bg.jpg", 800, 600)
 image world_marker = im.Scale("marker.png", 33, 35)
 image leader_pic = im.Scale("leader_pic.png", 100, 150)
@@ -61,10 +63,14 @@ init:
     image enemypic_r = im.Scale("enemy.png", 40, 50)
     image sakurapic_r = im.Scale("sakura.png", 40, 50)
     image kakashipic_r = im.Scale("kakashi.png", 40, 50)
+    image oripic_r = im.Scale("ori.png", 40, 50)
+    image itachipic_r = im.Scale("itachi.png", 40, 50)
     image playerpic_l = im.Flip(im.Scale("player.png", 40, 50), horizontal=True)
     image enemypic_l = im.Flip(im.Scale("enemy.png", 40, 50), horizontal=True)
     image sakurapic_l = im.Flip(im.Scale("sakura.png", 40, 50), horizontal=True)
     image kakashipic_l = im.Flip(im.Scale("kakashi.png", 40, 50), horizontal=True)
+    image oripic_l = im.Flip(im.Scale("ori.png", 40, 50), horizontal=True)
+    image itachipic_l = im.Flip(im.Scale("itachi.png", 40, 50), horizontal=True)
     
     $ player1currentpos = 1
     $ enemy1currentpos = 12
@@ -608,6 +614,7 @@ init python:
             self.mission = None
             self.mission_rank = None
             self.skill = None
+            self.skill_type = None
             self.item = None
             self.time_to_advance = {'hours': 0, 'days': 0, 'months': 0, 'years': 0}
             self.enemy_tag = []
@@ -626,6 +633,7 @@ init python:
             self.mission_rank = None
             self.item = None
             self.skill = None
+            self.skill_type = None
             self.enemy_tag = []
             self.player_tag = []
             self.stage = None
@@ -1217,7 +1225,7 @@ init python:
     damage_reduction_e = Skill('Focus', 'defence', 'damagereduction', 12, 1, 10, duration=2)
     chakra_defence = Skill('Chakra Defence', 'defence', 'chakradefence', 12, 2, 15, duration=3)
     chakra_defence_e = Skill('Chakra Defence', 'defence', 'chakradefence', 12, 2, 15, duration=3)
-    substitution = Skill('Substitution', 'defence', "substitution", 8, 20, 15, 0, stun=True)
+    substitution = Skill('Substitution', 'counter', "substitution", 8, 20, 15, 0, stun=True)
     reflect = Skill('Reflect', 'defence', 'reflect', 12, 20, 20, duration=2)
     dampen = Skill('Dampen', 'defence', 'dampen', 6, 30, 30, duration=3)
     yata_mirror = Skill('Yata Mirror', 'defence', 'yatamirror', 12, 50, 50, duration=2)
@@ -1233,15 +1241,21 @@ init python:
                     [onetwocombo, lioncombo], [rasengan], [substitution], [],
                     [damage_reduction_p, chakra_defence, reflect, dampen, yata_mirror], [], "leader_pic", weapons=[shiruken, kunai])
     sasuke = Player('Sasuke', "enemypic_r", sasuke_c, Image('enemy.png'), None, 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
-                    [onetwocombo, lioncombo, shiruken, kunai], [chidori], [], [], [damage_reduction_e, chakra_defence_e], battle_ai=nin_enemy_pattern)
+                    [onetwocombo, lioncombo], [chidori], [], [], [damage_reduction_e, chakra_defence_e], 
+                    battle_ai=nin_enemy_pattern, weapons=[shiruken, kunai])
     
     sakura = Player('Sakura', "sakurapic_r", sakura_c, Image('sakura.png'), None, 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
-                    [onetwocombo, lioncombo, shiruken, kunai], [chidori], [], [], [damage_reduction_e, chakra_defence_e])
+                    [onetwocombo, lioncombo], [chidori], [], [], [damage_reduction_e, chakra_defence_e], weapons=[shiruken, kunai])
     kakashi = Player('Kakashi', "kakashipic_r", kakashi_c, Image('kakashi.png'), None, 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
-                    [onetwocombo, lioncombo, shiruken, kunai], [raikiri], [], [], [damage_reduction_e, chakra_defence_e], battle_ai=nin_enemy_pattern)
-    itachi = copy.deepcopy(sasuke)
+                    [onetwocombo, lioncombo], [raikiri], [], [], [damage_reduction_e, chakra_defence_e], 
+                    battle_ai=nin_enemy_pattern, weapons=[shiruken, kunai])
     
-    ALL_PLAYERS = [naruto, sasuke, sakura, kakashi, itachi]
+    itachi = copy.deepcopy(sasuke)
+    itachi.name, itachi.picname, itachi.character = "Itachi", "itachipic_r", itachi_c
+    ori = copy.deepcopy(naruto)
+    ori.name, ori.picname, ori.character = "Orichimaru", "oripic_r", ori_c
+    
+    ALL_PLAYERS = [naruto, sasuke, sakura, kakashi, itachi, ori]
     ALL_CHARACTERS = [c.character for c in ALL_PLAYERS]
     
     clearing = Stage('Clearing', 1, 1)
@@ -1397,24 +1411,27 @@ init python:
     
     def enemy_tag_move(enemy, player, tag_p, tag_e):
         if (enemy.hp < (enemy.maxhp*0.4) and tag_e) or (enemy.chakra < (enemy.maxchakra*0.4) and tag_e):
-            partner = [p for p in tag_e if p.hp > 0][0]
-            partner.main = True
-            enemy.main = False
-            partner.tile = enemy.tile
+            # only 50% chance of tagging partner
+            if random.randint(1, 100) < 50:
+                renpy.say(enemy.character, "CHANCE")
+                partner = [p for p in tag_e if p.hp > 0][0]
+                partner.main = True
+                enemy.main = False
+                partner.tile = enemy.tile
             
-            renpy.hide(enemy.picname)
+                renpy.hide(enemy.picname)
         
-            info = get_tag_info(enemy, tag_e)
+                info = get_tag_info(enemy, tag_e)
         
-            renpy.call('fight', 
-                       player, 
-                       info['main'],
-                       tag_p, 
-                       info['tag'],
-                       current_session.stage, 
-                       current_session.win_label,
-                       current_session.lose_label,
-                       current_session.draw_label)
+                renpy.call('fight', 
+                           player, 
+                           info['main'],
+                           tag_p, 
+                           info['tag'],
+                           current_session.stage, 
+                           current_session.win_label,
+                           current_session.lose_label,
+                           current_session.draw_label)
     
     def enemy_pattern(enemy):
         PATTERN_HASH = {'d': enemy.defensiveskills,
@@ -1453,7 +1470,7 @@ init python:
                 
         if enemy.chakra < (enemy.maxchakra*0.2):
             enemy_move_back(enemy, player, 3)
-            if random.randint(1, 100) < 40:
+            if random.randint(1, 100) < 60:
                 renpy.say(enemy.character, "I am resting now to heal chakra.")
                 enemy.increase_chakra(25)
                 Jump("fight")
@@ -1640,10 +1657,15 @@ init python:
                 new_tag_p.append(p)
             
         for p in one_list:
+            p.tile = player.tile
             if p.main:
                 info['main'] = p
             else:
                 info['tag'] = new_tag_p
+                
+        # move the last partner to first, so tagging is spread
+        if len(info['tag']) == 2:
+            new_tag_p.insert(0, info['tag'].pop())
         return info
         
     import copy
@@ -1927,7 +1949,9 @@ screen taiactions:
         for skill in player.taiskills:
             if skill.range >= abs(player.tile.position - enemy.tile.position):
                 if player.chakra > skill.chakra_cost:
-                    textbutton "[skill.name]" action Jump(skill.label)  xpos 0.6
+                    textbutton "[skill.name]" action [SetField(current_session, 'skill', skill), 
+                                                      SetField(current_session, 'skill_type', 'attack'),
+                                                      Jump('skill_redirect')]  xpos 0.6
                 else:
                     textbutton "[skill.name]" xpos 0.6
             else:
@@ -1938,7 +1962,9 @@ screen ninactions:
         for skill in player.ninskills:
             if skill.range >= abs(player.tile.position - enemy.tile.position):
                 if player.chakra > skill.chakra_cost:
-                    textbutton "[skill.name]" action Jump(skill.label)  xpos 0.6
+                    textbutton "[skill.name]" action [SetField(current_session, 'skill', skill), 
+                                                      SetField(current_session, 'skill_type', 'attack'),
+                                                      Jump('skill_redirect')]  xpos 0.6
                 else:
                     textbutton "[skill.name]" xpos 0.6
             else:
@@ -1949,7 +1975,9 @@ screen genactions:
         for skill in player.genskills:
             if skill.range >= abs(player.tile.position - enemy.tile.position):
                 if player.chakra > skill.chakra_cost:
-                    textbutton "[skill.name]" action Jump(skill.label)  xpos 0.6
+                    textbutton "[skill.name]" action [SetField(current_session, 'skill', skill),
+                                                      SetField(current_session, 'skill_type', 'attack'),
+                                                      Jump('skill_redirect')]  xpos 0.6
                 else:
                     textbutton "[skill.name]" xpos 0.6
             else:
@@ -1960,7 +1988,9 @@ screen defenceactions:
         for skill in player.defensiveskills:
             if skill.range >= abs(player.tile.position - enemy.tile.position):
                 if player.chakra > skill.chakra_cost:
-                    textbutton "[skill.name]" action Jump(skill.label)  xpos 0.6
+                    textbutton "[skill.name]" action [SetField(current_session, 'skill', skill), 
+                                                      SetField(current_session, 'skill_type', 'defence'),
+                                                      Jump('skill_redirect')]  xpos 0.6
                 else:
                     textbutton "[skill.name]" xpos 0.6
             else:
@@ -1971,65 +2001,30 @@ screen weaponselection:
         for skill in player.weapons:
             if skill.range >= abs(player.tile.position - enemy.tile.position):
                 if player.chakra > skill.chakra_cost:
-                    textbutton "[skill.name]" action Jump(skill.label)  xpos 0.6
+                    textbutton "[skill.name]" action [SetField(current_session, 'skill', skill), 
+                                                      SetField(current_session, 'skill_type', 'attack'),
+                                                      Jump('skill_redirect')]  xpos 0.6
                 else:
                     textbutton "[skill.name]" xpos 0.6
             else:
                 textbutton "[skill.name]" xpos 0.6
 
-label onetwocombo:
-    $ onetwocombo.action(player, enemy)
-    jump enemymove
-    
-label lioncombo:
-    $ lioncombo.action(player, enemy)
-    jump enemymove
-    
-label rasengan:
-    $ rasengan.action(player, enemy)
-    jump enemymove
-
-label chidori:
-    $ chidori.action(player, enemy)
-    jump enemymove
-    
-label substitution:
-    $ renpy.say(player.character, "{}".format(substitution.name))
-    $ player.counter_state = True
-    jump enemymove
-    
-label shiruken:
-    $ shiruken.action(player, enemy)
-    jump enemymove
-    
-label kunai:
-    $ kunai.action(player, enemy)
+label skill_redirect:
+    python:
+        # deal with exceptions
+        if current_session.skill.skill_type == 'counter':
+            player.counter_state = True
+        
+        
+        if current_session.skill_type == 'attack':
+            current_session.skill.action(player,enemy)
+        elif current_session.skill_type == 'defence':
+            getattr(player, current_session.skill.label).apply()
+            
     jump enemymove
     
 label trap:
     jump settrap
-    
-label damagereduction:
-    "S" "ENEMY BEFORE DR: [enemy.damagereduction.active]"
-    $ player.damagereduction.apply()
-    "S" "ENEMY AFTER DR: [enemy.damagereduction.active]"
-    jump enemymove
-    
-label chakradefence:
-    $ player.chakradefence.apply()
-    jump enemymove
-    
-label reflect:
-    $ player.reflect.apply()
-    jump enemymove
-    
-label dampen:
-    $ player.dampen.apply()
-    jump enemymove
-    
-label yatamirror:
-    $ player.yatamirror.apply()
-    jump enemymove
 
 screen battlemenu(player, tag_p):
     vbox:
@@ -2042,7 +2037,7 @@ screen battlemenu(player, tag_p):
         textbutton "Defence" action [Hide("ninactions"), Hide("genactions"), Hide("movemenu"), Hide("weaponselection"), Show("defenceactions"), Hide("taiactions")]
         textbutton "Standby" action Jump("standby")
         for partner in tag_p:
-            textbutton "Tag [partner.name]" action [SetField(partner, 'main', True), SetField(partner, 'tile', player.tile), SetField(player, 'main', False), Jump('tag_partner')]
+            textbutton "Tag [partner.name]" action [SetField(partner, 'main', True), SetField(partner, 'tile', player.tile), SetField(player, 'main', False), Jump('tag_partner')] ypos 3.5
         
 screen stats:
     text "Str: [player.strength] Def: [player.defence] Eva: [player.evasion]" xpos 0.30
@@ -2101,19 +2096,29 @@ screen battlebars(tag_p, tag_e):
     if enemy.check_active_skill(chakra_defence_e):
         text "CD" xpos 0.75 ypos 0.15
         
-    #text "[tag_e]" xpos 0.75 ypos 0.15
+    text "[tag_e]" xpos 0.45 ypos 0.10
         
     # show tag partners health here
-    for partner in tag_p:
-        text "[partner.name]" xpos 0.15 ypos 0.75
-        vbar value partner.hp range partner.maxhp xpos 0.18 ypos 0.8 ymaximum 100 xmaximum 20
-        vbar value partner.chakra range partner.maxchakra xpos 0.15 ypos 0.8 ymaximum 100 xmaximum 20
+    for position, partner in enumerate(tag_p):
+        if position == 0:
+            text "[partner.name]" xpos 0.25 ypos 0.75
+            vbar value partner.hp range partner.maxhp xpos 0.28 ypos 0.8 ymaximum 100 xmaximum 20
+            vbar value partner.chakra range partner.maxchakra xpos 0.25 ypos 0.8 ymaximum 100 xmaximum 20
+        else:
+            text "[partner.name]" xpos 0.35 ypos 0.75
+            vbar value partner.hp range partner.maxhp xpos 0.38 ypos 0.8 ymaximum 100 xmaximum 20
+            vbar value partner.chakra range partner.maxchakra xpos 0.35 ypos 0.8 ymaximum 100 xmaximum 20
         
     # show tag partners health here
-    for partner in tag_e:
-        text "[partner.name]" xpos 0.65 ypos 0.75
-        vbar value partner.hp range partner.maxhp xpos 0.68 ypos 0.8 ymaximum 100 xmaximum 20
-        vbar value partner.chakra range partner.maxchakra xpos 0.65 ypos 0.8 ymaximum 100 xmaximum 20
+    for position, partner in enumerate(tag_e):
+        if position == 0:
+            text "[partner.name]" xpos 0.65 ypos 0.75
+            vbar value partner.hp range partner.maxhp xpos 0.68 ypos 0.8 ymaximum 100 xmaximum 20
+            vbar value partner.chakra range partner.maxchakra xpos 0.65 ypos 0.8 ymaximum 100 xmaximum 20
+        else:
+            text "[partner.name]" xpos 0.75 ypos 0.75
+            vbar value partner.hp range partner.maxhp xpos 0.78 ypos 0.8 ymaximum 100 xmaximum 20
+            vbar value partner.chakra range partner.maxchakra xpos 0.75 ypos 0.8 ymaximum 100 xmaximum 20
 
 label world_update(village):
     scene map
@@ -2241,7 +2246,7 @@ label start:
     $ current_session.village = hidden_mist
     scene dream_2
     #$ renpy.notify("hello")
-    call fight(naruto, sasuke, [sakura], [kakashi], clearing, 'fight1_w', 'fight1_l', None)
+    call fight(naruto, sasuke, [sakura, ori], [kakashi, itachi], clearing, 'fight1_w', 'fight1_l', None)
     show screen player_stats
     show screen stats_screen(current_session.player)
     show screen time_screen
@@ -2487,6 +2492,7 @@ label trap12:
     #hide playerpic
 #    $ show_player_at_pos(player, enemy, clearing, choice)
 #    jump fight
+
 
 
 
