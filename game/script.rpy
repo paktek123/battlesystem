@@ -623,6 +623,7 @@ init python:
             self.win_label = None
             self.lose_label = None
             self.draw_label = None
+            self.last_match_result = None
             
         def clear(self):
             self.player = None
@@ -640,11 +641,21 @@ init python:
             self.win_label = None
             self.lose_label = None
             self.draw_label = None
+            self.last_match_result = None
             
         def clear_time_to_advance(self):
             self.time_to_advance = {'hours': 0, 'days': 0, 'months': 0, 'years': 0}
         
     current_session = CurrentSession()
+    
+    INJURY_LEVELS = {1: "minor", 
+                     2: "significant", 
+                     3: "major",
+                     4: "crippled",
+                     5: "crippled",
+                     6: "crippled",
+                     7: "crippled",
+                     0: "none"}
     
     class Limb:
         def __init__(self, name):
@@ -653,6 +664,8 @@ init python:
             self.crippled = False
             self.cripple_count = 0
             self.injury = False
+            self.injury_severity = 0
+            self.injury_count = 0
             
         def bleed(self):
             self.bleeding = True
@@ -666,14 +679,23 @@ init python:
                 self.cripple = True
                 
         def injure(self):
+            self.injury_severity += 1
+            self.injury = True
+            
+        def heal_injury(self, full=True):
+            if full:
+                self.injury_severity = 0
+            else:
+                self.injury_severity -= 1
+            
             self.injury = True
             
     limb_head = Limb('head')
     limb_torso = Limb('torso')
-    limb_left_arm = Limb('left arm')
-    limb_right_arm = Limb('right arm')
-    limb_left_leg = Limb('left leg')
-    limb_right_leg = Limb('right leg')
+    limb_left_arm = Limb('left_arm')
+    limb_right_arm = Limb('right_arm')
+    limb_left_leg = Limb('left_leg')
+    limb_right_leg = Limb('right_leg')
     
     LIMBS = [limb_head, limb_torso, limb_left_arm, limb_right_arm, limb_left_leg, limb_right_leg]
     
@@ -707,7 +729,7 @@ init python:
         def __init__(self, name, picname, character, tilepic, hudpic, hp, maxhp, chakra, maxchakra, 
                      strength, speed, evasion, defence, stamina, base_hit_rate, tile, facing,
                      taiskills=[], ninskills=[], genskills=[], items=[], defensiveskills=[], bloodlineskills=[],
-                     leader_pic=None, taijutsu=1, ninjutsu=1, genjutsu=1, weapons=[], battle_ai=[]):
+                     leader_pic=None, taijutsu=1, ninjutsu=1, genjutsu=1, weapons=[], battle_ai=[], home_village=None):
             self.name = name
             self.picname = picname
             self.character = character
@@ -746,7 +768,6 @@ init python:
             self.right_arm = copy.deepcopy(limb_right_arm)
             self.left_leg = copy.deepcopy(limb_left_leg)
             self.right_leg = copy.deepcopy(limb_right_leg)
-            self.limbs = [self.head, self.torso, self.left_arm, self.right_arm, self.left_leg, self.right_leg]
             self.blood = 100
             self.max_blood = 100
             self.damage_dealt = 0
@@ -760,14 +781,27 @@ init python:
             self.bond = 0
             self.ryo = 1000
             self.battle_ai = battle_ai
-            #self.damage_reduction = False
-            #self.chakra_defence = False
-            #self.reflect = False
-            #self.dampen = False
-            #self.ignore_damage = False
+            self.home_village
             
             self.assign_all_skills()
             self.set_sensei()
+            
+        def injure_limb(self, name):
+            limb = [l for l in self.get_limbs() if l.name == name][0]
+            limb.injure()
+            setattr(self, limb.name, limb)
+            
+        def change_severity_limbs(self, injured_limbs, severity_delta):
+            for limb in injured_limbs:
+                l = getattr(self, limb.name)
+                l.injury_severity += severity_delta
+                setattr(self, limb.name, l)
+            
+        def get_limbs(self):
+            return [self.head, self.torso, self.left_arm, self.right_arm, self.left_leg, self.right_leg]
+            
+        def get_injured_limbs(self):
+            return [limb for limb in self.get_limbs() if limb.injury]
             
         def buy_item(self, item):
             if self.ryo >= item.price:
@@ -851,7 +885,7 @@ init python:
             
         def injury_chance(self, chance=0.00):
             percent = chance * 100
-            if renpy.random.randint(1,101) > percent:
+            if random.randint(1,101) > percent:
                 random.choice(self.limbs).injure()
                 
         def increase_hp(self, health):
@@ -896,7 +930,7 @@ init python:
             #renpy.say(self.character, "Now I am {} : {}".format(direction, self.picname))
             
         def is_bleeding(self):
-            for limb in self.limbs:
+            for limb in self.get_limbs():
                 if limb.bleeding:
                     return True
             return False
@@ -1030,7 +1064,8 @@ init python:
                 tile.deactivate_trap()
     
     class Skill(object):
-        def __init__(self, name, skill_type, label, range, tech=0, chakra_cost=0, damage=0, stun=False, duration=None, exp=0, unlock_exp=0):
+        def __init__(self, name, skill_type, label, range, tech=0, chakra_cost=0, damage=0, 
+                     stun=False, duration=None, exp=0, unlock_exp=0, limbs=[]):
             self.name = name
             self.skill_type = skill_type
             self.label = label
@@ -1044,6 +1079,7 @@ init python:
             self.duration = duration
             self.used = 0
             self.active = False
+            self.limbs = limbs
             
         def set_to_default(self):
             self.active = False
@@ -1067,10 +1103,18 @@ init python:
             self.active = False
             
         def action(self, player, enemy):
+            
+            skill_limb_requirements = [limb.name for limb in self.limbs]
+            
+            injured_limbs = [limb.name for limb in skill_limb_requirements if limb.name in player.get_injured_limbs()]
+            
+            if injured_limbs:
+                renpy.say(player.character, "I am injured but I will still use the skill, it will make my injury worse.")
+                player.increase_limb_severity([injured_limbs], 1)
+                
             if player.chakra < self.chakra_cost:
                 renpy.say(player.character, "I don't have enough chakra")
                 return
-                #renpy.jump("fight")
             
             if self.hit_successful(player, enemy):
                 renpy.say(player.character, "{}".format(self.name))
@@ -1095,11 +1139,6 @@ init python:
             self.used += 1
             
         def deal_damage(self, player, target):
-            #renpy.say(target.character, "{}".format(self.active))
-            #if not self.active:
-            #    return
-                
-            #renpy.say(target.character, "HELLO2")
             
             self.append_to_skill()
             
@@ -1121,13 +1160,14 @@ init python:
                 renpy.say(target.character, "Reflect!".format(target.name))
                 player.hp -= int((self.damage - player.defence)) 
                 target.reflect.used += 1
-                
             elif check_active_skill(target, "yatamirror"):
                 renpy.say(target.character, "Your skills won't affect me!".format(target.name))
                 damage = 0
                 target.yatamirror.used += 1
             else:
-                target.hp -= int(damage)
+                # only defensive skills
+                if self.skill_type == 'attack':
+                    target.hp -= int(damage)
                 
             player.damage_dealt = int(damage) + self.tech
             
@@ -1239,16 +1279,17 @@ init python:
     
     naruto = Player('Naruto', "playerpic_r", naruto_c, Image('player.png'), None, 100, 100, 80, 80, 10, 4, 3, 4, 5, 80, tile1, 'right', 
                     [onetwocombo, lioncombo], [rasengan], [substitution], [],
-                    [damage_reduction_p, chakra_defence, reflect, dampen, yata_mirror], [], "leader_pic", weapons=[shiruken, kunai])
+                    [damage_reduction_p, chakra_defence, reflect, dampen, yata_mirror], [], "leader_pic", 
+                    weapons=[shiruken, kunai], home_village=hidden_leaf)
     sasuke = Player('Sasuke', "enemypic_r", sasuke_c, Image('enemy.png'), None, 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
                     [onetwocombo, lioncombo], [chidori], [], [], [damage_reduction_e, chakra_defence_e], 
-                    battle_ai=nin_enemy_pattern, weapons=[shiruken, kunai])
+                    battle_ai=nin_enemy_pattern, weapons=[shiruken, kunai], home_village=hidden_leaf)
     
     sakura = Player('Sakura', "sakurapic_r", sakura_c, Image('sakura.png'), None, 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
-                    [onetwocombo, lioncombo], [chidori], [], [], [damage_reduction_e, chakra_defence_e], weapons=[shiruken, kunai])
+                    [onetwocombo, lioncombo], [chidori], [], [], [damage_reduction_e, chakra_defence_e], weapons=[shiruken, kunai], home_village=hidden_leaf)
     kakashi = Player('Kakashi', "kakashipic_r", kakashi_c, Image('kakashi.png'), None, 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
                     [onetwocombo, lioncombo], [raikiri], [], [], [damage_reduction_e, chakra_defence_e], 
-                    battle_ai=nin_enemy_pattern, weapons=[shiruken, kunai])
+                    battle_ai=nin_enemy_pattern, weapons=[shiruken, kunai], home_village=hidden_leaf)
     
     itachi = copy.deepcopy(sasuke)
     itachi.name, itachi.picname, itachi.character = "Itachi", "itachipic_r", itachi_c
@@ -1391,7 +1432,7 @@ init python:
         renpy.hide_screen("taiactions")
         renpy.hide_screen("ninactions")
         renpy.hide_screen("defenceactions")
-        renpy.hide_screen("itemselection")
+        renpy.hide_screen("weaponselection")
         
     # d = defensive skill
     # f = range attack (weapon)
@@ -1409,29 +1450,43 @@ init python:
     nin_enemy_pattern = 3*['nin'] + ['d'] + ['a'] + ['f']
     gen_enemy_pattern = 3*['gen'] + 2*['d'] + ['f']
     
+    def find_suitable_tag_partner(tag):
+        if len(tag) == 1:
+            if partner.hp > 0:
+                return partner
+        elif len(tag) == 2:
+            if tag[0].hp > tag[1].hp and tag[0].hp > 0:
+                return tag[0]
+            elif tag[1].hp > tag[0].hp and tag[1].hp > 0:
+                return tag[1]
+            elif tag[1].hp == tag[0].hp and tag[0].hp > 0:
+                return tag[0]
+            else:
+                return None
+        return None
+    
     def enemy_tag_move(enemy, player, tag_p, tag_e):
         if (enemy.hp < (enemy.maxhp*0.4) and tag_e) or (enemy.chakra < (enemy.maxchakra*0.4) and tag_e):
             # only 50% chance of tagging partner
             if random.randint(1, 100) < 50:
-                renpy.say(enemy.character, "CHANCE")
-                partner = [p for p in tag_e if p.hp > 0][0]
-                partner.main = True
-                enemy.main = False
-                partner.tile = enemy.tile
-            
-                renpy.hide(enemy.picname)
+                #renpy.say(enemy.character, "CHANCE")
+                partner = find_suitable_tag_partner(tag_e)
+                if partner:
+                    partner.main = True
+                    enemy.main = False
+                    partner.tile = enemy.tile
+                    renpy.hide(enemy.picname)
+                    info = get_tag_info(enemy, tag_e)
         
-                info = get_tag_info(enemy, tag_e)
-        
-                renpy.call('fight', 
-                           player, 
-                           info['main'],
-                           tag_p, 
-                           info['tag'],
-                           current_session.stage, 
-                           current_session.win_label,
-                           current_session.lose_label,
-                           current_session.draw_label)
+                    renpy.call('fight', 
+                               player, 
+                               info['main'],
+                               tag_p, 
+                               info['tag'],
+                               current_session.stage, 
+                               current_session.win_label,
+                               current_session.lose_label,
+                               current_session.draw_label)
     
     def enemy_pattern(enemy):
         PATTERN_HASH = {'d': enemy.defensiveskills,
@@ -1457,6 +1512,9 @@ init python:
             enemy.tile.position -= spaces
             if enemy.tile.position < 1:
                 enemy.tile.position = 1
+                
+        new_tile = get_tile_from_position(enemy.tile.position)
+        enemy.tile = new_tile
                 
         renpy.show(enemy.picname, [ POSITIONS[enemy.tile.position] ])
         
@@ -1507,7 +1565,6 @@ init python:
         if current_skill.skill_type == 'defence':
             if not enemy.active_defensive_skill():
                 enemy.apply_skill(current_skill)
-                 
                 Jump("fight")
             else:
                 current_skill = random.choice(enemy.taiskills)
@@ -1546,11 +1603,12 @@ init python:
     def player_bleed(target):
         if target.hp < (0.3 * target.maxhp):
             if renpy.random.randint(1,3) > 2:
-                limb_index = renpy.random.randint(0, len(target.limbs) - 1)
-                limb = target.limbs[limb_index]
+                limb = random.choice(target.get_limbs())
+                limb.injure()
                 renpy.say(target.character, "No my {} is bleeding".format(limb.name))
                 if not limb.bleeding:
                     limb.bleed()
+                setattr(target, limb.name, limb)
         
     def drain_blood(target):
         if target.is_bleeding():
@@ -1598,9 +1656,6 @@ init python:
                 s.used = 0
                 s.remove()
                 setattr(enemy, s.label, s)
-
-    def show_damage(st, at, player):
-        return Text("-{}".format(player.damage_dealt), color="#fff", size=20), None
         
     def end_match(player, enemy, tag_p, tag_e, win_label, lose_label, draw_label):
         # if player hp reaches zero force tag to partner with good hp
@@ -1613,27 +1668,23 @@ init python:
                     renpy.jump('tag_partner')
         
         if enemy.hp == 0 and tag_e:
-            for partner in tag_e:
-                if partner.hp > 0:
-                    partner.main = True
-                    enemy.main = False
-                    partner.tile = enemy.tile
-            
-                    renpy.hide(enemy.picname)
+            partner = find_suitable_tag_partner(tag_e)
+            if partner:
+                partner.main = True
+                enemy.main = False
+                partner.tile = enemy.tile
+                renpy.hide(enemy.picname)
+                info = get_tag_info(enemy, tag_e)
         
-                    info = get_tag_info(enemy, tag_e)
-                    
-                    #renpy.say(enemy.character, "Info is {}".format(info.keys()))
-        
-                    renpy.call('fight', 
-                               player, 
-                               info['main'],
-                               tag_p, 
-                               info['tag'],
-                               current_session.stage, 
-                               current_session.win_label,
-                               current_session.lose_label,
-                               current_session.draw_label)
+                renpy.call('fight', 
+                           player, 
+                           info['main'],
+                           tag_p, 
+                           info['tag'],
+                           current_session.stage, 
+                           current_session.win_label,
+                           current_session.lose_label,
+                           current_session.draw_label)
                 
         
         # tear down
@@ -1641,11 +1692,14 @@ init python:
         current_session.player_tag = None
         
         if draw_label:
-            renpy.jump(draw_label)
+            current_session.last_match_result = 'draw'
+            renpy.call(player, current_session.village)
         elif player.hp == 0:
-            renpy.jump(lose_label)
+            current_session.last_match_result = 'lose'
+            renpy.call(player, current_session.village)
         elif enemy.hp == 0:
-            renpy.jump(win_label)
+            current_session.last_match_result = 'win'
+            renpy.call(player, current_session.village)
             
     def get_tag_info(player, tag_p):
         one_list = [player] + tag_p
@@ -1657,15 +1711,18 @@ init python:
                 new_tag_p.append(p)
             
         for p in one_list:
+            p.tile.deactivate()
             p.tile = player.tile
             if p.main:
                 info['main'] = p
             else:
                 info['tag'] = new_tag_p
                 
-        # move the last partner to first, so tagging is spread
-        if len(info['tag']) == 2:
-            new_tag_p.insert(0, info['tag'].pop())
+        # deactivate tiles
+        info['main'].tile.activate()
+        #for p in info['tag']:
+        #    p.tile.deactivate()
+                
         return info
         
     import copy
@@ -2096,7 +2153,7 @@ screen battlebars(tag_p, tag_e):
     if enemy.check_active_skill(chakra_defence_e):
         text "CD" xpos 0.75 ypos 0.15
         
-    text "[tag_e]" xpos 0.45 ypos 0.10
+    #text "[tag_e]" xpos 0.45 ypos 0.10
         
     # show tag partners health here
     for position, partner in enumerate(tag_p):
@@ -2252,7 +2309,7 @@ label start:
     show screen time_screen
     $ show_village_map(hidden_mist, naruto)
     #$ start_world_events()
-    call fight(naruto, sasuke, [sakura], [kakashi], clearing, 'fight1_w', 'fight1_l', None)
+    call fight(naruto, sasuke, [sakura], [kakashi], clearing, 'generic_win', 'generic_lose', None)
     
 label fight(player, enemy, tag_p, tag_e, stage=clearing, win_label, lose_label, draw_label=None):
     #scene bg
@@ -2272,7 +2329,6 @@ label fight(player, enemy, tag_p, tag_e, stage=clearing, win_label, lose_label, 
     $ highlight_position(player, enemy, stage)
     $ end_match(player, enemy, tag_p, tag_e, win_label, lose_label, draw_label)
     $ remove_all_skill_affects(player, enemy)
-    #$ show_player_at_pos(player, enemy, clearing, player.tile, initial_movement=True)
     
     #$ drain_blood(player)
     #$ drain_blood(enemy)
@@ -2289,13 +2345,30 @@ label fight(player, enemy, tag_p, tag_e, stage=clearing, win_label, lose_label, 
     
     call movemenu
     
-label fight1_w:
-    "Sample" "I WON EVERYTHING"
-    #return
+label generic_win(player, mission):
+    # put in logic for mission success TODO
+    $ hide_battle_menu()
+    $ exp = renpy.random.randint(100,200) + 200
+    $ player.gain_exp(exp)
+    # maybe rotated random dialogues here? TODO
+    player.character "I won the match and gained [exp]."
+    player.character "Now to head back to the village."
+    player.character "..."
+    player.character "..........."
+    player.character "......................."
+    $ show_village_map(player.home_village, player)
 
-label fight1_l:
-    "Sample" "I LOST EVERYTHING"
-    #return
+label generic_lose(player, mission):
+    # put in logic for mission success TODO
+    $ hide_battle_menu()
+    $ exp = renpy.random.randint(100,200) + 70
+    $ player.gain_exp(exp)
+    player.character "I won the match and gained [exp]."
+    player.character "Now to head back to the village."
+    player.character "..."
+    player.character "..........."
+    player.character "......................."
+    $ show_village_map(player.home_village, player)
     
 label fight1_d:
     "Sample" "I DRAW EVERYTHING"
