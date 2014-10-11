@@ -1,4 +1,4 @@
-# You can place the script of your game in this file.
+﻿# You can place the script of your game in this file.
 
 # Declare images below this line, using the image statement.
 # eg. image eileen happy = "eileen_happy.png"
@@ -301,6 +301,28 @@ init python:
             
     main_time = GameTime(9, 1, 1, 1354)
     
+    class Month:
+        def __init__(self, number, days=[]):
+            self.number = number 
+            self.days = []
+            
+    class Day:
+        def __init__(self, number, month, events=[]):
+            self.number = number
+            self.events = events
+            self.month = month
+    
+    months = [Month(m) for m in range(1,13)]
+    
+    for m in months:
+        m.days = [Day(d, m) for d in range(1,31)]
+        
+    # populate events like this
+    for e in events:
+        for m in months:
+            for d in m.days:
+                if e.start_date[0] == d.number and d.month.number == e.finish_date[
+    
     class Event:
         """
         start = (day, month)
@@ -354,12 +376,17 @@ init python:
                            "S": {'ryo': 1000000, 'exp': 10000}}
            
         def reward(self, player, half=False):
+            exp_reward = renpy.random.randint(0, self.REWARDS[self.rank]['exp']) + self.REWARDS[self.rank]['exp']
+            ryo_reward = renpy.random.randint(0, self.REWARDS[self.rank]['ryo']) + self.REWARDS[self.rank]['ryo']
+            
             if half:
-                player.gain_exp((renpy.random.randint(0, self.REWARDS[self.rank]['exp']) + self.REWARDS[self.rank]['exp']) / 2)
-                player.ryo += (renpy.random.randint(0, self.REWARDS[self.rank]['ryo']) + self.REWARDS[self.rank]['ryo']) / 2
-            else:
-                player.gain_exp(renpy.random.randint(0, self.REWARDS[self.rank]['exp']) + self.REWARDS[self.rank]['exp'])
-                player.ryo += renpy.random.randint(0, self.REWARDS[self.rank]['ryo']) + self.REWARDS[self.rank]['ryo']
+                exp_reward = exp_reward / 2
+                ryo_reward = ryo_reward / 2
+            
+            player.gain_exp(exp_reward)
+            player.ryo += ryo_reward
+            
+            return {'exp': exp_reward, 'ryo': ryo_reward}
     
     class BasicMission(Mission):
         """
@@ -436,6 +463,9 @@ init python:
                 renpy.say(player.character, d)
             renpy.call('fight', player, self.fights['enemy'], player_team, self.fights['tag'], self.fights['stage'], self.fights['win_label'], self.fights['lose_label'])
             
+            if current_session.last_match_result == 'win':
+                self.success = True
+            
             # this maybe useless
             if self.success:
                 self.reward(player)
@@ -457,7 +487,9 @@ init python:
                               ('fight', 1),
                               ('sprite', 'show image name'),
                               ('scene', "image name"),
-                              ('screen', "call a screen")]
+                              ('screen', "call a screen"),
+                              ('time', 12),
+                              ('mission', "last_match|success")]
         Fights = [('stage': someplace, 
                   'win_label': win_label, 
                   'lose_label': lose_label, 
@@ -488,6 +520,18 @@ init python:
                 
             elif function[0] == 'screen':
                 renpy.show_screen(function[1], player, screen)
+                
+            elif function[0] == 'time':
+                 main_time.advance_time(hours=function[1])
+                
+            elif function[0] == 'mission':
+                if function[1] == 'success':
+                    self.success = True
+                elif function[1] == 'last_match':
+                    if current_session.last_match_result == 'win':
+                        self.success = True
+                    else:
+                        self.success = False
             
         def do_mission(self, player, from_village, dest_village):
             # show some dialogues between the transaction phases to make it seemless
@@ -607,7 +651,7 @@ init python:
     # This used to store information about recent actions (since renpy does not have a call action for screens)
     class CurrentSession:
         def __init__(self):
-            self.player = None
+            self.main_player = None
             self.location = None
             self.village = None
             self.limb = None
@@ -626,7 +670,7 @@ init python:
             self.last_match_result = None
             
         def clear(self):
-            self.player = None
+            self.main_player = None
             self.location = None
             self.village = None
             self.limb = None
@@ -781,7 +825,7 @@ init python:
             self.bond = 0
             self.ryo = 1000
             self.battle_ai = battle_ai
-            self.home_village
+            self.home_village = home_village
             
             self.assign_all_skills()
             self.set_sensei()
@@ -980,12 +1024,6 @@ init python:
                 return True
             else:
                 return False
-            #for skill in self.defensiveskills:
-            #    check = getattr(self, skill.label)
-            #    renpy.say(self.character, "{} {}".format(check.label, check.active))
-            #    if check.active:
-            #        return True
-            #return False
             
         def fix_stats(self):
             if self.hp < 0:
@@ -1166,7 +1204,7 @@ init python:
                 target.yatamirror.used += 1
             else:
                 # only defensive skills
-                if self.skill_type == 'attack':
+                if self.skill_type in ('attack', 'tai', 'nin', 'gen', 'weapon'):
                     target.hp -= int(damage)
                 
             player.damage_dealt = int(damage) + self.tech
@@ -1256,9 +1294,9 @@ init python:
     substitution = Skill('Substitution', 'gen', "substitution", 8, 20, 15, 0, stun=True)
     
     # tool skills
-    shiruken = Skill('Shiruken', 'tool', "shiruken", 12, 7, 1, 20)
-    kunai = Skill('Kunai', 'tool', "kunai", 12, 4, 1, 20)
-    trap = Skill('Trap', 'tool', "trap", 3, 1, 2, 30)
+    shiruken = Skill('Shiruken', 'weapon', "shiruken", 12, 7, 1, 20)
+    kunai = Skill('Kunai', 'weapon', "kunai", 12, 4, 1, 20)
+    trap = Skill('Trap', 'weapon', "trap", 3, 1, 2, 30)
     
     # defensive skills
     damage_reduction_p = Skill('Focus', 'defence', 'damagereduction', 12, 1, 10, duration=2)
@@ -1269,6 +1307,15 @@ init python:
     reflect = Skill('Reflect', 'defence', 'reflect', 12, 20, 20, duration=2)
     dampen = Skill('Dampen', 'defence', 'dampen', 6, 30, 30, duration=3)
     yata_mirror = Skill('Yata Mirror', 'defence', 'yatamirror', 12, 50, 50, duration=2)
+    
+    # villages
+    hidden_stone = Village(1, "Hidden Stone", None, marker_xpos=0.25, marker_ypos=0.25, map="stones_map", locations=BASE_LOCATIONS, village_tag="stones", mission_locations=2)
+    hidden_cloud = Village(2, "Hidden Cloud", None, marker_xpos=0.75, marker_ypos=0.20, map="clouds_map", locations=BASE_LOCATIONS, village_tag="cloud", mission_locations=2)
+    hidden_mist = Village(3, "Hidden Mist", None, marker_xpos=0.85, marker_ypos=0.70, map="mist_map", locations=BASE_LOCATIONS, village_tag="mist", mission_locations=2)
+    hidden_leaf = Village(4, "Hidden Leaf", None, marker_xpos=0.40, marker_ypos=0.60, map="konoha_map", locations=BASE_LOCATIONS, village_tag="leaf", mission_locations=2)
+    hidden_sand = Village(5, "Hidden Sand", None, marker_xpos=0.25, marker_ypos=0.90, map="sand_map", locations=BASE_LOCATIONS, village_tag="sand", mission_locations=4)
+    
+    ALL_VILLAGES = [hidden_stone, hidden_cloud, hidden_mist, hidden_leaf, hidden_sand]
     
     #defensive_enemy_pattern = 2*['d'] + 2*['f'] + 2*['a'] + 2*['t']
     #attack_enemy_pattern = 3*['a'] + 2*['f']
@@ -1300,15 +1347,6 @@ init python:
     ALL_CHARACTERS = [c.character for c in ALL_PLAYERS]
     
     clearing = Stage('Clearing', 1, 1)
-    
-    # villages
-    hidden_stone = Village(1, "Hidden Stone", naruto, marker_xpos=0.25, marker_ypos=0.25, map="stones_map", locations=BASE_LOCATIONS, village_tag="stones", mission_locations=2)
-    hidden_cloud = Village(2, "Hidden Cloud", naruto, marker_xpos=0.75, marker_ypos=0.20, map="clouds_map", locations=BASE_LOCATIONS, village_tag="cloud", mission_locations=2)
-    hidden_mist = Village(3, "Hidden Mist", naruto, marker_xpos=0.85, marker_ypos=0.70, map="mist_map", locations=BASE_LOCATIONS, village_tag="mist", mission_locations=2)
-    hidden_leaf = Village(4, "Hidden Leaf", naruto, marker_xpos=0.40, marker_ypos=0.60, map="konoha_map", locations=BASE_LOCATIONS, village_tag="leaf", mission_locations=2)
-    hidden_sand = Village(5, "Hidden Sand", naruto, marker_xpos=0.25, marker_ypos=0.90, map="sand_map", locations=BASE_LOCATIONS, village_tag="sand", mission_locations=4)
-    
-    ALL_VILLAGES = [hidden_stone, hidden_cloud, hidden_mist, hidden_leaf, hidden_sand]
     
     m_test_fightmission = SimpleFightMission('Fight Itachi', days=10, rank='C', dialogue=[("", "I found you Itachi!")], 
                                              fights={'stage': clearing, 
@@ -1361,6 +1399,9 @@ init python:
             renpy.show((image_name, 'night'))
     
     def show_village_map(village, player):
+        renpy.show_screen("player_stats")
+        renpy.show_screen("stats_screen", player)
+        renpy.show_screen("time_screen")
         renpy.hide(village.map) # remove it first otherwise it does not show the new image on top
         time_tag_show(village.map)
         renpy.show_screen('villagemap', village, player)
@@ -1393,16 +1434,12 @@ init python:
             if not tile.trap:
                 tile.deactivate()
             
-        #player.tile.activate()
         show_player_at_pos(player, enemy, stage, player.tile)
-        #renpy.show(player.picname, [ POSITIONS[player.tile.position] ])
-        #enemy.tile.activate()
         show_player_at_pos(enemy, player, stage, enemy.tile)
-        #renpy.show(enemy.picname, [ POSITIONS[enemy.tile.position] ])
     
     def show_player_at_pos(player, enemy, stage, tile, initial_movement=False):
         
-        difference = abs(player.tile.position - tile.position)
+        #difference = abs(player.tile.position - tile.position)
         player.tile.deactivate()
         player.tile = tile
         player.tile.activate()
@@ -1427,12 +1464,18 @@ init python:
             player.hp -= 30
             remove_trap(tile)
         
-    def hide_battle_screen():
+    def hide_battle_screen(all=False):
         renpy.hide_screen("battlemenu")
         renpy.hide_screen("taiactions")
         renpy.hide_screen("ninactions")
         renpy.hide_screen("defenceactions")
         renpy.hide_screen("weaponselection")
+        renpy.hide_screen("player_stats")
+        renpy.hide_screen("stats_screen")
+        renpy.hide_screen("time_screen")
+        if all:
+            renpy.hide_screen("stats")
+            renpy.hide_screen("battlebars")
         
     # d = defensive skill
     # f = range attack (weapon)
@@ -1452,8 +1495,8 @@ init python:
     
     def find_suitable_tag_partner(tag):
         if len(tag) == 1:
-            if partner.hp > 0:
-                return partner
+            if tag[0].hp > 0:
+                return tag[0]
         elif len(tag) == 2:
             if tag[0].hp > tag[1].hp and tag[0].hp > 0:
                 return tag[0]
@@ -1504,19 +1547,20 @@ init python:
         
     def enemy_move_back(enemy, player, spaces=0):
         relative_position = enemy.tile.position - player.tile.position
+        enemy_tile_position = enemy.tile.position
         if relative_position > 0:
-            enemy.tile.position += spaces
-            if enemy.tile.position > 12:
-                enemy.tile.position = 12
+            enemy_tile_position += spaces
+            if enemy_tile_position > 12:
+                enemy_tile_position = 12
         else:
-            enemy.tile.position -= spaces
-            if enemy.tile.position < 1:
-                enemy.tile.position = 1
+            enemy_tile_position -= spaces
+            if enemy_tile_position < 1:
+                enemy_tile_position = 1
                 
-        new_tile = get_tile_from_position(enemy.tile.position)
-        enemy.tile = new_tile
-                
-        renpy.show(enemy.picname, [ POSITIONS[enemy.tile.position] ])
+        new_tile = get_tile_from_position(enemy_tile_position)
+        enemy_tile = new_tile
+        show_player_at_pos(enemy, player, None, new_tile)
+        #renpy.show(enemy.picname, [ POSITIONS[enemy.tile.position] ])
         
     def enemy_use_item(enemy, player):
         if enemy.hp < (enemy.maxhp*0.3):
@@ -1538,14 +1582,16 @@ init python:
         old_tile = enemy.tile
         if player.tile.position == move_to:
             # TODO: this may lead to player going off grid
-            enemy.tile = get_tile_from_position(player.tile.position + 1)
+            enemy_tile = get_tile_from_position(player.tile.position + 1)
         else:
-            enemy.tile = get_tile_from_position(move_to)
+            enemy_tile = get_tile_from_position(move_to)
             
         # this is to prevent error where tile is None
         if not enemy.tile:
-            enemy.tile = old_tile
-        renpy.show(enemy.picname, [ POSITIONS[enemy.tile.position] ])
+            enemy_tile = old_tile
+            
+        show_player_at_pos(enemy, player, None, enemy_tile)
+        #renpy.show(enemy.picname, [ POSITIONS[enemy.tile.position] ])
         
     def enemy_move(player, enemy, stage, tag_p, tag_e):
         hide_battle_screen()
@@ -1570,17 +1616,19 @@ init python:
                 current_skill = random.choice(enemy.taiskills)
                 
         if current_skill.range >= abs(player.tile.position - enemy.tile.position):
-            renpy.show(enemy.picname, [ POSITIONS[enemy.tile.position] ])
+            show_player_at_pos(enemy, player, None, enemy.tile)
+            #renpy.show(enemy.picname, [ POSITIONS[enemy.tile.position] ])
             current_skill.action(enemy, player)
         else:
             # move enemy to near player
             old_tile = enemy.tile
             enemy_position = player.tile.position + current_skill.range
-            enemy.tile = get_tile_from_position(enemy_position)
+            enemy_tile = get_tile_from_position(enemy_position)
             
             if not enemy.tile:
-                enemy.tile = old_tile
-            renpy.show(enemy.picname, [ POSITIONS[enemy.tile.position] ])
+                enemy_tile = old_tile
+            show_player_at_pos(enemy, player, None, enemy_tile)
+            #renpy.show(enemy.picname, [ POSITIONS[enemy.tile.position] ])
             
             # Do the attack
             current_skill.action(enemy, player)
@@ -1693,13 +1741,13 @@ init python:
         
         if draw_label:
             current_session.last_match_result = 'draw'
-            renpy.call(player, current_session.village)
+            renpy.call(draw_label, current_session.main_player)
         elif player.hp == 0:
             current_session.last_match_result = 'lose'
-            renpy.call(player, current_session.village)
+            renpy.call(lose_label, current_session.main_player)
         elif enemy.hp == 0:
             current_session.last_match_result = 'win'
-            renpy.call(player, current_session.village)
+            renpy.call(win_label, current_session.main_player)
             
     def get_tag_info(player, tag_p):
         one_list = [player] + tag_p
@@ -1746,7 +1794,7 @@ screen hospitalshop(village, player):
     
     for item in hospital_shop.items:
         textbutton "[item.name] ([item.price])" action [SetField(current_session, 'village', village), 
-                                                        SetField(current_session, 'player', player),
+                                                        SetField(current_session, 'main_player', player),
                                                         SetField(current_session, 'location', l_hospital),
                                                         SetField(current_session, 'item', item),
                                                         SetField(current_session, 'time_to_advance', {'hours': 2}),
@@ -1765,7 +1813,7 @@ screen weaponshop(village, player):
     
     for weapon in weapon_shop.items:
         textbutton "[weapon.name] ([weapon.price])" action [SetField(current_session, 'village', village), 
-                                                            SetField(current_session, 'player', player),
+                                                            SetField(current_session, 'main_player', player),
                                                             SetField(current_session, 'location', l_ninja_tool_facility),
                                                             SetField(current_session, 'item', weapon),
                                                             SetField(current_session, 'time_to_advance', {'hours': 2}),
@@ -1786,14 +1834,14 @@ screen villagemissions(village, player):
     
     for rank in avaliable_missions:
         textbutton "[rank]" action [SetField(current_session, 'village', village), 
-                                    SetField(current_session, 'player', player), 
+                                    SetField(current_session, 'main_player', player), 
                                     SetField(current_session, 'mission_rank', rank),
                                     Hide("villagemissions"),
                                     Jump("missionselect_redirect")] xpos grid_place[counter][0] ypos grid_place[counter][1]
         $ counter += 1
         
     textbutton "Back to Location select" action [SetField(current_session, 'village', village), 
-                                                 SetField(current_session, 'player', player), 
+                                                 SetField(current_session, 'main_player', player), 
                                                  Hide("villagemissions"),
                                                  Jump('village_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
     
@@ -1803,14 +1851,14 @@ screen missionselect(village, player, rank):
     
     for mission in missions:
         textbutton "[mission.name]" action [SetField(current_session, 'village', village), 
-                                            SetField(current_session, 'player', player), 
+                                            SetField(current_session, 'main_player', player), 
                                             SetField(current_session, 'mission', mission),
                                             Hide("missionselect"),
                                             Jump("mission_redirect")] xpos grid_place[counter][0] ypos grid_place[counter][1]
         $ counter += 1
     
     textbutton "Back" action [SetField(current_session, 'village', village), 
-                              SetField(current_session, 'player', player),
+                              SetField(current_session, 'main_player', player),
                               Hide("missionselect"),
                               SetField(current_session, 'location', l_villagemission), 
                               Jump('location_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
@@ -1824,13 +1872,13 @@ screen training(village, player):
         textbutton "Train with team" action [SetField(getattr(player, 'team'), 'chemistry', getattr(player, team).increase_chemistry(10)),
                                              SetField(current_session, 'time_to_advance', {'hours': 4}),
                                              SetField(current_session, 'village', village), 
-                                             SetField(current_session, 'player', player), 
+                                             SetField(current_session, 'main_player', player), 
                                              SetField(current_session, 'location', l_training_ground),
                                              Hide("training"), 
                                              Jump('location_redirect')] xpos grid_place[2][0] ypos grid_place[2][1]
     if player.sensei:
         textbutton "Learn skills" action [SetField(current_session, 'village', village), 
-                                          SetField(current_session, 'player', player), 
+                                          SetField(current_session, 'main_player', player), 
                                           SetField(current_session, 'location', l_training_ground),
                                           Hide("training"), 
                                           Jump("training_sensei")] xpos grid_place[3][0] ypos grid_place[3][1]
@@ -1838,13 +1886,13 @@ screen training(village, player):
     textbutton "Train (+ exp)" action [SetField(player, 'exp', player.gain_exp(10)),
                                        SetField(current_session, 'time_to_advance', {'hours': 4}),
                                        SetField(current_session, 'village', village), 
-                                       SetField(current_session, 'player', player), 
+                                       SetField(current_session, 'main_player', player), 
                                        SetField(current_session, 'location', l_training_ground),
                                        Hide("training"), 
                                        Jump('location_redirect')] xpos grid_place[1][0] ypos grid_place[1][1]
     
     textbutton "Back to Location select" action [SetField(current_session, 'village', village), 
-                                                 SetField(current_session, 'player', player), 
+                                                 SetField(current_session, 'main_player', player), 
                                                  Hide('training'), 
                                                  Jump('village_redirect')] xpos grid_place[4][0] ypos grid_place[4][1]
     
@@ -1854,7 +1902,7 @@ screen train_skills(village, player):
     for skill in player.all_skills:
         if skill.exp < skill.unlock_exp:
             textbutton "[skill.name] [skill.exp]/[skill.unlock_exp]" action [SetField(current_session, 'village', village), 
-                                                                             SetField(current_session, 'player', player), 
+                                                                             SetField(current_session, 'main_player', player), 
                                                                              SetField(current_session, 'skill', skill),
                                                                              SetField(current_session, 'time_to_advance', {'hours': 4}),
                                                                              Hide("train_skills"),
@@ -1862,7 +1910,7 @@ screen train_skills(village, player):
             $ counter += 1
             
     textbutton "Back" action [SetField(current_session, 'village', village), 
-                              SetField(current_session, 'player', player),
+                              SetField(current_session, 'main_player', player),
                               Hide("train_skills"),
                               SetField(current_session, 'location', l_training_ground), 
                               Jump('location_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
@@ -1880,14 +1928,14 @@ screen levelup(village, player):
             textbutton "[stat] +1" action [SetField(player, stat, getattr(player, stat) + 1), 
                                            SetField(player, 'allocation_points', getattr(player, 'allocation_points') - 1), 
                                            SetField(current_session, 'village', village), 
-                                           SetField(current_session, 'player', player), 
+                                           SetField(current_session, 'main_player', player), 
                                            SetField(current_session, 'location', l_level_up), 
                                            Jump('location_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
             $ counter +=1 
     else:
         text "No allocation points" xpos 0.5 ypos 0.5
     textbutton "Back to Location select" action [SetField(current_session, 'village', village), 
-                                                 SetField(current_session, 'player', player), 
+                                                 SetField(current_session, 'main_player', player), 
                                                  Hide('levelup'), 
                                                  Jump('village_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
 
@@ -1898,13 +1946,13 @@ screen villagetravel(village, player):
     for v in other_villages(village):
         $ village_time = time_between_village(v, village)
         textbutton "[v.name] [village_time]" action [SetField(current_session, 'village', v), 
-                                                     SetField(current_session, 'player', player), 
+                                                     SetField(current_session, 'main_player', player), 
                                                      SetField(current_session, 'time_to_advance', {'days': village_time}),
                                                      Jump('village_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
         $ counter += 1
         
     textbutton "Back to Location select" action [SetField(current_session, 'village', village), 
-                                                 SetField(current_session, 'player', player), 
+                                                 SetField(current_session, 'main_player', player), 
                                                  Jump('village_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
 
 screen villagemap(village, player):
@@ -1914,7 +1962,7 @@ screen villagemap(village, player):
     #text "{color=#000}[main_time.current_time]{/color}" xpos 0.1 ypos 0.1
     
     for location in village.locations:
-        textbutton [location.name] action [SetField(current_session, 'player', player), 
+        textbutton [location.name] action [SetField(current_session, 'main_player', player), 
                                            SetField(current_session, 'village', village), 
                                            SetField(current_session, 'location', location), 
                                            Hide("villagemap"), 
@@ -2187,8 +2235,8 @@ label village_redirect:
     show screen player_stats
     $ main_time.advance_time(days=current_session.time_to_advance['days'])
     $ current_session.clear_time_to_advance()
-    $ show_village_map(current_session.village, current_session.player)
-    current_session.player.character "I need to choose an action."
+    $ show_village_map(current_session.village, current_session.main_player)
+    current_session.main_player.character "I need to choose an action."
     jump village_redirect
     
 label location_redirect:
@@ -2199,30 +2247,30 @@ label location_redirect:
         if current_session.location.background:
             renpy.hide(current_session.location.background)
             time_tag_show(current_session.location.background)
-    $ renpy.call(current_session.location.label, current_session.player, current_session.village)
+    $ renpy.call(current_session.location.label, current_session.main_player, current_session.village)
     
 label missionselect_redirect:
     hide screen villagemissions
-    show screen missionselect(current_session.village, current_session.player, current_session.mission_rank)
-    current_session.player.character "I need to select a mission"
+    show screen missionselect(current_session.village, current_session.main_player, current_session.mission_rank)
+    current_session.main_player.character "I need to select a mission"
     jump missionselect_redirect
     
 label mission_redirect:
     hide screen villagemap
     $ import random
-    $ current_session.mission.do_mission(current_session.player, current_session.village, random.choice(ALL_VILLAGES))
+    $ current_session.mission.do_mission(current_session.main_player, current_session.village, random.choice(ALL_VILLAGES))
     
 label purchase_item_redirect:
-    $ current_session.player.buy_item(current_session.item)
+    $ current_session.main_player.buy_item(current_session.item)
     jump location_redirect
     
 label purchase_weapon_redirect:
-    $ current_session.player.buy_weapon(current_session.item)
+    $ current_session.main_player.buy_weapon(current_session.item)
     jump location_redirect
     
 label statscreen_show_redirect:
     hide screen player_stats
-    show screen stats_screen(current_session.player)
+    show screen stats_screen(current_session.main_player)
     jump village_redirect
     
 label statscreen_hide_redirect:
@@ -2256,12 +2304,12 @@ label training_sensei:
         player.sensei.character "It is an advanced skill and hard to master."
     # some sort of explanation
     player.character "[new_skill.name] added to skill set."
-    $ renpy.call(current_session.location.label, current_session.player, current_session.village)
+    $ renpy.call(current_session.location.label, current_session.main_player, current_session.village)
     
 label train_skill_label:
     python:
-        setattr(getattr(current_session.player, current_session.skill.label), current_session.skill.label,  current_session.skill.gain_exp(10))
-    current_session.player.character "I have gained 10 exp for [current_session.skill.name]"
+        setattr(getattr(current_session.main_player, current_session.skill.label), current_session.skill.label,  current_session.skill.gain_exp(10))
+    current_session.main_player.character "I have gained 10 exp for [current_session.skill.name]"
     jump location_redirect
     
 label village_arena(player, village):
@@ -2299,13 +2347,13 @@ label tag_partner:
     $ renpy.call('fight', info['main'], enemy, info['tag'], tag_e, stage, win_label, lose_label, draw_label)
     
 label start:
-    $ current_session.player = naruto
+    $ current_session.main_player = naruto
     $ current_session.village = hidden_mist
     scene dream_2
     #$ renpy.notify("hello")
-    call fight(naruto, sasuke, [sakura, ori], [kakashi, itachi], clearing, 'fight1_w', 'fight1_l', None)
+    call fight(naruto, sasuke, [sakura], [kakashi], clearing, 'generic_win', 'generic_lose', None)
     show screen player_stats
-    show screen stats_screen(current_session.player)
+    show screen stats_screen(current_session.main_player)
     show screen time_screen
     $ show_village_map(hidden_mist, naruto)
     #$ start_world_events()
@@ -2345,9 +2393,8 @@ label fight(player, enemy, tag_p, tag_e, stage=clearing, win_label, lose_label, 
     
     call movemenu
     
-label generic_win(player, mission):
-    # put in logic for mission success TODO
-    $ hide_battle_menu()
+label generic_win(main_player):
+    $ hide_battle_screen(all=True)
     $ exp = renpy.random.randint(100,200) + 200
     $ player.gain_exp(exp)
     # maybe rotated random dialogues here? TODO
@@ -2356,23 +2403,38 @@ label generic_win(player, mission):
     player.character "..."
     player.character "..........."
     player.character "......................."
-    $ show_village_map(player.home_village, player)
+    call mission_report(current_session.main_player, current_session.mission)
+    $ show_village_map(current_session.main_player.home_village, current_session.main_player)
 
-label generic_lose(player, mission):
-    # put in logic for mission success TODO
-    $ hide_battle_menu()
+label generic_lose(main_player):
+    $ hide_battle_screen(all=True)
     $ exp = renpy.random.randint(100,200) + 70
     $ player.gain_exp(exp)
-    player.character "I won the match and gained [exp]."
+    player.character "I lost the match and gained [exp]."
     player.character "Now to head back to the village."
     player.character "..."
     player.character "..........."
     player.character "......................."
-    $ show_village_map(player.home_village, player)
+    call mission_report(current_session.main_player, current_session.mission)
+    $ show_village_map(current_session.main_player.home_village, current_session.main_player)
     
 label fight1_d:
     "Sample" "I DRAW EVERYTHING"
     #return
+    
+label mission_report(player, mission):
+    # scene mission table?? TODO 
+    python:
+        if mission:
+            if mission.success:
+                renpy.say(player.home_village.leader.character, "Good work {}.".format(player.name))
+                reward = mission.reward(player)
+                renpy.say(player.home_village.leader.character, "Here is your reward ryo {} and exp {}.".format(reward['ryo'], reward['exp']))
+            else:
+                renpy.say(player.home_village.leader.character, "It is unfortunate {} but you failed.".format(player.name))
+                reward = mission.reward(player, half=True)
+                renpy.say(player.home_village.leader.character, "Here is your reward ryo {} and exp {} for your trouble.".format(reward['ryo'], reward['exp']))
+    return
     
 label standby:
     $ player.chakra += player.stamina * 5
@@ -2436,6 +2498,11 @@ screen movemenu:
     for tile in TILES:
         imagebutton idle tile.idle hover tile.hover xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos - 0.05) action Jump("move{}".format(tile.position))
         text "{}".format(tile.idle.split('.')[0]) xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos + 0.15)
+        if player.tile == tile:
+            text "P" xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos + 0.25)
+            
+        if enemy.tile == tile:
+            text "E" xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos + 0.25)
     
 label settrap:
     call hidetiles
@@ -2544,28 +2611,5 @@ label trap11:
 label trap12:
     $ set_trap_at_pos(player, enemy, clearing, tile12)
     call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
-    
-#label movemenu:
-    
-#    python:
-#        ui.imagebutton("tile.png", "tileh.png", clicked=ui.returns(1), xpos=TILE1POS, ypos=TILEYPOS)
-#        ui.imagebutton("tile.png", "tileh.png", clicked=ui.returns(2), xpos=TILE2POS, ypos=TILEYPOS)
-#        ui.imagebutton("tile.png", "tileh.png", clicked=ui.returns(3), xpos=TILE3POS, ypos=TILEYPOS)
-#        ui.imagebutton("tile.png", "tileh.png", clicked=ui.returns(4), xpos=TILE4POS, ypos=TILEYPOS)
-#        ui.imagebutton("tile.png", "tileh.png", clicked=ui.returns(5), xpos=TILE5POS, ypos=TILEYPOS)
-#        ui.imagebutton("tile.png", "tileh.png", clicked=ui.returns(6), xpos=TILE6POS, ypos=TILEYPOS)
-#        ui.imagebutton("tile.png", "tileh.png", clicked=ui.returns(7), xpos=TILE7POS, ypos=TILEYPOS)
-#        ui.imagebutton("tile.png", "tileh.png", clicked=ui.returns(8), xpos=TILE8POS, ypos=TILEYPOS)
-#        ui.imagebutton("tile.png", "tileh.png", clicked=ui.returns(9), xpos=TILE9POS, ypos=TILEYPOS)
-#        ui.imagebutton("tile.png", "tileh.png", clicked=ui.returns(10), xpos=TILE10POS, ypos=TILEYPOS)
-#        ui.imagebutton("tile.png", "tileh.png", clicked=ui.returns(11), xpos=TILE11POS, ypos=TILEYPOS)
-#        ui.imagebutton("tile.png", "tileh.png", clicked=ui.returns(12), xpos=TILE12POS, ypos=TILEYPOS)
-#        choice = ui.interact()
-        
-    #hide playerpic
-#    $ show_player_at_pos(player, enemy, clearing, choice)
-#    jump fight
-
-
 
 
