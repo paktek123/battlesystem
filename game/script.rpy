@@ -306,22 +306,29 @@ init python:
             self.number = number 
             self.days = []
             
+        def __repr__(self):
+            return "Month: {}".format(self.number)
+            
     class Day:
         def __init__(self, number, month, events=[]):
             self.number = number
             self.events = events
             self.month = month
+            
+        def __repr__(self):
+            return "Day: {}".format(self.number)
     
     months = [Month(m) for m in range(1,13)]
     
     for m in months:
         m.days = [Day(d, m) for d in range(1,31)]
         
-    # populate events like this
-    for e in events:
-        for m in months:
-            for d in m.days:
-                if e.start_date[0] == d.number and d.month.number == e.finish_date[
+    ALL_DAYS = []
+    
+    for m in months:
+        ALL_DAYS += m.days
+        
+    from datetime import date, timedelta
     
     class Event:
         """
@@ -341,6 +348,13 @@ init python:
             self.character = None
             self.active = False
             
+        def date_range(self):
+            if self.start and self.finish:
+                d1 = date(main_time.year,self.start[1],self.start[0])
+                d2 = date(main_time.year,self.finish[1],self.finish[0])
+                dd = [d1 + timedelta(days=x) for x in range((d2-d1).days + 1)]
+                return dd
+            
         def check_active(self, game_time):
             if self.start and self.finish:
                 if self.start < (game_time.day, game_time.month) < self.finish:
@@ -358,6 +372,23 @@ init python:
     e_chunin_exams = Event("Chunin Exams", start=(15, 5), finish=(14, 7), label="chunin_exam")
     e_jounin_training = Event("Jounin Training", frequency=(1, ), label="jounin_training")
     e_jinchurri_attack = Event("Jinchurri Attack", chance=0.05, label="jinchurri_attack")
+    
+    ALL_EVENTS = [e_chunin_exams, e_jounin_training, e_jinchurri_attack]
+    
+    # populate events like this
+    for d in ALL_DAYS:
+        for e in ALL_EVENTS:
+            if e.start and e.finish:
+                for r in e.date_range():
+                    if r.day == d.number and r.month == d.month.number:
+                        d.events.append(e)
+            if e.frequency:
+                for day in e.frequency:
+                    if d.number == day:
+                        d.events.append(e)
+            if e.chance:
+                if (100*e.chance) < random.randint(1, 101):
+                    d.events.append(e)
     
     class Mission(object):
         def __init__(self, name, hours=0, days=0, months=0, rank="D", dialogue=[], fights=None):
@@ -1376,7 +1407,9 @@ init python:
                                                    
     ALL_MISSIONS = [m_d1, m_d2, m_label_test, m_test_fightmission, m_test_multifight]
     
+    # screen vars
     screen_on = False
+    calendar_on = False
     
     import math
     def time_between_village(village1, village2):
@@ -2017,11 +2050,23 @@ screen stats_screen(player):
         textbutton "Hide Stats" action Jump("toggle_screen_off") xpos 0.4 ypos 0.0
     
 screen player_stats:
-    #python:
-    #    screen_on = screen_on
-    
     if not screen_on:
         textbutton "Show Stats" action Jump("toggle_screen_on") xpos 0.4 ypos 0.0
+        
+screen calendar_screen_toggle:
+    if not screen_on:
+        textbutton "Show Calendar" action Jump("toggle_calendar_on") xpos 0.2 ypos 0.0
+        
+screen calendar_screen:
+    $ current_month = [m for m in months if m.number == main_time.month][0]
+    
+    grid 6 5 spacing 50: # area (0.1, 0.1, 240, 200):
+        for day in current_month.days:
+            $ how_many = len(day.events)
+            if day.events:
+                text "[day.number] [how_many]"
+            else:
+                text "[day.number]"
 
 label toggle_screen_on:
     $ screen_on = True
@@ -2038,6 +2083,16 @@ label toggle_screen_off:
             renpy.jump("location_redirect")
         else:
             renpy.jump("village_redirect")
+            
+label toggle_calendar_on:
+    $ calendar_on = True
+    python:
+        renpy.jump("village_redirect")
+    
+label toggle_calendar_off:
+    $ screen_on = False
+    python:
+        renpy.jump("village_redirect")
 
 screen worldevents(village):
     text "Wealth: [village.wealth]" xpos 0.3 ypos 0.03
@@ -2349,12 +2404,13 @@ label tag_partner:
 label start:
     $ current_session.main_player = naruto
     $ current_session.village = hidden_mist
-    scene dream_2
+    #scene dream_2
     #$ renpy.notify("hello")
-    call fight(naruto, sasuke, [sakura], [kakashi], clearing, 'generic_win', 'generic_lose', None)
+    #call fight(naruto, sasuke, [sakura], [kakashi], clearing, 'generic_win', 'generic_lose', None)
     show screen player_stats
     show screen stats_screen(current_session.main_player)
     show screen time_screen
+    show screen calendar_screen
     $ show_village_map(hidden_mist, naruto)
     #$ start_world_events()
     call fight(naruto, sasuke, [sakura], [kakashi], clearing, 'generic_win', 'generic_lose', None)
