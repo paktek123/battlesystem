@@ -12,6 +12,7 @@ define kakashi_c = Character('Kakashi', color="#3399FF")
 define itachi_c = Character('Itachi', color="#FFFFFF")
 define ori_c = Character('Orichimaru', color="#FF0000")
 image bg = im.Scale("bg.jpg", 800, 600)
+image black_fade = Solid((0, 0, 0, 150))
 image world_marker = im.Scale("marker.png", 33, 35)
 image leader_pic = im.Scale("leader_pic.png", 100, 150)
 define world_events = Character('World Events', color='#3399FF', window_left_padding=150, show_side_image=Image("leader_pic.png", xpos=0.03, yalign=0.96))
@@ -301,6 +302,8 @@ init python:
             
     main_time = GameTime(9, 1, 1, 1354)
     
+    import copy
+    
     class Month:
         def __init__(self, number, days=[]):
             self.number = number 
@@ -318,10 +321,10 @@ init python:
         def __repr__(self):
             return "Day: {}".format(self.number)
     
-    months = [Month(m) for m in range(1,13)]
+    months = [copy.deepcopy(Month(m)) for m in range(1,13)]
     
     for m in months:
-        m.days = [Day(d, m) for d in range(1,31)]
+        m.days = [copy.deepcopy(Day(d, m)) for d in range(1,31)]
         
     ALL_DAYS = []
     
@@ -357,7 +360,7 @@ init python:
             
         def check_active(self, game_time):
             if self.start and self.finish:
-                if self.start < (game_time.day, game_time.month) < self.finish:
+                if self.start < date(game_time.day, game_time.month) < self.finish:
                     self.active = True
                     renpy.call(self.label)
                 else:
@@ -382,13 +385,17 @@ init python:
                 for r in e.date_range():
                     if r.day == d.number and r.month == d.month.number:
                         d.events.append(e)
-            if e.frequency:
+            elif e.frequency:
                 for day in e.frequency:
                     if d.number == day:
                         d.events.append(e)
-            if e.chance:
-                if (100*e.chance) < random.randint(1, 101):
+            elif e.chance:
+                if (100*e.chance) > random.randint(1, 101):
                     d.events.append(e)
+                    
+    # only get unique events
+    for d in ALL_DAYS:
+        d.events = d.events #list(set(d.events))
     
     class Mission(object):
         def __init__(self, name, hours=0, days=0, months=0, rank="D", dialogue=[], fights=None):
@@ -2059,8 +2066,14 @@ screen calendar_screen_toggle:
         
 screen calendar_screen:
     $ current_month = [m for m in months if m.number == main_time.month][0]
+    #$ current_month.days = [current_month.days[0]]
+    $ stuff = [(d.day, d.month) for d in e_chunin_exams.date_range()]
+    #$ stuff = DAY_RANGES
     
-    grid 6 5 spacing 50: # area (0.1, 0.1, 240, 200):
+    #text "[stuff]" ypos 0.4
+    imagebutton idle "black_fade" hover "black_fade" # "gfx/black.png" hover "gfx/black.png"
+    
+    grid 6 5 spacing 30 ypos 0.2 xpos 0.2: #6, 5 # area (0.1, 0.1, 240, 200):
         for day in current_month.days:
             $ how_many = len(day.events)
             if day.events:
@@ -2412,6 +2425,7 @@ label start:
     show screen time_screen
     show screen calendar_screen
     $ show_village_map(hidden_mist, naruto)
+    #show screen calendar_screen
     #$ start_world_events()
     call fight(naruto, sasuke, [sakura], [kakashi], clearing, 'generic_win', 'generic_lose', None)
     
@@ -2667,5 +2681,4 @@ label trap11:
 label trap12:
     $ set_trap_at_pos(player, enemy, clearing, tile12)
     call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
-
 
