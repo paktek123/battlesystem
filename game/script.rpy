@@ -1,4 +1,4 @@
-﻿# You can place the script of your game in this file.
+# You can place the script of your game in this file.
 
 # Declare images below this line, using the image statement.
 # eg. image eileen happy = "eileen_happy.png"
@@ -318,10 +318,30 @@ init python:
             self.events = events
             self.month = month
             
+        def parse_events(self):
+            if self.events:
+                names = [e.small_name for e in self.events]
+                return ', '.join(names)
+            else:
+                return ' '
+            
         def __repr__(self):
             return "Day: {}".format(self.number)
     
     months = [copy.deepcopy(Month(m)) for m in range(1,13)]
+    
+    def get_month(number):
+        if number == 13:
+            number = 1
+        elif number == 0:
+            number = 12
+            
+        #renpy.say("sample", "{}".format(number))
+        
+        return [m for m in months if m.number == number][0]
+        
+    def get_current_month():
+        return [m for m in months if m.number == main_time.month][0]
     
     for m in months:
         m.days = [copy.deepcopy(Day(d, m)) for d in range(1,31)]
@@ -340,8 +360,9 @@ init python:
         frequency = (day1, day2, day3) e.g. (1, 14, 30) event will happen on 1st, 14th and 30th of month
         chance = 0.1 (10% chance of event happening)
         """
-        def __init__(self, name, start=None, finish=None, frequency=None, chance=None, label=None):
+        def __init__(self, name, small_name, start=None, finish=None, frequency=None, chance=None, label=None):
             self.name = name
+            self.small_name = small_name
             self.start = start
             self.finish = finish
             self.frequency = frequency
@@ -362,21 +383,26 @@ init python:
             if self.start and self.finish:
                 if self.start < date(game_time.day, game_time.month) < self.finish:
                     self.active = True
-                    renpy.call(self.label)
+                    if self.label:
+                        renpy.call(self.label)
                 else:
                     self.active = False
             elif game_time.day in self.frequency:
                 self.active = True
-                renpy.call(self.label)
+                if self.label:
+                    renpy.call(self.label)
             else:
                 if renpy.random.randint(1, 100) < 100 * self.chance:
-                    renpy.call(self.label)
+                    if self.label:
+                        renpy.call(self.label)
                     
-    e_chunin_exams = Event("Chunin Exams", start=(15, 5), finish=(14, 7), label="chunin_exam")
-    e_jounin_training = Event("Jounin Training", frequency=(1, ), label="jounin_training")
-    e_jinchurri_attack = Event("Jinchurri Attack", chance=0.05, label="jinchurri_attack")
+    e_chunin_exams = Event("Chunin Exams", "CE", start=(15, 5), finish=(14, 7), label="chunin_exam")
+    e_jounin_training = Event("Jounin Training", "JT", frequency=(1, ), label="jounin_training")
+    e_jinchurri_attack = Event("Jinchurri Attack", "???", chance=0.05, label="jinchurri_attack")
+    e_weapon_discount = Event("Weapon Discount", "WD", frequency=(random.randint(2,30),)) 
+    e_hospital_discount = Event("Hospital Discount", "HD", frequency=(random.randint(2,30),)) 
     
-    ALL_EVENTS = [e_chunin_exams, e_jounin_training, e_jinchurri_attack]
+    ALL_EVENTS = [e_chunin_exams, e_jounin_training, e_jinchurri_attack, e_weapon_discount, e_hospital_discount]
     
     # populate events like this
     for d in ALL_DAYS:
@@ -683,8 +709,9 @@ init python:
     l_intelligence_division = Location('Intelligence Division', 'village_intelligence_division')
     l_ninja_tool_facility = Location('Ninja Tool Facility', 'village_ninja_tool_facility')
     l_villagemission = Location('Mission Assignment Desk', 'village_missions')
+    l_home = Location('Home', 'village_home')
     
-    BASE_LOCATIONS = [l_travel, l_level_up, l_training_ground, l_arena, l_hospital, l_jounin_station, l_intelligence_division, l_ninja_tool_facility, l_villagemission]
+    BASE_LOCATIONS = [l_travel, l_level_up, l_training_ground, l_arena, l_hospital, l_jounin_station, l_intelligence_division, l_ninja_tool_facility, l_villagemission, l_home]
     
     # This used to store information about recent actions (since renpy does not have a call action for screens)
     class CurrentSession:
@@ -1923,13 +1950,12 @@ screen training(village, player):
                                           Hide("training"), 
                                           Jump("training_sensei")] xpos grid_place[3][0] ypos grid_place[3][1]
                                       
-    textbutton "Train (+ exp)" action [SetField(player, 'exp', player.gain_exp(10)),
-                                       SetField(current_session, 'time_to_advance', {'hours': 4}),
+    textbutton "Train (+ exp)" action [SetField(current_session, 'time_to_advance', {'hours': 4}),
                                        SetField(current_session, 'village', village), 
                                        SetField(current_session, 'main_player', player), 
                                        SetField(current_session, 'location', l_training_ground),
                                        Hide("training"), 
-                                       Jump('location_redirect')] xpos grid_place[1][0] ypos grid_place[1][1]
+                                       Jump('train_gain_exp')] xpos grid_place[1][0] ypos grid_place[1][1]
     
     textbutton "Back to Location select" action [SetField(current_session, 'village', village), 
                                                  SetField(current_session, 'main_player', player), 
@@ -1995,6 +2021,19 @@ screen villagetravel(village, player):
                                                  SetField(current_session, 'main_player', player), 
                                                  Jump('village_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
 
+screen villagehome(village, player):
+    $ counter = 0
+    
+    textbutton "Show Calendar" action [SetField(current_session, 'village', village), 
+                                       SetField(current_session, 'main_player', player), 
+                                       Hide('villagehome'),
+                                       Show('calendar_screen', player=player, village=village, current_month=get_current_month())] xpos grid_place[counter][0] ypos grid_place[counter][1]
+        
+    textbutton "Back to Location select" action [SetField(current_session, 'village', village), 
+                                                 SetField(current_session, 'main_player', player), 
+                                                 Hide('villagehome'),
+                                                 Jump('village_redirect')] xpos grid_place[1][0] ypos grid_place[1][1]
+
 screen villagemap(village, player):
     # show player time details here
     $ counter = 0
@@ -2002,6 +2041,13 @@ screen villagemap(village, player):
     #text "{color=#000}[main_time.current_time]{/color}" xpos 0.1 ypos 0.1
     
     for location in village.locations:
+        if player.home_village:
+            if not player.home_village == village:
+                if location.name == 'Home':
+                    $ location.name = 'Hotel'
+        else:
+            if location.name == 'Home':
+                $ location.name = 'Hotel'
         textbutton [location.name] action [SetField(current_session, 'main_player', player), 
                                            SetField(current_session, 'village', village), 
                                            SetField(current_session, 'location', location), 
@@ -2054,38 +2100,50 @@ screen stats_screen(player):
         text "{size=-5}Nin: [player.ninjutsu]{/size}" xpos 0.915 ypos 0.16
         text "{size=-5}Gen: [player.genjutsu]{/size}" xpos 0.915 ypos 0.20
     
-        textbutton "Hide Stats" action Jump("toggle_screen_off") xpos 0.4 ypos 0.0
+        textbutton "Hide Stats" action [Hide("stats_screen"), Jump("toggle_screen_off")] xpos 0.4 ypos 0.0
     
 screen player_stats:
     if not screen_on:
-        textbutton "Show Stats" action Jump("toggle_screen_on") xpos 0.4 ypos 0.0
+        textbutton "Show Stats" action [Show("stats_screen", player=current_session.main_player), Jump("toggle_screen_on")] xpos 0.4 ypos 0.0
         
 screen calendar_screen_toggle:
-    if not screen_on:
+    if not calendar_on:
         textbutton "Show Calendar" action Jump("toggle_calendar_on") xpos 0.2 ypos 0.0
         
-screen calendar_screen:
-    $ current_month = [m for m in months if m.number == main_time.month][0]
+screen calendar_screen(village, player, current_month):
     #$ current_month.days = [current_month.days[0]]
     $ stuff = [(d.day, d.month) for d in e_chunin_exams.date_range()]
     #$ stuff = DAY_RANGES
     
     #text "[stuff]" ypos 0.4
+    #if calendar_on:
     imagebutton idle "black_fade" hover "black_fade" # "gfx/black.png" hover "gfx/black.png"
     
-    grid 6 5 spacing 30 ypos 0.2 xpos 0.2: #6, 5 # area (0.1, 0.1, 240, 200):
+    textbutton "Last month" action [Hide('calendar_screen'), 
+                                    Show('calendar_screen', village=village, player=player, current_month=get_month(current_month.number - 1))] xpos 0.15 ypos 0.1
+    text "[current_month]" xpos 0.43 ypos 0.11
+    textbutton "Next month" action [Hide('calendar_screen'), 
+                                    Show('calendar_screen', village=village, player=player, current_month=get_month(current_month.number + 1))] xpos 0.65 ypos 0.1
+    
+    grid 6 5 spacing -200 ypos 0.2 xpos 0.15 xfill True yfill True: #6, 5 # area (0.1, 0.1, 240, 200):
         for day in current_month.days:
-            $ how_many = len(day.events)
-            if day.events:
-                text "[day.number] [how_many]"
+            $ how_many = day.parse_events()
+            #if day.events:
+            if main_time.day == day.number and current_month.number == main_time.month:
+                text "[day.number]\n([how_many])" color "#F00"
             else:
-                text "[day.number]"
+                text "[day.number]\n([how_many])" 
+            #else:
+            #    text "[day.number]"
+                    
+    textbutton "Hide Calendar" action [Hide('calendar_screen'), Show("villagehome", player=player, village=village)] xpos 0.2 ypos 0.0
 
 label toggle_screen_on:
     $ screen_on = True
     python:
         if current_session.location:
             renpy.jump("location_redirect")
+        #elif current_session.location
         else:
             renpy.jump("village_redirect")
     
@@ -2099,11 +2157,12 @@ label toggle_screen_off:
             
 label toggle_calendar_on:
     $ calendar_on = True
+    hide screen villagemap
     python:
         renpy.jump("village_redirect")
     
 label toggle_calendar_off:
-    $ screen_on = False
+    $ calendar_on = False
     python:
         renpy.jump("village_redirect")
 
@@ -2309,6 +2368,7 @@ label village_redirect:
     
 label location_redirect:
     hide screen villagemap 
+    #"SAMPLE" "HULLO"
     $ main_time.advance_time(hours=current_session.time_to_advance['hours'])
     $ current_session.clear_time_to_advance()
     python:
@@ -2380,6 +2440,11 @@ label train_skill_label:
     current_session.main_player.character "I have gained 10 exp for [current_session.skill.name]"
     jump location_redirect
     
+label train_gain_exp:
+    python:
+        current_session.main_player.gain_exp(10)
+    jump location_redirect
+    
 label village_arena(player, village):
     "SAMPLE" "TRAVEL HERE"
     jump start
@@ -2408,6 +2473,12 @@ label village_missions(player, village):
     show screen villagemissions(village, player)
     player.character "I need to choose mission."
     $ renpy.call('village_missions', player, village)
+    
+label village_home(player, village):
+    show screen villagehome(village, player)
+    #show screen calendar_screen_toggle
+    player.character "I need choose an action."
+    $ renpy.call('village_home', player, village)
 
 label tag_partner:
     $ info = get_tag_info(player, tag_p)
@@ -2421,9 +2492,10 @@ label start:
     #$ renpy.notify("hello")
     #call fight(naruto, sasuke, [sakura], [kakashi], clearing, 'generic_win', 'generic_lose', None)
     show screen player_stats
+    #$ renpy.show_screen("calendar_screen", layer="master")
     show screen stats_screen(current_session.main_player)
     show screen time_screen
-    show screen calendar_screen
+    #show screen calendar_screen_toggle
     $ show_village_map(hidden_mist, naruto)
     #show screen calendar_screen
     #$ start_world_events()
@@ -2681,4 +2753,6 @@ label trap11:
 label trap12:
     $ set_trap_at_pos(player, enemy, clearing, tile12)
     call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+
+
 
