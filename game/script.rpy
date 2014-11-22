@@ -342,6 +342,9 @@ init python:
         
     def get_current_month():
         return [m for m in months if m.number == main_time.month][0]
+        
+    def get_today():
+        return [d for d in ALL_DAYS if d.number == main_time.day and d.month.number == main_time.month][0]
     
     for m in months:
         m.days = [copy.deepcopy(Day(d, m)) for d in range(1,31)]
@@ -383,14 +386,14 @@ init python:
             if self.start and self.finish:
                 if self.start < date(game_time.day, game_time.month) < self.finish:
                     self.active = True
-                    if self.label:
-                        renpy.call(self.label)
+                    #if self.label:
+                    #    renpy.call(self.label)
                 else:
                     self.active = False
             elif game_time.day in self.frequency:
                 self.active = True
-                if self.label:
-                    renpy.call(self.label)
+                #if self.label:
+                #    renpy.call(self.label)
             else:
                 if renpy.random.randint(1, 100) < 100 * self.chance:
                     if self.label:
@@ -685,12 +688,12 @@ init python:
             return "<Village>: {}".format(self.name)
             
     class Location:
-        def __init__(self, name, label, background=None, special_event=False, map_pic_idle=None, map_pic_hover=None, npc=[], visits=0):
+        def __init__(self, name, label, background=None, events=[], map_pic_idle=None, map_pic_hover=None, npc=[], visits=0):
             self.name = name
             self.label = label
             self.background = background
             #self.village = village
-            self.special_event = special_event
+            self.events = events
             self.map_pic_idle = map_pic_idle
             self.map_pic_hover = map_pic_hover
             self.npc = npc
@@ -704,11 +707,11 @@ init python:
     l_level_up = Location('Level Up', 'village_levelup')
     l_training_ground = Location('Training', 'village_training', 'training')
     l_arena = Location('Arena', 'village_arena')
-    l_hospital = Location('Hospital', 'village_hospital')
-    l_jounin_station = Location('Jounin Standby Station', 'village_jounin_station')
+    l_hospital = Location('Hospital', 'village_hospital', events=[e_hospital_discount])
+    l_jounin_station = Location('Jounin Standby Station', 'village_jounin_station', events=[e_jounin_training])
     l_intelligence_division = Location('Intelligence Division', 'village_intelligence_division')
-    l_ninja_tool_facility = Location('Ninja Tool Facility', 'village_ninja_tool_facility')
-    l_villagemission = Location('Mission Assignment Desk', 'village_missions')
+    l_ninja_tool_facility = Location('Ninja Tool Facility', 'village_ninja_tool_facility', events=[e_weapon_discount])
+    l_villagemission = Location('Mission Assignment Desk', 'village_missions', events=[e_chunin_exams])
     l_home = Location('Home', 'village_home')
     
     BASE_LOCATIONS = [l_travel, l_level_up, l_training_ground, l_arena, l_hospital, l_jounin_station, l_intelligence_division, l_ninja_tool_facility, l_villagemission, l_home]
@@ -2037,6 +2040,7 @@ screen villagehome(village, player):
 screen villagemap(village, player):
     # show player time details here
     $ counter = 0
+    $ x_adj = 0.03
     
     #text "{color=#000}[main_time.current_time]{/color}" xpos 0.1 ypos 0.1
     
@@ -2053,7 +2057,18 @@ screen villagemap(village, player):
                                            SetField(current_session, 'location', location), 
                                            Hide("villagemap"), 
                                            Jump('location_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
+        
+        
+        if location.events:
+            for e in location.events:
+                for today_e in get_today().events:
+                    if e.small_name == today_e.small_name and counter < 5:
+                        text "[e.small_name]" xpos (grid_place[counter][0]-x_adj) ypos grid_place[counter][1]
+                    elif e.small_name == today_e.small_name and counter >= 5:
+                        text "[e.small_name]" xpos (grid_place[counter][0]-x_adj) ypos grid_place[counter][1]
+            
         $ counter += 1 
+                
         
 screen time_screen:
     text "{color=#000}[main_time.current_time]{/color}" xpos 0.1 ypos 0.1
