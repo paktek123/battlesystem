@@ -1,4 +1,4 @@
-# You can place the script of your game in this file.
+﻿# You can place the script of your game in this file.
 
 # Declare images below this line, using the image statement.
 # eg. image eileen happy = "eileen_happy.png"
@@ -386,26 +386,31 @@ init python:
             if self.start and self.finish:
                 if self.start < date(game_time.day, game_time.month) < self.finish:
                     self.active = True
-                    #if self.label:
-                    #    renpy.call(self.label)
+                    if self.label:
+                        renpy.call(self.label)
                 else:
                     self.active = False
             elif game_time.day in self.frequency:
                 self.active = True
-                #if self.label:
-                #    renpy.call(self.label)
+                if self.label:
+                    renpy.call(self.label)
             else:
                 if renpy.random.randint(1, 100) < 100 * self.chance:
                     if self.label:
                         renpy.call(self.label)
                     
     e_chunin_exams = Event("Chunin Exams", "CE", start=(15, 5), finish=(14, 7), label="chunin_exam")
-    e_jounin_training = Event("Jounin Training", "JT", frequency=(1, ), label="jounin_training")
+    e_jounin_training = Event("Jounin Training", "JT", frequency=(1, ))
     e_jinchurri_attack = Event("Jinchurri Attack", "???", chance=0.05, label="jinchurri_attack")
     e_weapon_discount = Event("Weapon Discount", "WD", frequency=(random.randint(2,30),)) 
     e_hospital_discount = Event("Hospital Discount", "HD", frequency=(random.randint(2,30),)) 
     
     ALL_EVENTS = [e_chunin_exams, e_jounin_training, e_jinchurri_attack, e_weapon_discount, e_hospital_discount]
+    
+    def is_event_active_today(event):
+        if event.name in [e.name for e in get_today().events]:
+            return True
+        return False
     
     # populate events like this
     for d in ALL_DAYS:
@@ -633,6 +638,7 @@ init python:
             self.influence_change = 0
             self.wealth_change = 0
             self.locations = locations
+            self.jounins = []
             self.mission_locations = ["{}_{}".format(village_tag, x) for x in range(1,mission_locations+1)]
 
         def random_mission_location(self):
@@ -831,6 +837,12 @@ init python:
         def decrease_chemistry(self, exp):
             self.chemistry -= exp
     
+    # D - Level 1 - 10 
+    # C - Level 11 - 20
+    # B - Level 21 - 30
+    # A - Level 31 - 40
+    # S - Level 41 +
+    
     LEVELS = {level: level*100 for level in range(1,100)}
     MAX_BOND = 100
     
@@ -897,6 +909,22 @@ init python:
             
             self.assign_all_skills()
             self.set_sensei()
+            
+        def ninja_rank(self):
+            if self.level in range(1, 11):
+                return "Genin"
+            elif self.level in range(11, 21):
+                return "Genin"
+            elif self.level in range(21, 31):
+                return "Chunin"
+            elif self.level in range(31, 41):
+                return "Jounin"
+            elif self.level in range(41, 51):
+                return "Sannin"
+            elif self.level in range(51, 71):
+                return "Kage"
+            elif self.level in range(71, 101):
+                return "Legend"
             
         def injure_limb(self, name):
             limb = [l for l in self.get_limbs() if l.name == name][0]
@@ -1332,6 +1360,12 @@ init python:
             elif self.chakra:
                 player.increase_chakra(self.chakra)
                 
+        def half_price(self):
+            self.price = self.price / 2
+            
+        def double_price(self):
+            self.price = self.price * 2
+                
         def __repr__(self):
             return "<Item: {} {}>".format(self.name, self.quantity)
             
@@ -1345,6 +1379,16 @@ init python:
             self.discount = 0
             self.keeper = keeper
             self.background = background
+            self.price_halved = False
+            
+        def half_prices(self):
+            self.price_halved = True
+            for item in self.items:
+                item.half_price()
+                
+        def double_prices(self):
+            for item in self.items:
+                item.double_price()
             
     hospital_shop = Shop("Hospital", 'leaf_hospital_1', items=[i_heal_paste, i_chakra_paste])
     weapon_shop = Shop("Weapons", 'leaf_shrine', items=[w_kunai, w_paper_bomb])
@@ -1403,16 +1447,31 @@ init python:
     sakura = Player('Sakura', "sakurapic_r", sakura_c, Image('sakura.png'), None, 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
                     [onetwocombo, lioncombo], [chidori], [], [], [damage_reduction_e, chakra_defence_e], weapons=[shiruken, kunai], home_village=hidden_leaf)
     kakashi = Player('Kakashi', "kakashipic_r", kakashi_c, Image('kakashi.png'), None, 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
-                    [onetwocombo, lioncombo], [raikiri], [], [], [damage_reduction_e, chakra_defence_e], 
+                    [onetwocombo, lioncombo], [raikiri], [], [], [damage_reduction_e, chakra_defence_e], level=32,
                     battle_ai=nin_enemy_pattern, weapons=[shiruken, kunai], home_village=hidden_leaf)
     
     itachi = copy.deepcopy(sasuke)
-    itachi.name, itachi.picname, itachi.character = "Itachi", "itachipic_r", itachi_c
+    itachi.name, itachi.picname, itachi.character, itachi.level = "Itachi", "itachipic_r", itachi_c, 46
     ori = copy.deepcopy(naruto)
-    ori.name, ori.picname, ori.character = "Orichimaru", "oripic_r", ori_c
+    ori.name, ori.picname, ori.character, ori.level = "Orichimaru", "oripic_r", ori_c, 45
+    kyuubi = copy.deepcopy(naruto)
+    kyuubi.name, kyuubi.picname, kyuubi.character, kyuubi.level = "Kyuubi", "kakashipic_r", kakashi_c, 79
     
     ALL_PLAYERS = [naruto, sasuke, sakura, kakashi, itachi, ori]
     ALL_CHARACTERS = [c.character for c in ALL_PLAYERS]
+    # Populate jounins for training purposes
+    for village in ALL_VILLAGES:
+        village.jounins = [c for c in ALL_PLAYERS if c.home_village and c.home_village == village and c.level in range(31, 41)]
+        
+    def get_random_jounin(player, village, exclude_sensei=False, exclude=[]):
+        if exclude_sensei and player.sensei:
+            sensei =  [player.sensei]
+        else:
+            sensei = [None] + exclude
+        
+        remove_sensei_jounin = [j for j in village.jounins if j not in sensei]
+        return random.choice(remove_sensei_jounin)
+        
     
     clearing = Stage('Clearing', 1, 1)
     
@@ -1862,6 +1921,13 @@ screen hospitalshop(village, player):
     text "Ryo: [player.ryo]" xpos 0.1
     text "Items: [player.items]" xpos 0.1 ypos 0.2
     
+    python:
+        if is_event_active_today(e_hospital_discount):
+            hospital_shop.half_prices()
+        else:
+            if hospital_shop.price_halved:
+                hospital_shop.double_prices()
+    
     for item in hospital_shop.items:
         textbutton "[item.name] ([item.price])" action [SetField(current_session, 'village', village), 
                                                         SetField(current_session, 'main_player', player),
@@ -1880,6 +1946,13 @@ screen weaponshop(village, player):
     $ counter = 0
     text "Ryo: [player.ryo]" xpos 0.1
     text "Weapons: [player.weapons]" xpos 0.1 ypos 0.2
+    
+    python:
+        if is_event_active_today(e_weapon_discount):
+            weapon_shop.half_prices()
+        else:
+            if weapon_shop.price_halved:
+                weapon_shop.double_prices()
     
     for weapon in weapon_shop.items:
         textbutton "[weapon.name] ([weapon.price])" action [SetField(current_session, 'village', village), 
@@ -2374,6 +2447,9 @@ label world_update(village):
     
 label village_redirect:
     hide screen villagetravel
+    python:
+        if is_event_active_today(e_jinchurri_attack):
+            renpy.call("jinchurri_attack", current_session.main_player, current_session.village)
     show screen player_stats
     $ main_time.advance_time(days=current_session.time_to_advance['days'])
     $ current_session.clear_time_to_advance()
@@ -2445,7 +2521,7 @@ label training_sensei:
         player.sensei.character "It is an intermediate skill but fundamental to being a shinobi."
     elif new_skill.unlock_exp < 900:
         player.sensei.character "It is an advanced skill and hard to master."
-    # some sort of explanation
+    # TODO: some sort of explanation
     player.character "[new_skill.name] added to skill set."
     $ renpy.call(current_session.location.label, current_session.main_player, current_session.village)
     
@@ -2471,8 +2547,49 @@ label village_hospital(player, village):
     $ renpy.call('village_hospital', player, village)
     
 label village_jounin_station(player, village):
-    "SAMPLE" "TRAVEL HERE"
-    jump start
+    # TODO: handle npc events
+    python:
+        if is_event_active_today(e_jounin_training):
+            renpy.jump("event_jounin_training")
+            
+    "Jounin" "Sorry, no training events today, please come back on the 1st of next month."
+    jump village_redirect
+    
+label event_jounin_training:
+    $ trainer = get_random_jounin(current_session.main_player, current_session.village, exclude_sensei=True)
+    $ random_value = renpy.random.randint(1,3)
+    if random_value == 1:
+        $ new_skill = get_sensei_skill(trainer, current_session.main_player)
+        trainer.character "I am about to teach you is [new_skill.name]."
+        if new_skill.unlock_exp < 300:
+            trainer.character "It is a basic skill but fundamental to being a shinobi."
+        elif new_skill.unlock_exp < 600:
+            trainer.character "It is an intermediate skill but fundamental to being a shinobi."
+        elif new_skill.unlock_exp < 900:
+            trainer.character "It is an advanced skill and hard to master."
+        # TODO: some sort of explanation
+        current_session.main_player.character "[new_skill.name] added to skill set."
+    elif random_value == 2:
+        trainer.character "This class is about improving general concentration and ninja skills."
+        trainer.character "It will take a few hours but I'm sure you will benefit from this greater."
+        maxhp_increase += renpy.random.randint(5, 10)
+        maxchakra_increase += renpy.random.randint(5, 10)
+        exp_increase = renpy.random.randint(10, 30)
+        current_session.main_player.maxhp += maxhp_increase
+        current_session.main_player.character "Max HP increased by [maxhp_increase]."
+        current_session.main_player.maxchakra += maxchakra_increase
+        current_session.main_player.character "Max HP increased by [maxchakra_increase]."
+        current_session.main_player.gain_exp(exp_increase)
+        current_session.main_player.character "Exp increased by [exp_increase]."
+    else:
+        #$ skill_improve = renpy.random.choice(current_session.main_player.all_skills)
+        python:
+            skill_improve = random.choice(current_session.main_player.all_skills)
+            setattr(getattr(current_session.main_player, skill_improve.label), skill_improve.label,  skill_improve.gain_exp(100))
+            renpy.say(current_session.main_player.character,  "I have gained 100 exp for {}.".format(skill_improve.name))
+        
+    $ main_time.advance_time(hours=6)
+    jump village_redirect
     
 label village_intelligence_division(player, village):
     "SAMPLE" "TRAVEL HERE"
@@ -2494,6 +2611,36 @@ label village_home(player, village):
     #show screen calendar_screen_toggle
     player.character "I need choose an action."
     $ renpy.call('village_home', player, village)
+    
+label jinchurri_attack(player, village):
+    player.character "I feel a chill in the air..."
+    player.character "There is an immense chakra in the air."
+    # randomise the tailed beasts here
+    kyuubi.character "ROAR!!!"
+    # chance of finding team or random jounins
+    $ random_choice = renpy.random.randint(1,2)
+    if random_choice == 1:
+        if player.team:
+            player.team.members[0].character "[player.name] are you okay!?"
+            player.team.members[1].character "The whole village is under attack."
+            player.character "No! Lets fight him."
+            # affects and stuff
+            player.character "The huge beast faces us."
+            call fight(player, kyuubi, player.team.members, [], clearing, 'generic_win', 'generic_lose', None)
+        else:
+            player.character "The huge beast faces me."
+            call fight(player, kyuubi, [], [], clearing, 'generic_win', 'generic_lose', None)
+            
+    else:
+        if player.team:
+            player.character "I can't find my team mates."
+            player.character "I see some jounins."
+            $ jounin_1 = get_random_jounin(player, village, exclude=[])
+            $ jounin_2 = get_random_jounin(player, village, exclude=[jounin_1])
+            jounin_1.character "Lets go!"
+            call fight(player, kyuubi, [jounin_1, jounin_2], [], clearing, 'generic_win', 'generic_lose', None)
+            
+    
 
 label tag_partner:
     $ info = get_tag_info(player, tag_p)
