@@ -1,4 +1,4 @@
-﻿# You can place the script of your game in this file.
+# You can place the script of your game in this file.
 
 # Declare images below this line, using the image statement.
 # eg. image eileen happy = "eileen_happy.png"
@@ -59,6 +59,10 @@ init:
     $ variable = False # when false, the affection screen button doesn't appear on the screen
     
     $ current_skill = None
+    
+    $ maxhp_increase = 0
+    $ maxchakra_increase = 0
+    $ exp_increase = 0
     
     image playerpic_r = im.Scale("player.png", 40, 50)
     image enemypic_r = im.Scale("enemy.png", 40, 50)
@@ -618,6 +622,9 @@ init python:
                 self.reward(player, half=True)
             show_village_map(from_village, player)
     
+    NINJA_RANKS = {'genin': range(1, 21), 'chunin': range(21, 31), 'jounin': range(31, 41), 
+                   'sannin': range(41, 51), 'kage': range(51, 71), 'legend': range(71, 101)}
+    
     import random
     class Village:
         def __init__(self, id, name, leader, marker_xpos, marker_ypos, map, wealth=10000, army=1000, control=100, influence=100, uprising=0, 
@@ -638,8 +645,28 @@ init python:
             self.influence_change = 0
             self.wealth_change = 0
             self.locations = locations
+            self.genins = []
+            self.chunins = []
             self.jounins = []
+            self.sannins = []
             self.mission_locations = ["{}_{}".format(village_tag, x) for x in range(1,mission_locations+1)]
+
+        def add_to_ninja_ranks(self, player):
+            for rank, level_range in NINJA_RANKS.iteritems():
+                if player.level in level_range:
+                    village_ranks = getattr(self, "{}s".format(rank))
+                    village_ranks.append(player)
+                    setattr(self, "{}s".format(rank), village_ranks)
+                    
+        def update_ninja_ranks(self, player):
+            self.genins = [g for g in self.genins if g != player]
+            self.chunins = [g for g in self.chunins if g != player]
+            self.jounins = [g for g in self.jounins if g != player]
+            self.sannins = [g for g in self.sannins if g != player]
+            
+            village_ranks = getattr(self, "{}s".format(player.ninja_rank()))
+            village_ranks.append(player)
+            setattr(self, "{}s".format(player.ninja_rank()), village_ranks)
 
         def random_mission_location(self):
             return random.choice(self.mission_locations)
@@ -846,6 +873,7 @@ init python:
     LEVELS = {level: level*100 for level in range(1,100)}
     MAX_BOND = 100
     
+    
     import copy
     import random
 
@@ -853,7 +881,7 @@ init python:
         def __init__(self, name, picname, character, tilepic, hudpic, hp, maxhp, chakra, maxchakra, 
                      strength, speed, evasion, defence, stamina, base_hit_rate, tile, facing,
                      taiskills=[], ninskills=[], genskills=[], items=[], defensiveskills=[], bloodlineskills=[],
-                     leader_pic=None, taijutsu=1, ninjutsu=1, genjutsu=1, weapons=[], battle_ai=[], home_village=None):
+                     leader_pic=None, taijutsu=1, ninjutsu=1, genjutsu=1, weapons=[], battle_ai=[], home_village=None, level=1):
             self.name = name
             self.picname = picname
             self.character = character
@@ -897,7 +925,7 @@ init python:
             self.damage_dealt = 0
             self.main = False
             self.exp = 0
-            self.level = 1
+            self.level = level
             self.allocation_points = 0
             self.leader_pic = leader_pic
             self.team = None
@@ -909,22 +937,30 @@ init python:
             
             self.assign_all_skills()
             self.set_sensei()
+            self.add_to_village_ranks()
+            
+        def add_to_village_ranks(self):
+            if self.home_village:
+                self.home_village.add_to_ninja_ranks(self)
             
         def ninja_rank(self):
-            if self.level in range(1, 11):
-                return "Genin"
-            elif self.level in range(11, 21):
-                return "Genin"
-            elif self.level in range(21, 31):
-                return "Chunin"
-            elif self.level in range(31, 41):
-                return "Jounin"
-            elif self.level in range(41, 51):
-                return "Sannin"
-            elif self.level in range(51, 71):
-                return "Kage"
-            elif self.level in range(71, 101):
-                return "Legend"
+            for rank, level_range in NINJA_RANKS.iteritems():
+                if self.level in level_range:
+                    return rank #.capitalize()
+            #if self.level in range(1, 11):
+            #    return "Genin"
+            #elif self.level in range(11, 21):
+            #    return "Genin"
+            #elif self.level in range(21, 31):
+            #    return "Chunin"
+            #elif self.level in range(31, 41):
+            #    return "Jounin"
+            #elif self.level in range(41, 51):
+            #    return "Sannin"
+            #elif self.level in range(51, 71):
+            #    return "Kage"
+            #elif self.level in range(71, 101):
+            #    return "Legend"
             
         def injure_limb(self, name):
             limb = [l for l in self.get_limbs() if l.name == name][0]
@@ -1095,9 +1131,11 @@ init python:
                 
         def remove_skill(self, skill):
             delattr(self, skill.label)
+            self.all_skills.remove(skill)
             
         def assign_skill(self, skill):
             setattr(self, skill.label, skill)
+            self.all_skills.append(skill)
             
         def apply_skill(self, skill):
             skill.apply()
@@ -1399,8 +1437,8 @@ init python:
     
     # nin skills
     rasengan = Skill('Rasengan', 'nin', "rasengan", 2, 1, 25, 30, unlock_exp=500)
-    chidori = Skill('Chidori', 'nin', "chidori", 2, 1, 25, 30)
-    raikiri = Skill('Raikiri', 'nin', "raikiri", 2, 1, 50, 50)
+    chidori = Skill('Chidori', 'nin', "chidori", 2, 1, 25, 30, unlock_exp=1000)
+    raikiri = Skill('Raikiri', 'nin', "raikiri", 2, 1, 50, 50, unlock_exp=1500)
     
     # gen skills # replace with something new
     substitution = Skill('Substitution', 'gen', "substitution", 8, 20, 15, 0, stun=True)
@@ -1411,14 +1449,14 @@ init python:
     trap = Skill('Trap', 'weapon', "trap", 3, 1, 2, 30)
     
     # defensive skills
-    damage_reduction_p = Skill('Focus', 'defence', 'damagereduction', 12, 1, 10, duration=2)
+    damage_reduction_p = Skill('Focus', 'defence', 'damagereduction', 12, 1, 10, duration=2, unlock_exp=300)
     damage_reduction_e = Skill('Focus', 'defence', 'damagereduction', 12, 1, 10, duration=2)
-    chakra_defence = Skill('Chakra Defence', 'defence', 'chakradefence', 12, 2, 15, duration=3)
+    chakra_defence = Skill('Chakra Defence', 'defence', 'chakradefence', 12, 2, 15, duration=3, unlock_exp=500)
     chakra_defence_e = Skill('Chakra Defence', 'defence', 'chakradefence', 12, 2, 15, duration=3)
     substitution = Skill('Substitution', 'counter', "substitution", 8, 20, 15, 0, stun=True)
-    reflect = Skill('Reflect', 'defence', 'reflect', 12, 20, 20, duration=2)
-    dampen = Skill('Dampen', 'defence', 'dampen', 6, 30, 30, duration=3)
-    yata_mirror = Skill('Yata Mirror', 'defence', 'yatamirror', 12, 50, 50, duration=2)
+    reflect = Skill('Reflect', 'defence', 'reflect', 12, 20, 20, duration=2, unlock_exp=1500)
+    dampen = Skill('Dampen', 'defence', 'dampen', 6, 30, 30, duration=3, unlock_exp=2000)
+    yata_mirror = Skill('Yata Mirror', 'defence', 'yatamirror', 12, 50, 50, duration=2, unlock_exp=2500)
     
     # villages
     hidden_stone = Village(1, "Hidden Stone", None, marker_xpos=0.25, marker_ypos=0.25, map="stones_map", locations=BASE_LOCATIONS, village_tag="stones", mission_locations=2)
@@ -1449,6 +1487,9 @@ init python:
     kakashi = Player('Kakashi', "kakashipic_r", kakashi_c, Image('kakashi.png'), None, 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
                     [onetwocombo, lioncombo], [raikiri], [], [], [damage_reduction_e, chakra_defence_e], level=32,
                     battle_ai=nin_enemy_pattern, weapons=[shiruken, kunai], home_village=hidden_leaf)
+    anko = Player('Anko', "kakashipic_r", kakashi_c, Image('kakashi.png'), None, 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
+                    [onetwocombo, lioncombo], [raikiri], [], [], [damage_reduction_e, chakra_defence_e], level=32,
+                    battle_ai=nin_enemy_pattern, weapons=[shiruken, kunai], home_village=hidden_leaf)
     
     itachi = copy.deepcopy(sasuke)
     itachi.name, itachi.picname, itachi.character, itachi.level = "Itachi", "itachipic_r", itachi_c, 46
@@ -1456,18 +1497,23 @@ init python:
     ori.name, ori.picname, ori.character, ori.level = "Orichimaru", "oripic_r", ori_c, 45
     kyuubi = copy.deepcopy(naruto)
     kyuubi.name, kyuubi.picname, kyuubi.character, kyuubi.level = "Kyuubi", "kakashipic_r", kakashi_c, 79
+    gai = copy.deepcopy(naruto)
+    gai.name, gai.picname, gai.character, gai.level = "Gai", "oripic_r", ori_c, 32
+    gai.add_to_village_ranks()
     
-    ALL_PLAYERS = [naruto, sasuke, sakura, kakashi, itachi, ori]
+    ALL_PLAYERS = [naruto, sasuke, sakura, kakashi, itachi, ori, gai]
     ALL_CHARACTERS = [c.character for c in ALL_PLAYERS]
     # Populate jounins for training purposes
-    for village in ALL_VILLAGES:
-        village.jounins = [c for c in ALL_PLAYERS if c.home_village and c.home_village == village and c.level in range(31, 41)]
+    #for village in ALL_VILLAGES:
+    #    village.jounins = [c for c in ALL_PLAYERS if c.home_village.name == village.name and c.level in range(31, 41)]
         
     def get_random_jounin(player, village, exclude_sensei=False, exclude=[]):
         if exclude_sensei and player.sensei:
             sensei =  [player.sensei]
         else:
             sensei = [None] + exclude
+            
+        #renpy.say(player.character, "jounins: {}".format(village.jounins))
         
         remove_sensei_jounin = [j for j in village.jounins if j not in sensei]
         return random.choice(remove_sensei_jounin)
@@ -1906,11 +1952,14 @@ init python:
     def get_sensei_skill(sensei, student):
         sensei_skills = [skill.label for skill in sensei.all_skills]
         student_skills = [skill.label for skill in student.all_skills]
-        skills_to_teach = list(set(sensei_kills) - set(student_skills))
+        skills_to_teach = list(set(sensei_skills) - set(student_skills))
+        renpy.say(student.character, "New skills are {}.".format(len(skills_to_teach)))
         if skills_to_teach:
-            skill_index = renpy.random.randint(0, len(skills_to_teach) - 1)
-            new_skill = skills_to_teach[skill_index]
-            learnt_skill = copy.deepcopy(new_skill.set_to_default())
+            new_skill_label = random.choice(skills_to_teach)
+            new_skill = copy.deepcopy(getattr(sensei, new_skill_label))
+            new_skill.set_to_default()
+            learnt_skill = new_skill
+            renpy.say(student.character, "New skill is {}.".format(learnt_skill))
             student.assign_skill(learnt_skill)
             return learnt_skill
         else:
@@ -2115,7 +2164,7 @@ screen villagemap(village, player):
     $ counter = 0
     $ x_adj = 0.03
     
-    #text "{color=#000}[main_time.current_time]{/color}" xpos 0.1 ypos 0.1
+    text "[village.jounins]" xpos 0.1
     
     for location in village.locations:
         if player.home_village:
@@ -2549,10 +2598,10 @@ label village_hospital(player, village):
 label village_jounin_station(player, village):
     # TODO: handle npc events
     python:
-        if is_event_active_today(e_jounin_training):
+        if is_event_active_today(e_jounin_training) and main_time.hour in range(6, 19):
             renpy.jump("event_jounin_training")
             
-    "Jounin" "Sorry, no training events today, please come back on the 1st of next month."
+    "Jounin" "Sorry, no training events today, please come back on the 1st of next month between 6AM and 6PM."
     jump village_redirect
     
 label event_jounin_training:
@@ -2572,17 +2621,17 @@ label event_jounin_training:
     elif random_value == 2:
         trainer.character "This class is about improving general concentration and ninja skills."
         trainer.character "It will take a few hours but I'm sure you will benefit from this greater."
-        maxhp_increase += renpy.random.randint(5, 10)
-        maxchakra_increase += renpy.random.randint(5, 10)
-        exp_increase = renpy.random.randint(10, 30)
-        current_session.main_player.maxhp += maxhp_increase
+        $ maxhp_increase += renpy.random.randint(5, 10)
+        $ maxchakra_increase += renpy.random.randint(5, 10)
+        $ exp_increase = renpy.random.randint(10, 30)
+        $ current_session.main_player.maxhp += maxhp_increase
         current_session.main_player.character "Max HP increased by [maxhp_increase]."
-        current_session.main_player.maxchakra += maxchakra_increase
+        $ current_session.main_player.maxchakra += maxchakra_increase
         current_session.main_player.character "Max HP increased by [maxchakra_increase]."
-        current_session.main_player.gain_exp(exp_increase)
+        $ current_session.main_player.gain_exp(exp_increase)
         current_session.main_player.character "Exp increased by [exp_increase]."
     else:
-        #$ skill_improve = renpy.random.choice(current_session.main_player.all_skills)
+        trainer.character "We will focus on on particular skill today."
         python:
             skill_improve = random.choice(current_session.main_player.all_skills)
             setattr(getattr(current_session.main_player, skill_improve.label), skill_improve.label,  skill_improve.gain_exp(100))
@@ -2649,7 +2698,7 @@ label tag_partner:
     
 label start:
     $ current_session.main_player = naruto
-    $ current_session.village = hidden_mist
+    $ current_session.village = hidden_leaf
     #scene dream_2
     #$ renpy.notify("hello")
     #call fight(naruto, sasuke, [sakura], [kakashi], clearing, 'generic_win', 'generic_lose', None)
@@ -2658,7 +2707,7 @@ label start:
     show screen stats_screen(current_session.main_player)
     show screen time_screen
     #show screen calendar_screen_toggle
-    $ show_village_map(hidden_mist, naruto)
+    $ show_village_map(current_session.village, naruto)
     #show screen calendar_screen
     #$ start_world_events()
     call fight(naruto, sasuke, [sakura], [kakashi], clearing, 'generic_win', 'generic_lose', None)
@@ -2915,6 +2964,8 @@ label trap11:
 label trap12:
     $ set_trap_at_pos(player, enemy, clearing, tile12)
     call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+
+
 
 
 
