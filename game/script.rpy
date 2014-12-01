@@ -13,6 +13,7 @@ define itachi_c = Character('Itachi', color="#FFFFFF")
 define ori_c = Character('Orichimaru', color="#FF0000")
 image bg = im.Scale("bg.jpg", 800, 600)
 image black_fade = Solid((0, 0, 0, 150))
+image black_fade_small = Solid((0, 0, 0, 150), area=(0.4, 0.7, 0.6,0.4)) # im.Tile(im.Scale("black.png", 400, 300)
 image world_marker = im.Scale("marker.png", 33, 35)
 image leader_pic = im.Scale("leader_pic.png", 100, 150)
 define world_events = Character('World Events', color='#3399FF', window_left_padding=150, show_side_image=Image("leader_pic.png", xpos=0.03, yalign=0.96))
@@ -367,7 +368,7 @@ init python:
         frequency = (day1, day2, day3) e.g. (1, 14, 30) event will happen on 1st, 14th and 30th of month
         chance = 0.1 (10% chance of event happening)
         """
-        def __init__(self, name, small_name, start=None, finish=None, frequency=None, chance=None, label=None):
+        def __init__(self, name, small_name, start=None, finish=None, frequency=None, chance=None, label=None, occurrence=None):
             self.name = name
             self.small_name = small_name
             self.start = start
@@ -378,6 +379,7 @@ init python:
             self.location = None
             self.character = None
             self.active = False
+            self.occurrence = occurrence # how many times it happens during a day
             
         def date_range(self):
             if self.start and self.finish:
@@ -405,7 +407,7 @@ init python:
                     
     e_chunin_exams = Event("Chunin Exams", "CE", start=(15, 5), finish=(14, 7), label="chunin_exam")
     e_jounin_training = Event("Jounin Training", "JT", frequency=(1, ))
-    e_jinchurri_attack = Event("Jinchurri Attack", "???", chance=0.05, label="jinchurri_attack")
+    e_jinchurri_attack = Event("Jinchurri Attack", "???",chance=0.05, label="jinchurri_attack", occurrence=0)
     e_weapon_discount = Event("Weapon Discount", "WD", frequency=(random.randint(2,30),)) 
     e_hospital_discount = Event("Hospital Discount", "HD", frequency=(random.randint(2,30),)) 
     
@@ -769,6 +771,7 @@ init python:
             self.lose_label = None
             self.draw_label = None
             self.last_match_result = None
+            self.initial_pos = True
             
         def clear(self):
             self.main_player = None
@@ -787,6 +790,7 @@ init python:
             self.lose_label = None
             self.draw_label = None
             self.last_match_result = None
+            self.initial_pos = True
             
         def clear_time_to_advance(self):
             self.time_to_advance = {'hours': 0, 'days': 0, 'months': 0, 'years': 0}
@@ -801,6 +805,8 @@ init python:
                      6: "crippled",
                      7: "crippled",
                      0: "none"}
+    # in days
+    INJURY_LENGTH = {1: 3, 2: 7, 3: 30, 4: 90, 5: 360}
     
     class Limb:
         def __init__(self, name):
@@ -811,6 +817,8 @@ init python:
             self.injury = False
             self.injury_severity = 0
             self.injury_count = 0
+            self.injury_length = 0
+            self.days_rested = 0
             
         def bleed(self):
             self.bleeding = True
@@ -826,14 +834,20 @@ init python:
         def injure(self):
             self.injury_severity += 1
             self.injury = True
+            self.injury_length = INJURY_LENGTH[self.injury_severity]
             
         def heal_injury(self, full=True):
             if full:
                 self.injury_severity = 0
+                self.injury = False
             else:
                 self.injury_severity -= 1
             
-            self.injury = True
+            if self.injury_severity < 1:
+                self.injury = False
+                
+        def heal_percentage(self):
+            return (self.days_rested / self.injury_length) * 100 
             
     limb_head = Limb('head')
     limb_torso = Limb('torso')
@@ -1371,6 +1385,11 @@ init python:
             self.quantity = quantity
             
             # maybe apply element, electric etc
+        def half_price(self):
+            self.price = self.price / 2
+            
+        def double_price(self):
+            self.price = self.price * 2
             
         def __repr__(self):
             return "<Weapon: {} {}>".format(self.name, self.quantity)
@@ -1425,6 +1444,7 @@ init python:
                 item.half_price()
                 
         def double_prices(self):
+            self.price_halved = False
             for item in self.items:
                 item.double_price()
             
@@ -1716,6 +1736,7 @@ init python:
                         'nin': enemy.ninskills,
                         'gen': enemy.genskills}
         
+        renpy.say(enemy.character, "skill: {}".format(len(enemy.battle_ai)))
         current_skill = random.choice(PATTERN_HASH[random.choice(enemy.battle_ai)])
         
         return current_skill
@@ -1916,12 +1937,15 @@ init python:
         
         if draw_label:
             current_session.last_match_result = 'draw'
+            current_session.initial_pos = True
             renpy.call(draw_label, current_session.main_player)
         elif player.hp == 0:
             current_session.last_match_result = 'lose'
+            current_session.initial_pos = True
             renpy.call(lose_label, current_session.main_player)
         elif enemy.hp == 0:
             current_session.last_match_result = 'win'
+            current_session.initial_pos = True
             renpy.call(win_label, current_session.main_player)
             
     def get_tag_info(player, tag_p):
@@ -1971,11 +1995,10 @@ screen hospitalshop(village, player):
     text "Items: [player.items]" xpos 0.1 ypos 0.2
     
     python:
-        if is_event_active_today(e_hospital_discount):
+        if is_event_active_today(e_hospital_discount) and not hospital_shop.price_halved:
             hospital_shop.half_prices()
-        else:
-            if hospital_shop.price_halved:
-                hospital_shop.double_prices()
+        elif not is_event_active_today(e_hospital_discount) and hospital_shop.price_halved:
+            hospital_shop.double_prices()
     
     for item in hospital_shop.items:
         textbutton "[item.name] ([item.price])" action [SetField(current_session, 'village', village), 
@@ -1997,11 +2020,10 @@ screen weaponshop(village, player):
     text "Weapons: [player.weapons]" xpos 0.1 ypos 0.2
     
     python:
-        if is_event_active_today(e_weapon_discount):
+        if is_event_active_today(e_weapon_discount) and not weapon_shop.price_halved:
             weapon_shop.half_prices()
-        else:
-            if weapon_shop.price_halved:
-                weapon_shop.double_prices()
+        elif not is_event_active_today(e_weapon_discount) and weapon_shop.price_halved:
+            weapon_shop.double_prices()
     
     for weapon in weapon_shop.items:
         textbutton "[weapon.name] ([weapon.price])" action [SetField(current_session, 'village', village), 
@@ -2162,9 +2184,11 @@ screen villagehome(village, player):
 screen villagemap(village, player):
     # show player time details here
     $ counter = 0
-    $ x_adj = 0.03
+    $ x_adj = 0.05
     
-    text "[village.jounins]" xpos 0.1
+    #text "[current_session.initial_pos]" xpos 0.1
+    
+    imagebutton idle "black_fade_small" hover "black_fade_small"
     
     for location in village.locations:
         if player.home_village:
@@ -2193,6 +2217,7 @@ screen villagemap(village, player):
                 
         
 screen time_screen:
+    #text "[current_session.initial_pos]" xpos 0.1
     text "{color=#000}[main_time.current_time]{/color}" xpos 0.1 ypos 0.1
         
 screen stats_screen(player):
@@ -2497,11 +2522,16 @@ label world_update(village):
 label village_redirect:
     hide screen villagetravel
     python:
-        if is_event_active_today(e_jinchurri_attack):
-            renpy.call("jinchurri_attack", current_session.main_player, current_session.village)
+        if is_event_active_today(e_jinchurri_attack) and e_jinchurri_attack.occurrence < 1:
+            e_jinchurri_attack.occurrence += 1
+            renpy.call(e_jinchurri_attack.label, current_session.main_player, current_session.village)
+        else:
+            e_jinchurri_attack.occurrence = 0
     show screen player_stats
     $ main_time.advance_time(days=current_session.time_to_advance['days'])
     $ current_session.clear_time_to_advance()
+    show screen stats_screen(current_session.main_player)
+    show screen time_screen
     $ show_village_map(current_session.village, current_session.main_player)
     current_session.main_player.character "I need to choose an action."
     jump village_redirect
@@ -2678,16 +2708,15 @@ label jinchurri_attack(player, village):
             call fight(player, kyuubi, player.team.members, [], clearing, 'generic_win', 'generic_lose', None)
         else:
             player.character "The huge beast faces me."
-            call fight(player, kyuubi, [], [], clearing, 'generic_win', 'generic_lose', None)
+            call fight(player, anko, [], [], clearing, 'generic_win', 'generic_lose', None)
             
     else:
-        if player.team:
-            player.character "I can't find my team mates."
-            player.character "I see some jounins."
-            $ jounin_1 = get_random_jounin(player, village, exclude=[])
-            $ jounin_2 = get_random_jounin(player, village, exclude=[jounin_1])
-            jounin_1.character "Lets go!"
-            call fight(player, kyuubi, [jounin_1, jounin_2], [], clearing, 'generic_win', 'generic_lose', None)
+        player.character "I can't find my team mates."
+        player.character "I see some jounins."
+        $ jounin_1 = get_random_jounin(player, village, exclude=[])
+        $ jounin_2 = get_random_jounin(player, village, exclude=[jounin_1])
+        jounin_1.character "Lets go!"
+        call fight(player, anko, [jounin_1, jounin_2], [], clearing, 'generic_win', 'generic_lose', None)
             
     
 
@@ -2714,6 +2743,7 @@ label start:
     
 label fight(player, enemy, tag_p, tag_e, stage=clearing, win_label, lose_label, draw_label=None):
     #scene bg
+    $ hide_battle_screen(all=True)
     
     # set current_session
     $ current_session.enemy_tag = tag_e
@@ -2727,6 +2757,8 @@ label fight(player, enemy, tag_p, tag_e, stage=clearing, win_label, lose_label, 
     hide screen movemenu
     hide screen settrap
     # initial position
+    call initial_pos(player, enemy)
+        
     $ highlight_position(player, enemy, stage)
     $ end_match(player, enemy, tag_p, tag_e, win_label, lose_label, draw_label)
     $ remove_all_skill_affects(player, enemy)
@@ -2745,6 +2777,15 @@ label fight(player, enemy, tag_p, tag_e, stage=clearing, win_label, lose_label, 
     "Sample" "Sample...."
     
     call movemenu
+    
+label initial_pos(player, enemy):
+    #player.character "[current_session.initial_pos]"
+    python:
+        if current_session.initial_pos:
+            show_player_at_pos(player, enemy, current_session.stage, tile1)
+            show_player_at_pos(enemy, player, current_session.stage, tile12)
+            current_session.initial_pos = False
+    return
     
 label generic_win(main_player):
     $ hide_battle_screen(all=True)
