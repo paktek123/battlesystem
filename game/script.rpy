@@ -64,6 +64,7 @@ init:
     $ maxhp_increase = 0
     $ maxchakra_increase = 0
     $ exp_increase = 0
+    $ moved = False
     
     image playerpic_r = im.Scale("player.png", 40, 50)
     image enemypic_r = im.Scale("enemy.png", 40, 50)
@@ -772,6 +773,7 @@ init python:
             self.draw_label = None
             self.last_match_result = None
             self.initial_pos = True
+            self.rest = False
             
         def clear(self):
             self.main_player = None
@@ -791,9 +793,28 @@ init python:
             self.draw_label = None
             self.last_match_result = None
             self.initial_pos = True
+            self.rest = False
             
         def clear_time_to_advance(self):
+            self.rest = False
             self.time_to_advance = {'hours': 0, 'days': 0, 'months': 0, 'years': 0}
+            
+        def time_to_advance_in_days(self):
+            days = 0
+            
+            if self.time_to_advance.get('hours'):
+                days += self.time_to_advance['hours'] / 24
+            
+            if self.time_to_advance.get('days'):
+                days += self.time_to_advance['days']
+                
+            if self.time_to_advance.get('months'):
+                days += self.time_to_advance['months'] * 30
+                
+            if self.time_to_advance.get('years'):
+                days += self.time_to_advance['years'] * 365
+                
+            return days
         
     current_session = CurrentSession()
     
@@ -836,12 +857,22 @@ init python:
             self.injury = True
             self.injury_length = INJURY_LENGTH[self.injury_severity]
             
+        def rest(self, days):
+            if self.injury:
+                self.days_rested += days
+                if self.injury_length == self.days_rested:
+                    self.heal_injury(full=True)
+            # TODO: maybe some dialogue here
+            
         def heal_injury(self, full=True):
             if full:
                 self.injury_severity = 0
                 self.injury = False
+                self.injury_length = 0
+                self.days_rested = 0
             else:
                 self.injury_severity -= 1
+                self.injury_length = INJURY_LENGTH[self.injury_severity]
             
             if self.injury_severity < 1:
                 self.injury = False
@@ -945,13 +976,36 @@ init python:
             self.team = None
             self.sensei = None
             self.bond = 0
-            self.ryo = 1000
+            self.ryo = 2000
             self.battle_ai = battle_ai
             self.home_village = home_village
             
             self.assign_all_skills()
             self.set_sensei()
             self.add_to_village_ranks()
+            
+        def heal_all_injuries(self):
+            for limb in self.get_limbs():
+                limb.heal_injury(full=True)
+            
+        def get_injury_bill(self):
+            price = 0
+            stay_days = 0
+            for limb in self.get_limbs():
+                if limb.injury_severity == 1:
+                    price += 1000
+                    stay_days += 3
+                elif limb.injury_severity == 2:
+                    price += 2000
+                    stay_days += 7
+                elif limb.injury_severity == 3:
+                    price += 4000
+                    stay_days += 14
+                elif limb.injury_severity > 4:
+                    price += 10000
+                    stay_days += 30
+                    
+            return (price, stay_days) # this has to be tuple so renpy string interpolation can pick up
             
         def add_to_village_ranks(self):
             if self.home_village:
@@ -961,30 +1015,16 @@ init python:
             for rank, level_range in NINJA_RANKS.iteritems():
                 if self.level in level_range:
                     return rank #.capitalize()
-            #if self.level in range(1, 11):
-            #    return "Genin"
-            #elif self.level in range(11, 21):
-            #    return "Genin"
-            #elif self.level in range(21, 31):
-            #    return "Chunin"
-            #elif self.level in range(31, 41):
-            #    return "Jounin"
-            #elif self.level in range(41, 51):
-            #    return "Sannin"
-            #elif self.level in range(51, 71):
-            #    return "Kage"
-            #elif self.level in range(71, 101):
-            #    return "Legend"
             
         def injure_limb(self, name):
             limb = [l for l in self.get_limbs() if l.name == name][0]
             limb.injure()
             setattr(self, limb.name, limb)
             
-        def change_severity_limbs(self, injured_limbs, severity_delta):
+        def increase_limbs_severity(self, injured_limbs):
             for limb in injured_limbs:
                 l = getattr(self, limb.name)
-                l.injury_severity += severity_delta
+                l.injure()
                 setattr(self, limb.name, l)
             
         def get_limbs(self):
@@ -1070,7 +1110,7 @@ init python:
             return False
             
         def injured_limbs(self):
-            injured = [limb for limb in self.limbs if limb.injury]
+            injured = [limb for limb in self.get_limbs() if limb.injury]
             return injured
             
         def injury_chance(self, chance=0.00):
@@ -1141,6 +1181,7 @@ init python:
                     
         def assign_all_skills(self):
             for skill in self.all_skills:
+                skill.limbs = self.get_limbs()
                 setattr(self, skill.label, skill)
                 
         def remove_skill(self, skill):
@@ -1149,6 +1190,7 @@ init python:
             
         def assign_skill(self, skill):
             setattr(self, skill.label, skill)
+            skill.limbs = self.get_limbs()
             self.all_skills.append(skill)
             
         def apply_skill(self, skill):
@@ -1290,13 +1332,16 @@ init python:
             
         def action(self, player, enemy):
             
-            skill_limb_requirements = [limb.name for limb in self.limbs]
-            
-            injured_limbs = [limb.name for limb in skill_limb_requirements if limb.name in player.get_injured_limbs()]
+            injured_limbs = player.get_injured_limbs()
+            severity_scale = [limb.injury_severity for limb in player.injured_limbs()]
             
             if injured_limbs:
-                renpy.say(player.character, "I am injured but I will still use the skill, it will make my injury worse.")
-                player.increase_limb_severity([injured_limbs], 1)
+                if (sum(severity_scale) / len(severity_scale)) > 2:
+                    renpy.say(player.character, "I can't do anymore moves, I am too injured.")
+                    return
+                else:
+                    renpy.say(player.character, "I am injured but I will still use the skill, it will make my injury worse.")
+                    player.increase_limbs_severity([injured_limbs])
                 
             if player.chakra < self.chakra_cost:
                 renpy.say(player.character, "I don't have enough chakra")
@@ -1736,7 +1781,7 @@ init python:
                         'nin': enemy.ninskills,
                         'gen': enemy.genskills}
         
-        renpy.say(enemy.character, "skill: {}".format(len(enemy.battle_ai)))
+        #renpy.say(enemy.character, "skill: {}".format(len(enemy.battle_ai)))
         current_skill = random.choice(PATTERN_HASH[random.choice(enemy.battle_ai)])
         
         return current_skill
@@ -1938,14 +1983,17 @@ init python:
         if draw_label:
             current_session.last_match_result = 'draw'
             current_session.initial_pos = True
+            moved = False
             renpy.call(draw_label, current_session.main_player)
         elif player.hp == 0:
             current_session.last_match_result = 'lose'
             current_session.initial_pos = True
+            moved = False
             renpy.call(lose_label, current_session.main_player)
         elif enemy.hp == 0:
             current_session.last_match_result = 'win'
             current_session.initial_pos = True
+            moved = False
             renpy.call(win_label, current_session.main_player)
             
     def get_tag_info(player, tag_p):
@@ -1990,7 +2038,9 @@ init python:
             return None
             
 screen hospitalshop(village, player):
-    $ counter = 0
+    $ counter = 1
+    #$ player.left_leg.injure()
+    $ injury_bill = player.get_injury_bill()
     text "Ryo: [player.ryo]" xpos 0.1
     text "Items: [player.items]" xpos 0.1 ypos 0.2
     
@@ -1999,6 +2049,17 @@ screen hospitalshop(village, player):
             hospital_shop.half_prices()
         elif not is_event_active_today(e_hospital_discount) and hospital_shop.price_halved:
             hospital_shop.double_prices()
+    
+    if injury_bill[0]:
+        textbutton "Heal all injuries [injury_bill[0]] [injury_bill[1]]" action [SetField(current_session, 'village', village), 
+                                                                                 SetField(current_session, 'main_player', player),
+                                                                                 SetField(current_session, 'time_to_advance', {'days': injury_bill[1]}),
+                                                                                 SetField(current_session, 'rest', True),
+                                                                                 Hide("hospitalshop"),
+                                                                                 SetField(current_session, 'location', l_hospital), 
+                                                                                 Jump('hospital_injury')] xpos grid_place[0][0] ypos grid_place[0][1]
+    else:
+        $ counter = 0
     
     for item in hospital_shop.items:
         textbutton "[item.name] ([item.price])" action [SetField(current_session, 'village', village), 
@@ -2174,12 +2235,73 @@ screen villagehome(village, player):
     textbutton "Show Calendar" action [SetField(current_session, 'village', village), 
                                        SetField(current_session, 'main_player', player), 
                                        Hide('villagehome'),
-                                       Show('calendar_screen', player=player, village=village, current_month=get_current_month())] xpos grid_place[counter][0] ypos grid_place[counter][1]
+                                       Show('calendar_screen', player=player, village=village, current_month=get_current_month())] xpos grid_place[0][0] ypos grid_place[0][1]
+    
+    textbutton "Rest" action [SetField(current_session, 'village', village), 
+                              SetField(current_session, 'main_player', player), 
+                              Hide('villagehome'),
+                              Show('rest_screen', player=player, village=village)] xpos grid_place[1][0] ypos grid_place[1][1]
         
     textbutton "Back to Location select" action [SetField(current_session, 'village', village), 
                                                  SetField(current_session, 'main_player', player), 
                                                  Hide('villagehome'),
-                                                 Jump('village_redirect')] xpos grid_place[1][0] ypos grid_place[1][1]
+                                                 Jump('village_redirect')] xpos grid_place[2][0] ypos grid_place[2][1]
+    
+screen rest_screen(village, player):
+    
+    textbutton "1 Hour" action [SetField(current_session, 'village', village), 
+                                SetField(current_session, 'main_player', player),
+                                SetField(current_session, 'time_to_advance', {'hours': 1}),
+                                SetField(current_session, 'rest', True),
+                                Hide("rest_screen"),
+                                SetField(current_session, 'location', l_home), 
+                                Jump('location_redirect')] xpos grid_place[0][0] ypos grid_place[0][1]
+    
+    textbutton "2 Hours" action [SetField(current_session, 'village', village), 
+                                 SetField(current_session, 'main_player', player),
+                                 SetField(current_session, 'time_to_advance', {'hours': 2}),
+                                 SetField(current_session, 'rest', True),
+                                 Hide("rest_screen"),
+                                 SetField(current_session, 'location', l_home), 
+                                 Jump('location_redirect')] xpos grid_place[1][0] ypos grid_place[1][1]
+    
+    textbutton "12 Hours" action [SetField(current_session, 'village', village), 
+                                  SetField(current_session, 'main_player', player),
+                                  SetField(current_session, 'time_to_advance', {'hours': 12}),
+                                  SetField(current_session, 'rest', True),
+                                  Hide("rest_screen"),
+                                  SetField(current_session, 'location', l_home), 
+                                  Jump('location_redirect')] xpos grid_place[2][0] ypos grid_place[2][1]
+    
+    textbutton "1 Day" action [SetField(current_session, 'village', village), 
+                               SetField(current_session, 'main_player', player),
+                               SetField(current_session, 'time_to_advance', {'days': 1}),
+                               SetField(current_session, 'rest', True),
+                               Hide("rest_screen"),
+                               SetField(current_session, 'location', l_home), 
+                               Jump('location_redirect')] xpos grid_place[3][0] ypos grid_place[3][1]
+    
+    textbutton "1 Week" action [SetField(current_session, 'village', village), 
+                                SetField(current_session, 'main_player', player),
+                                SetField(current_session, 'time_to_advance', {'days': 7}),
+                                SetField(current_session, 'rest', True),
+                                Hide("rest_screen"),
+                                SetField(current_session, 'location', l_home), 
+                                Jump('location_redirect')] xpos grid_place[4][0] ypos grid_place[4][1]
+    
+    textbutton "1 Month" action [SetField(current_session, 'village', village), 
+                                 SetField(current_session, 'main_player', player),
+                                 SetField(current_session, 'time_to_advance', {'months': 1}),
+                                 SetField(current_session, 'rest', True),
+                                 Hide("rest_screen"),
+                                 SetField(current_session, 'location', l_home), 
+                                 Jump('location_redirect')] xpos grid_place[5][0] ypos grid_place[5][1]
+    
+    textbutton "Back" action [SetField(current_session, 'village', village), 
+                              SetField(current_session, 'main_player', player),
+                              Hide("rest_screen"),
+                              SetField(current_session, 'location', l_home), 
+                              Jump('location_redirect')] xpos grid_place[6][0] ypos grid_place[6][1]
 
 screen villagemap(village, player):
     # show player time details here
@@ -2426,7 +2548,8 @@ screen battlemenu(player, tag_p):
         textbutton "Tai" action [Hide("ninactions"), Hide("genactions"), Hide("movemenu"), Hide("weaponselection"), Hide("defenceactions"), Show("taiactions")]
         textbutton "Nin" action [Hide("taiactions"), Hide("genactions"), Hide("movemenu"), Hide("weaponselection"), Hide("defenceactions"), Show("ninactions")]
         textbutton "Gen" action [Hide("ninactions"), Hide("taiactions"), Hide("movemenu"), Hide("weaponselection"), Hide("defenceactions"), Show("genactions")]
-        textbutton "Move" action [Hide("ninactions"), Hide("genactions"), Hide("taiactions"), Hide("weaponselection"), Hide("defenceactions"), Show("movemenu")]
+        if not moved:
+            textbutton "Move" action [Hide("ninactions"), Hide("genactions"), Hide("taiactions"), Hide("weaponselection"), Hide("defenceactions"), Show("movemenu")]
         textbutton "Weapons" action [Hide("ninactions"), Hide("genactions"), Hide("movemenu"), Show("weaponselection"), Hide("defenceactions"), Hide("taiactions")]
         textbutton "Defence" action [Hide("ninactions"), Hide("genactions"), Hide("movemenu"), Hide("weaponselection"), Show("defenceactions"), Hide("taiactions")]
         textbutton "Standby" action Jump("standby")
@@ -2538,9 +2661,18 @@ label village_redirect:
     
 label location_redirect:
     hide screen villagemap 
-    #"SAMPLE" "HULLO"
-    $ main_time.advance_time(hours=current_session.time_to_advance['hours'])
-    $ current_session.clear_time_to_advance()
+    python:
+        main_time.advance_time(hours=current_session.time_to_advance.get('hours'),
+                               days=current_session.time_to_advance.get('days'),
+                               months=current_session.time_to_advance.get('months'),
+                               years=current_session.time_to_advance.get('years'))
+    # advance limb rest
+    python:
+        if current_session.rest:
+            for limb in current_session.main_player.get_limbs():
+                limb.rest(current_session.time_to_advance_in_days())
+    
+    $ current_session.clear_time_to_advance() # this clears rest too
     python:
         if current_session.location.background:
             renpy.hide(current_session.location.background)
@@ -2606,13 +2738,21 @@ label training_sensei:
     
 label train_skill_label:
     python:
-        setattr(getattr(current_session.main_player, current_session.skill.label), current_session.skill.label,  current_session.skill.gain_exp(10))
-    current_session.main_player.character "I have gained 10 exp for [current_session.skill.name]"
+        if current_session.main_player.get_injured_limbs():
+            renpy.say(current_session.main_player.character, "I can't train, I am injured and have to heal my injuries first.")
+            current_session.clear_time_to_advance()
+        else:
+            setattr(getattr(current_session.main_player, current_session.skill.label), current_session.skill.label,  current_session.skill.gain_exp(10))
+            renpy.say(current_session.main_player.character, "I have gained 10 exp for {}.".format(current_session.skill.name))
     jump location_redirect
     
 label train_gain_exp:
     python:
-        current_session.main_player.gain_exp(10)
+        if current_session.main_player.get_injured_limbs():
+            renpy.say(current_session.main_player.character, "I can't train, I am injured and have to heal my injuries first.")
+            current_session.clear_time_to_advance()
+        else:
+            current_session.main_player.gain_exp(10)
     jump location_redirect
     
 label village_arena(player, village):
@@ -2624,6 +2764,25 @@ label village_hospital(player, village):
     show screen hospitalshop(village, player)
     player.character "I need to choose items to buy."
     $ renpy.call('village_hospital', player, village)
+    
+label hospital_injury:
+    # TODO: special events, etc
+    $ injury_bill = player.get_injury_bill()
+    "Nurse" "Looks like you are injured."
+    "Nurse" "Lets take a look here."
+    "Nurse" "....."
+    "Nurse" "That will be [injury_bill[0]] Ryo."
+    if current_session.main_player.ryo >= injury_bill[0]:
+        current_session.main_player.character "Here."
+        $ current_session.main_player.ryo -= injury_bill[0]
+        "Nurse" "You can stay here and rest up, we will discharge you once your fully healed."
+        $ current_session.main_player.heal_all_injuries()
+    else:
+        current_session.main_player.character "Sorry, I do not have enough ryo."
+        "Nurse" "I would suggest you heal your minor injuries by resting at home, then once you have enough ryo we can treat you."
+        $ current_session.clear_time_to_advance()
+    
+    jump location_redirect
     
 label village_jounin_station(player, village):
     # TODO: handle npc events
@@ -2728,9 +2887,9 @@ label tag_partner:
 label start:
     $ current_session.main_player = naruto
     $ current_session.village = hidden_leaf
-    #scene dream_2
-    #$ renpy.notify("hello")
-    #call fight(naruto, sasuke, [sakura], [kakashi], clearing, 'generic_win', 'generic_lose', None)
+    #$ current_session.main_player.left_leg.injure()
+    scene dream_2
+    call fight(naruto, sasuke, [sakura], [kakashi], clearing, 'generic_win', 'generic_lose', None)
     show screen player_stats
     #$ renpy.show_screen("calendar_screen", layer="master")
     show screen stats_screen(current_session.main_player)
@@ -2835,7 +2994,7 @@ label standby:
     jump enemymove
     
 label enemymove:
-    # damage movement??
+    $ moved = False
     $ end_match(player, enemy, tag_p, tag_e, win_label, lose_label, draw_label)
     $ remove_all_skill_affects(player, enemy)
     
@@ -2911,50 +3070,62 @@ screen settrap:
         imagebutton idle tile.idle hover TILETRAPPIC xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos - 0.05) action Jump("trap{}".format(tile.position))
     
 label move1:
+    $ moved = True
     $ show_player_at_pos(player, enemy, clearing, tile1)
     call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
 label move2:
+    $ moved = True
     $ show_player_at_pos(player, enemy, clearing, tile2)
     call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
 label move3:
+    $ moved = True
     $ show_player_at_pos(player, enemy, clearing, tile3)
     call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
 label move4:
+    $ moved = True
     $ show_player_at_pos(player, enemy, clearing, tile4)
     call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
 
 label move5:
+    $ moved = True
     $ show_player_at_pos(player, enemy, clearing, tile5)
     call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
 
 label move6:
+    $ moved = True
     $ show_player_at_pos(player, enemy, clearing, tile6)
     call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
 label move7:
+    $ moved = True
     $ show_player_at_pos(player, enemy, clearing, tile7)
     call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
 label move8:
+    $ moved = True
     $ show_player_at_pos(player, enemy, clearing, tile8)
     call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
 label move9:
+    $ moved = True
     $ show_player_at_pos(player, enemy, clearing, tile9)
     call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
 label move10:
+    $ moved = True
     $ show_player_at_pos(player, enemy, clearing, tile10)
     call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
 label move11:
+    $ moved = True
     $ show_player_at_pos(player, enemy, clearing, tile11)
     call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
 label move12:
+    $ moved = True
     $ show_player_at_pos(player, enemy, clearing, tile12)
     call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
@@ -3005,6 +3176,8 @@ label trap11:
 label trap12:
     $ set_trap_at_pos(player, enemy, clearing, tile12)
     call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+
+
 
 
 
