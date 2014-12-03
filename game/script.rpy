@@ -84,6 +84,17 @@ init:
 
 init python:
     
+    def detective_dragged(drags, drop):
+
+        if not drop:
+            return
+
+        store.detective = drags[0].drag_name
+        store.city = drop.drag_name
+
+        return True
+
+    
     import os
     for fname in os.listdir(config.gamedir + '/gfx'):
         if fname.endswith(('.jpg', '.png')):
@@ -123,6 +134,7 @@ init python:
     
     TILEIDLEPIC = "tile.png"
     TILEHOVERPIC = "tileh.png"
+    TILEPROJECTPIC = "tilep.png"
     TILETRAPPIC = "tiletrap.png"
     
     # Positions
@@ -774,6 +786,7 @@ init python:
             self.last_match_result = None
             self.initial_pos = True
             self.rest = False
+            self.spar = []
             
         def clear(self):
             self.main_player = None
@@ -794,6 +807,7 @@ init python:
             self.last_match_result = None
             self.initial_pos = True
             self.rest = False
+            self.spar = []
             
         def clear_time_to_advance(self):
             self.rest = False
@@ -1249,6 +1263,15 @@ init python:
             self.trap = False
             self.active = False
             self.trap_pic = TILETRAPPIC
+            self.potential = False
+            
+        def project(self):
+            self.idle = TILEPROJECTPIC
+            self.potential = True
+            
+        def deproject(self):
+            self.hover = TILEIDLEPIC
+            self.potential = False
             
         def activate(self):
             self.idle = self.hover
@@ -1673,6 +1696,35 @@ init python:
         for tile in TILES:
             if not tile.trap:
                 tile.deactivate()
+                tile.deproject()
+                
+        max_limit = player.tile.position + player.speed
+        min_limit = player.tile.position - player.speed
+        
+        if max_limit > 12:
+            max_limit = 12
+        
+        if min_limit < 1:
+            min_limit = 1
+            
+        low_range = range(min_limit, player.tile.position)
+        high_range = range(player.tile.position + 1, max_limit + 1)
+        
+        #remove the current player and enemy positions
+        low_range = [x for x in low_range if x != player.tile.position]
+        high_range = [x for x in high_range if x != player.tile.position]
+        low_range = [x for x in low_range if x != enemy.tile.position]
+        high_range = [x for x in high_range if x != enemy.tile.position]
+        
+        for tile_position in low_range:
+            tile = get_tile_from_position(tile_position)
+            if not tile.trap:
+                tile.project()
+            
+        for tile_position in high_range:
+            tile = get_tile_from_position(tile_position)
+            if not tile.trap:
+                tile.project()
             
         show_player_at_pos(player, enemy, stage, player.tile)
         show_player_at_pos(enemy, player, stage, enemy.tile)
@@ -1863,8 +1915,22 @@ init python:
         else:
             # move enemy to near player
             old_tile = enemy.tile
-            enemy_position = player.tile.position + current_skill.range
-            enemy_tile = get_tile_from_position(enemy_position)
+            # check distance between enemy and player
+            difference = abs(enemy.tile.position - player.tile.position)
+            if difference > enemy.speed:
+                if enemy.tile.position > player.tile.position:
+                    enemy_position = enemy.tile.position - enemy.speed
+                else:
+                    enemy_position = enemy.tile.position + enemy.speed
+            else:
+                # TODO: enemy does not honour enemy.speed
+                if enemy.tile.position > player.tile.position:
+                    enemy_position = player.tile.position - current_skill.range
+                else:
+                    enemy_position = player.tile.position + current_skill.range
+                
+            renpy.say("HELLO", "Enemy position is {}.".format(enemy_position))
+            enemy_tile = get_tile_from_position(abs(enemy_position))
             
             if not enemy.tile:
                 enemy_tile = old_tile
@@ -1882,8 +1948,9 @@ init python:
         
         # trap
         if enemy.tile.trap:
-            renpy.say(player.character, "You got stuck in my trap!")
-            renpy.say(enemy.character, "Oh no!")
+            #renpy.say(player.character, "You got stuck in my trap!")
+            #renpy.say(enemy.character, "Oh no!")
+            # TODO: some affect similar but not text
             enemy.hp -= 30
             remove_trap(enemy.tile)
             
@@ -1926,7 +1993,7 @@ init python:
             renpy.say(player.character, "A trap is already set there.")
             set_trap_at_pos(player, enemy, stage, tile)
             
-        Jump("fight")
+        #Jump("fight")
         
     def remove_all_skill_affects(player, enemy):
         player.fix_stats()
@@ -2145,12 +2212,10 @@ screen training(village, player):
         # maybe add formation, TODO
         text "Team Chemistry: [player.team.chemistry]" xpos 0.1 ypos 0.1
         textbutton "Train with team" action [SetField(getattr(player, 'team'), 'chemistry', getattr(player, team).increase_chemistry(10)),
-                                             SetField(current_session, 'time_to_advance', {'hours': 4}),
                                              SetField(current_session, 'village', village), 
                                              SetField(current_session, 'main_player', player), 
-                                             SetField(current_session, 'location', l_training_ground),
                                              Hide("training"), 
-                                             Jump('location_redirect')] xpos grid_place[2][0] ypos grid_place[2][1]
+                                             Show("train_with_team", village=village, player=player)] xpos grid_place[2][0] ypos grid_place[2][1]
     if player.sensei:
         textbutton "Learn skills" action [SetField(current_session, 'village', village), 
                                           SetField(current_session, 'main_player', player), 
@@ -2169,6 +2234,32 @@ screen training(village, player):
                                                  SetField(current_session, 'main_player', player), 
                                                  Hide('training'), 
                                                  Jump('village_redirect')] xpos grid_place[4][0] ypos grid_place[4][1]
+    
+screen train_with_team(village, player):
+    $ team_length = len(player.team.members)
+    # TODO: maybe add player + team member vs others (drag and drop?)
+    if team_length > 0:
+        textbutton "Spar with [player.team.members[0].name]" action [SetField(current_session, 'time_to_advance', {'hours': 4}),
+                                                                     SetField(current_session, 'village', village), 
+                                                                     SetField(current_session, 'main_player', player), 
+                                                                     SetField(current_session, 'spar', [player.team.members[0]]),
+                                                                     Hide("training"), 
+                                                                     Jump("training_spar")] xpos grid_place[0][0] ypos grid_place[0][1]
+    if team_length > 1:
+        textbutton "Spar with [player.team.members[0].name] and [player.team.members[1].name (1 on 2)" action [SetField(current_session, 'time_to_advance', {'hours': 4}),
+                                                                     SetField(current_session, 'village', village), 
+                                                                     SetField(current_session, 'main_player', player), 
+                                                                     SetField(current_session, 'spar', player.team.members),
+                                                                     Hide("training"), 
+                                                                     Jump("training_spar")] xpos grid_place[1][0] ypos grid_place[1][1]  
+    if player.sensei:
+        textbutton "Spar with [player.sensei.name]" action [SetField(current_session, 'time_to_advance', {'hours': 4}),
+                                                                     SetField(current_session, 'village', village), 
+                                                                     SetField(current_session, 'main_player', player), 
+                                                                     SetField(current_session, 'spar', [player.sensei]),
+                                                                     Hide("training"), 
+                                                                     Jump("training_spar")] xpos grid_place[0][0] ypos grid_place[0][1]
+    
     
 screen train_skills(village, player):
     $ counter = 0
@@ -2551,6 +2642,7 @@ screen battlemenu(player, tag_p):
         if not moved:
             textbutton "Move" action [Hide("ninactions"), Hide("genactions"), Hide("taiactions"), Hide("weaponselection"), Hide("defenceactions"), Show("movemenu")]
         textbutton "Weapons" action [Hide("ninactions"), Hide("genactions"), Hide("movemenu"), Show("weaponselection"), Hide("defenceactions"), Hide("taiactions")]
+        textbutton "Trap" action [Hide("ninactions"), Hide("genactions"), Hide("taiactions"), Hide("weaponselection"), Hide("defenceactions"), Show("settrap")]
         textbutton "Defence" action [Hide("ninactions"), Hide("genactions"), Hide("movemenu"), Hide("weaponselection"), Show("defenceactions"), Hide("taiactions")]
         textbutton "Standby" action Jump("standby")
         for partner in tag_p:
@@ -2591,9 +2683,9 @@ screen battlebars(tag_p, tag_e):
     if player.check_active_skill(yata_mirror):
         text "Yata" xpos 0.3 ypos 0.15
     
-    if player.is_bleeding():
-        text "blood" vertical True xpos 0.40 ypos 0.2
-        vbar value player.blood range player.max_blood xpos 0.45 ypos 0.2 ymaximum 150
+    #if player.is_bleeding():
+    #    text "blood" vertical True xpos 0.40 ypos 0.2
+    #    vbar value player.blood range player.max_blood xpos 0.45 ypos 0.2 ymaximum 150
     
     text "[enemy.name]" xpos 0.65 ypos 0.15
     text "[enemy.chakra]" xpos 0.64 ypos 0.45
@@ -2603,9 +2695,9 @@ screen battlebars(tag_p, tag_e):
     if player.damage_dealt > 0:
         text "-[player.damage_dealt]" xpos 0.75 ypos 0.3
     
-    if enemy.is_bleeding():
-        text "blood" vertical True xpos 0.78 ypos 0.2
-        vbar value enemy.blood range enemy.max_blood xpos 0.74 ypos 0.2 ymaximum 150
+    #if enemy.is_bleeding():
+    #    text "blood" vertical True xpos 0.78 ypos 0.2
+    #    vbar value enemy.blood range enemy.max_blood xpos 0.74 ypos 0.2 ymaximum 150
         
     if enemy.check_active_skill(damage_reduction_e):
         text "DR" xpos 0.75 ypos 0.15
@@ -2636,6 +2728,50 @@ screen battlebars(tag_p, tag_e):
             text "[partner.name]" xpos 0.75 ypos 0.75
             vbar value partner.hp range partner.maxhp xpos 0.78 ypos 0.8 ymaximum 100 xmaximum 20
             vbar value partner.chakra range partner.maxchakra xpos 0.75 ypos 0.8 ymaximum 100 xmaximum 20
+
+screen send_detective_screen:
+
+    # A map as background.
+    add "bg.jpg"
+
+    # A drag group ensures that the detectives and the cities can be
+    # dragged to each other.
+    draggroup:
+
+        # Our detectives.
+        drag:
+            drag_name "Ivy"
+            child "enemy.png"
+            droppable False
+            dragged detective_dragged
+            xpos 100 ypos 100
+        drag:
+            drag_name "Zack"
+            child "itachi.png"
+            droppable False
+            dragged detective_dragged
+            xpos 150 ypos 100
+
+        # The cities they can go to.
+        drag:
+            drag_name "London"
+            child "button_hover.png"
+            draggable False
+            xpos 450 ypos 140
+        drag:
+            drag_name "Paris"
+            draggable False
+            child "button_idle.png"
+            xpos 500 ypos 280
+
+
+label send_detective:
+    "We need to investigate! Who should we send, and where should they go?"
+
+    call screen send_detective_screen
+
+    "Okay, we'll send [detective] to [city]."
+    return
 
 label world_update(village):
     scene map
@@ -2754,6 +2890,18 @@ label train_gain_exp:
         else:
             current_session.main_player.gain_exp(10)
     jump location_redirect
+    
+label training_spar:
+    if len(current_session.spar) == 1:
+        current_session.main_player.character "Lets spar [current_session.spar[0].name]."
+        current_session.spar[0].character "Lets go."
+        call fight(player, current_session.spar[0], [], [], clearing, 'generic_win', 'generic_lose', None)
+    
+    if len(current_session.spar) > 1:
+        current_session.main_player.character "Lets spar [current_session.spar[0].name] and [current_session.spar[1].name]."
+        current_session.spar[0].character "Lets go."
+        current_session.spar[1].character "Lets do this."
+        call fight(player, current_session.spar[0], [], [current_session.spar[1]], clearing, 'generic_win', 'generic_lose', None)
     
 label village_arena(player, village):
     "SAMPLE" "TRAVEL HERE"
@@ -2887,6 +3035,7 @@ label tag_partner:
 label start:
     $ current_session.main_player = naruto
     $ current_session.village = hidden_leaf
+    #jump send_detective
     #$ current_session.main_player.left_leg.injure()
     scene dream_2
     call fight(naruto, sasuke, [sakura], [kakashi], clearing, 'generic_win', 'generic_lose', None)
@@ -2916,6 +3065,7 @@ label fight(player, enemy, tag_p, tag_e, stage=clearing, win_label, lose_label, 
     hide screen movemenu
     hide screen settrap
     # initial position
+    call remove_projections
     call initial_pos(player, enemy)
         
     $ highlight_position(player, enemy, stage)
@@ -2924,13 +3074,14 @@ label fight(player, enemy, tag_p, tag_e, stage=clearing, win_label, lose_label, 
     
     #$ drain_blood(player)
     #$ drain_blood(enemy)
-    show screen battlemenu(player, tag_p)
+    
     show screen battlebars(tag_p, tag_e)
     show screen stats
+    call screen battlemenu(player, tag_p)
     
-    python:
-        ui.imagebutton("tile.png", "tileh.png", clicked=ui.returns(1), xpos=1000, ypos=1000)
-        choice = ui.interact()
+    #python:
+    #    ui.imagebutton("tile.png", "tileh.png", clicked=ui.returns(1), xpos=1000, ypos=1000)
+    #    choice = ui.interact()
     
     "Tiger" "Gao gao! You're strong!"
     "Sample" "Sample...."
@@ -2946,28 +3097,58 @@ label initial_pos(player, enemy):
             current_session.initial_pos = False
     return
     
-label generic_win(main_player):
+label remove_projections:
+    python:
+        for tile in TILES:
+            tile.deproject()
+    return
+    
+label generic_win(player):
     $ hide_battle_screen(all=True)
     $ exp = renpy.random.randint(100,200) + 200
     $ player.gain_exp(exp)
+    if current_session.spar:
+        $ chemistry = renpy.random.randint(10, 15)
+        $ player.team.increase_chemistry(chemistry)
+        player.character "I gained [chemistry]."
+        $ current_session.spar = []
     # maybe rotated random dialogues here? TODO
     player.character "I won the match and gained [exp]."
     player.character "Now to head back to the village."
     player.character "..."
     player.character "..........."
     player.character "......................."
+    python:
+        main_time.advance_time(hours=current_session.time_to_advance.get('hours'),
+                               days=current_session.time_to_advance.get('days'),
+                               months=current_session.time_to_advance.get('months'),
+                               years=current_session.time_to_advance.get('years'))
+    
+    $ current_session.clear_time_to_advance() # this clears rest too
     call mission_report(current_session.main_player, current_session.mission)
     $ show_village_map(current_session.main_player.home_village, current_session.main_player)
 
-label generic_lose(main_player):
+label generic_lose(player):
     $ hide_battle_screen(all=True)
     $ exp = renpy.random.randint(100,200) + 70
     $ player.gain_exp(exp)
+    if current_session.spar:
+        $ chemistry = renpy.random.randint(10, 15)
+        $ player.team.increase_chemistry(chemistry)
+        player.character "I gained [chemistry]."
+        $ current_session.spar = []
     player.character "I lost the match and gained [exp]."
     player.character "Now to head back to the village."
     player.character "..."
     player.character "..........."
     player.character "......................."
+    python:
+        main_time.advance_time(hours=current_session.time_to_advance.get('hours'),
+                               days=current_session.time_to_advance.get('days'),
+                               months=current_session.time_to_advance.get('months'),
+                               years=current_session.time_to_advance.get('years'))
+    
+    $ current_session.clear_time_to_advance() # this clears rest too
     call mission_report(current_session.main_player, current_session.mission)
     $ show_village_map(current_session.main_player.home_village, current_session.main_player)
     
@@ -3049,7 +3230,12 @@ screen movemenu:
     $ highlight_position(player, enemy, clearing)
     
     for tile in TILES:
-        imagebutton idle tile.idle hover tile.hover xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos - 0.05) action Jump("move{}".format(tile.position))
+        if tile.potential:
+            imagebutton idle tile.idle hover tile.hover xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos - 0.05) action Jump("move{}".format(tile.position))
+        elif tile.trap:
+            imagebutton idle TILETRAPPIC hover TILETRAPPIC xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos - 0.05)
+        else:
+            imagebutton idle tile.idle hover tile.idle xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos - 0.05)
         text "{}".format(tile.idle.split('.')[0]) xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos + 0.15)
         if player.tile == tile:
             text "P" xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos + 0.25)
@@ -3067,7 +3253,11 @@ screen settrap:
     $ highlight_position(player, enemy, clearing)
     
     for tile in TILES:
-        imagebutton idle tile.idle hover TILETRAPPIC xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos - 0.05) action Jump("trap{}".format(tile.position))
+        if tile.potential:
+            imagebutton idle tile.idle hover TILETRAPPIC xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos - 0.05) action Jump("trap{}".format(tile.position))
+        else:
+            imagebutton idle tile.idle hover tile.idle xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos - 0.05)
+        #imagebutton idle tile.idle hover TILETRAPPIC xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos - 0.05) action Jump("trap{}".format(tile.position))
     
 label move1:
     $ moved = True
@@ -3131,51 +3321,64 @@ label move12:
     
 label trap1:
     $ set_trap_at_pos(player, enemy, clearing, tile1)
-    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    jump enemymove
+    #call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
 label trap2:
     $ set_trap_at_pos(player, enemy, clearing, tile2)
-    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    jump enemymove
+    #call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
 label trap3:
     $ set_trap_at_pos(player, enemy, clearing, tile3)
-    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    jump enemymove
+    #call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
 label trap4:
     $ set_trap_at_pos(player, enemy, clearing, tile4)
-    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    jump enemymove
+    #call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
 label trap5:
     $ set_trap_at_pos(player, enemy, clearing, tile5)
-    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    jump enemymove
+    #call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
 label trap6:
     $ set_trap_at_pos(player, enemy, clearing, tile6)
-    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    jump enemymove
+    #call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
 label trap7:
     $ set_trap_at_pos(player, enemy, clearing, tile7)
-    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    jump enemymove
+    #call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
 label trap8:
     $ set_trap_at_pos(player, enemy, clearing, tile8)
-    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    jump enemymove
+    #call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
 label trap9:
     $ set_trap_at_pos(player, enemy, clearing, tile9)
-    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    jump enemymove
+    #call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
 label trap10:
     $ set_trap_at_pos(player, enemy, clearing, tile10)
-    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    jump enemymove
+    #call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
 label trap11:
     $ set_trap_at_pos(player, enemy, clearing, tile11)
-    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    jump enemymove
+    #call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
 label trap12:
     $ set_trap_at_pos(player, enemy, clearing, tile12)
-    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    jump enemymove
+    #call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+
 
 
 
