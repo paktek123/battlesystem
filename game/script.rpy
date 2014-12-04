@@ -1,4 +1,4 @@
-# You can place the script of your game in this file.
+﻿# You can place the script of your game in this file.
 
 # Declare images below this line, using the image statement.
 # eg. image eileen happy = "eileen_happy.png"
@@ -1364,7 +1364,7 @@ init python:
                     return
                 else:
                     renpy.say(player.character, "I am injured but I will still use the skill, it will make my injury worse.")
-                    player.increase_limbs_severity([injured_limbs])
+                    player.increase_limbs_severity(injured_limbs)
                 
             if player.chakra < self.chakra_cost:
                 renpy.say(player.character, "I don't have enough chakra")
@@ -1588,6 +1588,10 @@ init python:
     gai = copy.deepcopy(naruto)
     gai.name, gai.picname, gai.character, gai.level = "Gai", "oripic_r", ori_c, 32
     gai.add_to_village_ranks()
+    
+    team7 = Team("Team 7", kakashi, [sasuke, sakura, naruto]) 
+    naruto.team = team7
+    naruto.sensei = kakashi
     
     ALL_PLAYERS = [naruto, sasuke, sakura, kakashi, itachi, ori, gai]
     ALL_CHARACTERS = [c.character for c in ALL_PLAYERS]
@@ -1834,7 +1838,10 @@ init python:
                         'gen': enemy.genskills}
         
         #renpy.say(enemy.character, "skill: {}".format(len(enemy.battle_ai)))
-        current_skill = random.choice(PATTERN_HASH[random.choice(enemy.battle_ai)])
+        try:
+            current_skill = random.choice(PATTERN_HASH[random.choice(enemy.battle_ai)])
+        except IndexError:
+            current_skill = random.choice(enemy.all_skills)
         
         return current_skill
         
@@ -1929,7 +1936,7 @@ init python:
                 else:
                     enemy_position = player.tile.position + current_skill.range
                 
-            renpy.say("HELLO", "Enemy position is {}.".format(enemy_position))
+            #renpy.say("HELLO", "Enemy position is {}.".format(enemy_position))
             enemy_tile = get_tile_from_position(abs(enemy_position))
             
             if not enemy.tile:
@@ -2210,9 +2217,8 @@ screen training(village, player):
     textbutton "Train skills" action [Hide("training"), Show("train_skills", village=village, player=player)] xpos grid_place[0][0] ypos grid_place[0][1]
     if player.team:
         # maybe add formation, TODO
-        text "Team Chemistry: [player.team.chemistry]" xpos 0.1 ypos 0.1
-        textbutton "Train with team" action [SetField(getattr(player, 'team'), 'chemistry', getattr(player, team).increase_chemistry(10)),
-                                             SetField(current_session, 'village', village), 
+        text "Team Chemistry: [player.team.chemistry]" xpos 0.4 ypos 0.1
+        textbutton "Train with team" action [SetField(current_session, 'village', village), 
                                              SetField(current_session, 'main_player', player), 
                                              Hide("training"), 
                                              Show("train_with_team", village=village, player=player)] xpos grid_place[2][0] ypos grid_place[2][1]
@@ -2243,22 +2249,22 @@ screen train_with_team(village, player):
                                                                      SetField(current_session, 'village', village), 
                                                                      SetField(current_session, 'main_player', player), 
                                                                      SetField(current_session, 'spar', [player.team.members[0]]),
-                                                                     Hide("training"), 
+                                                                     Hide("train_with_team"), 
                                                                      Jump("training_spar")] xpos grid_place[0][0] ypos grid_place[0][1]
     if team_length > 1:
-        textbutton "Spar with [player.team.members[0].name] and [player.team.members[1].name (1 on 2)" action [SetField(current_session, 'time_to_advance', {'hours': 4}),
+        textbutton "Spar with [player.team.members[0].name] and [player.team.members[1].name] (1 on 2)" action [SetField(current_session, 'time_to_advance', {'hours': 4}),
                                                                      SetField(current_session, 'village', village), 
                                                                      SetField(current_session, 'main_player', player), 
                                                                      SetField(current_session, 'spar', player.team.members),
-                                                                     Hide("training"), 
+                                                                     Hide("train_with_team"), 
                                                                      Jump("training_spar")] xpos grid_place[1][0] ypos grid_place[1][1]  
     if player.sensei:
         textbutton "Spar with [player.sensei.name]" action [SetField(current_session, 'time_to_advance', {'hours': 4}),
                                                                      SetField(current_session, 'village', village), 
                                                                      SetField(current_session, 'main_player', player), 
                                                                      SetField(current_session, 'spar', [player.sensei]),
-                                                                     Hide("training"), 
-                                                                     Jump("training_spar")] xpos grid_place[0][0] ypos grid_place[0][1]
+                                                                     Hide("train_with_team"), 
+                                                                     Jump("training_spar")] xpos grid_place[2][0] ypos grid_place[2][1]
     
     
 screen train_skills(village, player):
@@ -2805,6 +2811,8 @@ label location_redirect:
     # advance limb rest
     python:
         if current_session.rest:
+            current_session.main_player.hp = current_session.main_player.maxhp
+            current_session.main_player.chakra = current_session.main_player.maxchakra
             for limb in current_session.main_player.get_limbs():
                 limb.rest(current_session.time_to_advance_in_days())
     
@@ -2855,6 +2863,9 @@ label village_levelup(player, village):
 
 label village_training(player, village):
     #scene training
+    if player.hp < 50 or player.chakra < 50:
+        player.character "I don't have enough hp or chakra to continue, I need to rest before I can train."
+        jump village_redirect
     show screen training(village, player)
     player.character "What should I do?"
     $ renpy.call('village_training', player, village)
@@ -3037,8 +3048,8 @@ label start:
     $ current_session.village = hidden_leaf
     #jump send_detective
     #$ current_session.main_player.left_leg.injure()
-    scene dream_2
-    call fight(naruto, sasuke, [sakura], [kakashi], clearing, 'generic_win', 'generic_lose', None)
+    #scene dream_2
+    #call fight(naruto, sasuke, [sakura], [kakashi], clearing, 'generic_win', 'generic_lose', None)
     show screen player_stats
     #$ renpy.show_screen("calendar_screen", layer="master")
     show screen stats_screen(current_session.main_player)
@@ -3110,10 +3121,10 @@ label generic_win(player):
     if current_session.spar:
         $ chemistry = renpy.random.randint(10, 15)
         $ player.team.increase_chemistry(chemistry)
-        player.character "I gained [chemistry]."
+        player.character "I gained [chemistry] team chemistry."
         $ current_session.spar = []
     # maybe rotated random dialogues here? TODO
-    player.character "I won the match and gained [exp]."
+    player.character "I won the match and gained [exp] exp."
     player.character "Now to head back to the village."
     player.character "..."
     player.character "..........."
@@ -3135,9 +3146,9 @@ label generic_lose(player):
     if current_session.spar:
         $ chemistry = renpy.random.randint(10, 15)
         $ player.team.increase_chemistry(chemistry)
-        player.character "I gained [chemistry]."
+        player.character "I gained [chemistry] team chemistry."
         $ current_session.spar = []
-    player.character "I lost the match and gained [exp]."
+    player.character "I lost the match and gained [exp] exp."
     player.character "Now to head back to the village."
     player.character "..."
     player.character "..........."
@@ -3378,6 +3389,7 @@ label trap12:
     $ set_trap_at_pos(player, enemy, clearing, tile12)
     jump enemymove
     #call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+
 
 
 
