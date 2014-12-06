@@ -64,6 +64,7 @@ init:
     $ maxhp_increase = 0
     $ maxchakra_increase = 0
     $ exp_increase = 0
+    $ bond_increase = 0
     $ moved = False
     
     image playerpic_r = im.Scale("player.png", 40, 50)
@@ -381,7 +382,8 @@ init python:
         frequency = (day1, day2, day3) e.g. (1, 14, 30) event will happen on 1st, 14th and 30th of month
         chance = 0.1 (10% chance of event happening)
         """
-        def __init__(self, name, small_name, start=None, finish=None, frequency=None, chance=None, label=None, occurrence=None):
+        def __init__(self, name, small_name, start=None, finish=None, frequency=None, chance=None, label=None, 
+                     occurrence=None, npc=None, npc_icon=None):
             self.name = name
             self.small_name = small_name
             self.start = start
@@ -393,6 +395,10 @@ init python:
             self.character = None
             self.active = False
             self.occurrence = occurrence # how many times it happens during a day
+            self.npc = npc
+            self.npc_icon = npc_icon
+            self.count = 1
+            self.stop = False
             
         def date_range(self):
             if self.start and self.finish:
@@ -430,25 +436,6 @@ init python:
         if event.name in [e.name for e in get_today().events]:
             return True
         return False
-    
-    # populate events like this
-    for d in ALL_DAYS:
-        for e in ALL_EVENTS:
-            if e.start and e.finish:
-                for r in e.date_range():
-                    if r.day == d.number and r.month == d.month.number:
-                        d.events.append(e)
-            elif e.frequency:
-                for day in e.frequency:
-                    if d.number == day:
-                        d.events.append(e)
-            elif e.chance:
-                if (100*e.chance) > random.randint(1, 101):
-                    d.events.append(e)
-                    
-    # only get unique events
-    for d in ALL_DAYS:
-        d.events = d.events #list(set(d.events))
     
     class Mission(object):
         def __init__(self, name, hours=0, days=0, months=0, rank="D", dialogue=[], fights=None):
@@ -940,7 +927,8 @@ init python:
         def __init__(self, name, picname, character, tilepic, hudpic, hp, maxhp, chakra, maxchakra, 
                      strength, speed, evasion, defence, stamina, base_hit_rate, tile, facing,
                      taiskills=[], ninskills=[], genskills=[], items=[], defensiveskills=[], bloodlineskills=[],
-                     leader_pic=None, taijutsu=1, ninjutsu=1, genjutsu=1, weapons=[], battle_ai=[], home_village=None, level=1):
+                     leader_pic=None, taijutsu=1, ninjutsu=1, genjutsu=1, weapons=[], battle_ai=[], home_village=None, level=1,
+                     interaction={}):
             self.name = name
             self.picname = picname
             self.character = character
@@ -993,10 +981,31 @@ init python:
             self.ryo = 2000
             self.battle_ai = battle_ai
             self.home_village = home_village
+            self.interaction = interaction
+            self.npc_event = None
             
             self.assign_all_skills()
             self.set_sensei()
             self.add_to_village_ranks()
+            self.generate_events_for_interaction()
+            
+        def generate_events_for_interaction(self):
+            # this will jump to label called for Sasuke Uchiha sasuke_uchiha1, 1 is number of visits
+            data = {'name': self.name, 
+                    'small_name': "NPC", 
+                    'start': None, 
+                    'finish': None, 
+                    'frequency': None, 
+                    'chance': None,
+                    'label': self.name.replace(' ', '_').lower() + "{}",
+                    'occurrence': None,
+                    'npc': self,
+                    'npc_icon': None}
+            data.update(self.interaction)
+            new_event = Event(**data)
+            #location.events.append(new_event)
+            self.npc_event = new_event
+            ALL_EVENTS.append(new_event)
             
         def heal_all_injuries(self):
             for limb in self.get_limbs():
@@ -1568,7 +1577,7 @@ init python:
                     weapons=[shiruken, kunai], home_village=hidden_leaf)
     sasuke = Player('Sasuke', "enemypic_r", sasuke_c, Image('enemy.png'), None, 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
                     [onetwocombo, lioncombo], [chidori], [], [], [damage_reduction_e, chakra_defence_e], 
-                    battle_ai=nin_enemy_pattern, weapons=[shiruken, kunai], home_village=hidden_leaf)
+                    battle_ai=nin_enemy_pattern, weapons=[shiruken, kunai], home_village=hidden_leaf, interaction={'frequency': (1,)})
     
     sakura = Player('Sakura', "sakurapic_r", sakura_c, Image('sakura.png'), None, 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
                     [onetwocombo, lioncombo], [chidori], [], [], [damage_reduction_e, chakra_defence_e], weapons=[shiruken, kunai], home_village=hidden_leaf)
@@ -1640,6 +1649,25 @@ init python:
                                                    'number': 2}])
                                                    
     ALL_MISSIONS = [m_d1, m_d2, m_label_test, m_test_fightmission, m_test_multifight]
+    
+    # populate events like this
+    for d in ALL_DAYS:
+        for e in ALL_EVENTS:
+            if e.start and e.finish:
+                for r in e.date_range():
+                    if r.day == d.number and r.month == d.month.number:
+                        d.events.append(e)
+            elif e.frequency:
+                for day in e.frequency:
+                    if d.number == day:
+                        d.events.append(e)
+            elif e.chance:
+                if (100*e.chance) > random.randint(1, 101):
+                    d.events.append(e)
+                    
+    # only get unique events
+    for d in ALL_DAYS:
+        d.events = d.events #list(set(d.events))
     
     # screen vars
     screen_on = False
@@ -2111,6 +2139,27 @@ init python:
         else:
             return None
             
+screen villagearena(village, player):
+    $ counter = 0
+    textbutton "Level 5" action [SetField(current_session, 'village', village), 
+                                 SetField(current_session, 'main_player', player),
+                                 SetField(current_session, 'time_to_advance', {'hours': 8}),
+                                 Hide("villagearena"),
+                                 SetField(current_session, 'location', l_arena), 
+                                 Jump('village_arena_level5')] xpos grid_place[0][0] ypos grid_place[0][1]
+    
+    textbutton "Level 10" action [SetField(current_session, 'village', village), 
+                                  SetField(current_session, 'main_player', player),
+                                  SetField(current_session, 'time_to_advance', {'hours': 8}),
+                                  Hide("villagearena"),
+                                  SetField(current_session, 'location', l_arena), 
+                                  Jump('village_arena_level10')] xpos grid_place[1][0] ypos grid_place[1][1]
+    
+    textbutton "Back" action [SetField(current_session, 'village', village), 
+                              SetField(current_session, 'main_player', player),
+                              Hide("villagearena"),
+                              Jump('village_redirect')] xpos grid_place[2][0] ypos grid_place[2][1]
+            
 screen hospitalshop(village, player):
     $ counter = 1
     #$ player.left_leg.injure()
@@ -2145,7 +2194,7 @@ screen hospitalshop(village, player):
         $ counter += 1
                                          
     textbutton "Back to Location select" action [SetField(current_session, 'village', village), 
-                                                 SetField(current_session, 'player', player), 
+                                                 SetField(current_session, 'main_player', player), 
                                                  Hide("hospitalshop"),
                                                  Jump('village_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
     
@@ -2170,7 +2219,7 @@ screen weaponshop(village, player):
         $ counter += 1
                                          
     textbutton "Back to Location select" action [SetField(current_session, 'village', village), 
-                                                 SetField(current_session, 'player', player), 
+                                                 SetField(current_session, 'main_player', player), 
                                                  Hide("weaponshop"),
                                                  Jump('village_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
             
@@ -2403,11 +2452,22 @@ screen rest_screen(village, player):
 screen villagemap(village, player):
     # show player time details here
     $ counter = 0
+    $ npc_counter = 0
     $ x_adj = 0.05
+    $ npc_x_adj = 0.2
     
     #text "[current_session.initial_pos]" xpos 0.1
     
     imagebutton idle "black_fade_small" hover "black_fade_small"
+    
+    for today_e in get_today().events:
+        if today_e.npc and not today_e.stop:
+            textbutton today_e.npc.name action [SetField(current_session, 'main_player', player), 
+                                                SetField(current_session, 'village', village), 
+                                                SetField(current_session, 'time_to_advance', {'hours': 4}),
+                                                Hide("villagemap"), 
+                                                Jump(today_e.label.format(today_e.count))] xpos (grid_place[npc_counter][0]-npc_x_adj) ypos grid_place[npc_counter][1]
+            $ npc_counter += 1
     
     for location in village.locations:
         if player.home_village:
@@ -2787,14 +2847,19 @@ label world_update(village):
 label village_redirect:
     hide screen villagetravel
     python:
+        main_time.advance_time(hours=current_session.time_to_advance.get('hours'),
+                               days=current_session.time_to_advance.get('days'),
+                               months=current_session.time_to_advance.get('months'),
+                               years=current_session.time_to_advance.get('years'))
+    $ current_session.clear_time_to_advance()
+    
+    python:
         if is_event_active_today(e_jinchurri_attack) and e_jinchurri_attack.occurrence < 1:
             e_jinchurri_attack.occurrence += 1
             renpy.call(e_jinchurri_attack.label, current_session.main_player, current_session.village)
         else:
             e_jinchurri_attack.occurrence = 0
     show screen player_stats
-    $ main_time.advance_time(days=current_session.time_to_advance['days'])
-    $ current_session.clear_time_to_advance()
     show screen stats_screen(current_session.main_player)
     show screen time_screen
     $ show_village_map(current_session.village, current_session.main_player)
@@ -2915,8 +2980,9 @@ label training_spar:
         call fight(player, current_session.spar[0], [], [current_session.spar[1]], clearing, 'generic_win', 'generic_lose', None)
     
 label village_arena(player, village):
-    "SAMPLE" "TRAVEL HERE"
-    jump start
+    show screen villagearena(village, player)
+    player.character "I need to choose the arena fight."
+    $ renpy.call('village_arena', player, village)
     
 label village_hospital(player, village):
     # maybe show hospital for each village here
@@ -3035,7 +3101,43 @@ label jinchurri_attack(player, village):
         $ jounin_2 = get_random_jounin(player, village, exclude=[jounin_1])
         jounin_1.character "Lets go!"
         call fight(player, anko, [jounin_1, jounin_2], [], clearing, 'generic_win', 'generic_lose', None)
+        
+label village_arena_level5:
+    # TODO: Add arena background
+    current_session.main_player.character "Time to fight in the arena."
+    itachi.character "I will be your opponent!"
+    call fight(current_session.main_player, itachi, [], [], clearing, 'generic_win', 'generic_lose', None)
+    
+label village_arena_level10:
+    # TODO: Add arena background
+    current_session.main_player.character "Time to fight in the arena."
+    ori.character "I will be your opponent!"
+    call fight(current_session.main_player, ori, [], [], clearing, 'generic_win', 'generic_lose', None)
             
+### NPC LABELS ###
+label sasuke1:
+    $ sasuke.npc_event.count += 1
+    $ time_tag_show("leaf_1")
+    current_session.main_player.character "Hi Sasuke, we are meeting the first time."
+    # TODO: character sprites??
+    sasuke.character "How is it going."
+    " " "We eat ramen at the ramen shop."
+    $ bond_increase = renpy.random.randint(10, 15)
+    $ sasuke.bond += bond_increase
+    current_session.main_player.character "My bond with Sasuke goes up by [bond_increase]."
+    jump village_redirect
+    
+label sasuke2:
+    $ sasuke.npc_event.count += 1
+    $ time_tag_show("leaf_1")
+    $ sasuke.npc_event.stop = True
+    current_session.main_player.character "Hi Sasuke, we are meeting the second time."
+    sasuke.character "How is it going."
+    " " "We eat ramen at the ramen shop."
+    $ bond_increase = renpy.random.randint(10, 15)
+    $ sasuke.bond += bond_increase
+    current_session.main_player.character "My bond with Sasuke goes up by [bond_increase]."
+    jump village_redirect
     
 
 label tag_partner:
@@ -3389,6 +3491,7 @@ label trap12:
     $ set_trap_at_pos(player, enemy, clearing, tile12)
     jump enemymove
     #call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+
 
 
 
