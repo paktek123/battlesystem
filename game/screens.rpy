@@ -1,6 +1,843 @@
 ﻿# This file is in the public domain. Feel free to modify it as a basis
 # for your own screens.
 
+
+##############################################################################
+# VILLAGE SCREENS
+#
+screen villagearena(village, player):
+    $ counter = 0
+    textbutton "Level 5" action [SetField(current_session, 'village', village), 
+                                 SetField(current_session, 'main_player', player),
+                                 SetField(current_session, 'time_to_advance', {'hours': 8}),
+                                 Hide("villagearena"),
+                                 SetField(current_session, 'location', l_arena), 
+                                 Jump('village_arena_level5')] xpos grid_place[0][0] ypos grid_place[0][1]
+    
+    textbutton "Level 10" action [SetField(current_session, 'village', village), 
+                                  SetField(current_session, 'main_player', player),
+                                  SetField(current_session, 'time_to_advance', {'hours': 8}),
+                                  Hide("villagearena"),
+                                  SetField(current_session, 'location', l_arena), 
+                                  Jump('village_arena_level10')] xpos grid_place[1][0] ypos grid_place[1][1]
+    
+    textbutton "Back" action [SetField(current_session, 'village', village), 
+                              SetField(current_session, 'main_player', player),
+                              Hide("villagearena"),
+                              Jump('village_redirect')] xpos grid_place[2][0] ypos grid_place[2][1]
+            
+screen hospitalshop(village, player):
+    $ counter = 1
+    #$ player.left_leg.injure()
+    $ injury_bill = player.get_injury_bill()
+    text "Ryo: [player.ryo]" xpos 0.1
+    text "Items: [player.items]" xpos 0.1 ypos 0.2
+    
+    python:
+        if is_event_active_today(e_hospital_discount) and not hospital_shop.price_halved:
+            hospital_shop.half_prices()
+        elif not is_event_active_today(e_hospital_discount) and hospital_shop.price_halved:
+            hospital_shop.double_prices()
+    
+    if injury_bill[0]:
+        textbutton "Heal all injuries [injury_bill[0]] [injury_bill[1]]" action [SetField(current_session, 'village', village), 
+                                                                                 SetField(current_session, 'main_player', player),
+                                                                                 SetField(current_session, 'time_to_advance', {'days': injury_bill[1]}),
+                                                                                 SetField(current_session, 'rest', True),
+                                                                                 Hide("hospitalshop"),
+                                                                                 SetField(current_session, 'location', l_hospital), 
+                                                                                 Jump('hospital_injury')] xpos grid_place[0][0] ypos grid_place[0][1]
+    else:
+        $ counter = 0
+    
+    for item in hospital_shop.items:
+        textbutton "[item.name] ([item.price])" action [SetField(current_session, 'village', village), 
+                                                        SetField(current_session, 'main_player', player),
+                                                        SetField(current_session, 'location', l_hospital),
+                                                        SetField(current_session, 'item', item),
+                                                        SetField(current_session, 'time_to_advance', {'hours': 2}),
+                                                        Jump("purchase_item_redirect")] xpos grid_place[counter][0] ypos grid_place[counter][1]
+        $ counter += 1
+                                         
+    textbutton "Back to Location select" action [SetField(current_session, 'village', village), 
+                                                 SetField(current_session, 'main_player', player), 
+                                                 Hide("hospitalshop"),
+                                                 Jump('village_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
+    
+screen weaponshop(village, player):
+    $ counter = 0
+    text "Ryo: [player.ryo]" xpos 0.1
+    text "Weapons: [player.weapons]" xpos 0.1 ypos 0.2
+    
+    python:
+        if is_event_active_today(e_weapon_discount) and not weapon_shop.price_halved:
+            weapon_shop.half_prices()
+        elif not is_event_active_today(e_weapon_discount) and weapon_shop.price_halved:
+            weapon_shop.double_prices()
+    
+    for weapon in weapon_shop.items:
+        textbutton "[weapon.name] ([weapon.price])" action [SetField(current_session, 'village', village), 
+                                                            SetField(current_session, 'main_player', player),
+                                                            SetField(current_session, 'location', l_ninja_tool_facility),
+                                                            SetField(current_session, 'item', weapon),
+                                                            SetField(current_session, 'time_to_advance', {'hours': 2}),
+                                                            Jump("purchase_weapon_redirect")] xpos grid_place[counter][0] ypos grid_place[counter][1]
+        $ counter += 1
+                                         
+    textbutton "Back to Location select" action [SetField(current_session, 'village', village), 
+                                                 SetField(current_session, 'main_player', player), 
+                                                 Hide("weaponshop"),
+                                                 Jump('village_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
+            
+screen villagemissions(village, player):
+    $ counter = 0
+    $ village_time = 0
+    $ mission_levels = [('D', 10), ('C', 20), ('B', 30), ('A', 40), ('S', 50)]
+    $ player.level = 40
+    $ avaliable_missions = [mission[0] for mission in mission_levels if player.level > mission[1]]
+    
+    for rank in avaliable_missions:
+        textbutton "[rank]" action [SetField(current_session, 'village', village), 
+                                    SetField(current_session, 'main_player', player), 
+                                    SetField(current_session, 'mission_rank', rank),
+                                    Hide("villagemissions"),
+                                    Jump("missionselect_redirect")] xpos grid_place[counter][0] ypos grid_place[counter][1]
+        $ counter += 1
+        
+    textbutton "Back to Location select" action [SetField(current_session, 'village', village), 
+                                                 SetField(current_session, 'main_player', player), 
+                                                 Hide("villagemissions"),
+                                                 Jump('village_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
+    
+screen missionselect(village, player, rank):
+    $ counter = 0
+    $ missions = [mission for mission in ALL_MISSIONS if mission.rank == rank]
+    
+    for mission in missions:
+        textbutton "[mission.name]" action [SetField(current_session, 'village', village), 
+                                            SetField(current_session, 'main_player', player), 
+                                            SetField(current_session, 'mission', mission),
+                                            Hide("missionselect"),
+                                            Jump("mission_redirect")] xpos grid_place[counter][0] ypos grid_place[counter][1]
+        $ counter += 1
+    
+    textbutton "Back" action [SetField(current_session, 'village', village), 
+                              SetField(current_session, 'main_player', player),
+                              Hide("missionselect"),
+                              SetField(current_session, 'location', l_villagemission), 
+                              Jump('location_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
+    
+
+screen training(village, player):
+    textbutton "Train skills" action [Hide("training"), Show("train_skills", village=village, player=player)] xpos grid_place[0][0] ypos grid_place[0][1]
+    if player.team:
+        # maybe add formation, TODO
+        text "Team Chemistry: [player.team.chemistry]" xpos 0.4 ypos 0.1
+        textbutton "Train with team" action [SetField(current_session, 'village', village), 
+                                             SetField(current_session, 'main_player', player), 
+                                             Hide("training"), 
+                                             Show("train_with_team", village=village, player=player)] xpos grid_place[2][0] ypos grid_place[2][1]
+    if player.sensei:
+        textbutton "Learn skills" action [SetField(current_session, 'village', village), 
+                                          SetField(current_session, 'main_player', player), 
+                                          SetField(current_session, 'location', l_training_ground),
+                                          Hide("training"), 
+                                          Jump("training_sensei")] xpos grid_place[3][0] ypos grid_place[3][1]
+                                      
+    textbutton "Train (+ exp)" action [SetField(current_session, 'time_to_advance', {'hours': 4}),
+                                       SetField(current_session, 'village', village), 
+                                       SetField(current_session, 'main_player', player), 
+                                       SetField(current_session, 'location', l_training_ground),
+                                       Hide("training"), 
+                                       Jump('train_gain_exp')] xpos grid_place[1][0] ypos grid_place[1][1]
+    
+    textbutton "Back to Location select" action [SetField(current_session, 'village', village), 
+                                                 SetField(current_session, 'main_player', player), 
+                                                 Hide('training'), 
+                                                 Jump('village_redirect')] xpos grid_place[4][0] ypos grid_place[4][1]
+    
+screen train_with_team(village, player):
+    $ team_length = len(player.team.members)
+    # TODO: maybe add player + team member vs others (drag and drop?)
+    if team_length > 0:
+        textbutton "Spar with [player.team.members[0].name]" action [SetField(current_session, 'time_to_advance', {'hours': 4}),
+                                                                     SetField(current_session, 'village', village), 
+                                                                     SetField(current_session, 'main_player', player), 
+                                                                     SetField(current_session, 'spar', [player.team.members[0]]),
+                                                                     Hide("train_with_team"), 
+                                                                     Jump("training_spar")] xpos grid_place[0][0] ypos grid_place[0][1]
+    if team_length > 1:
+        textbutton "Spar with [player.team.members[0].name] and [player.team.members[1].name] (1 on 2)" action [SetField(current_session, 'time_to_advance', {'hours': 4}),
+                                                                     SetField(current_session, 'village', village), 
+                                                                     SetField(current_session, 'main_player', player), 
+                                                                     SetField(current_session, 'spar', player.team.members),
+                                                                     Hide("train_with_team"), 
+                                                                     Jump("training_spar")] xpos grid_place[1][0] ypos grid_place[1][1]  
+    if player.sensei:
+        textbutton "Spar with [player.sensei.name]" action [SetField(current_session, 'time_to_advance', {'hours': 4}),
+                                                                     SetField(current_session, 'village', village), 
+                                                                     SetField(current_session, 'main_player', player), 
+                                                                     SetField(current_session, 'spar', [player.sensei]),
+                                                                     Hide("train_with_team"), 
+                                                                     Jump("training_spar")] xpos grid_place[2][0] ypos grid_place[2][1]
+    
+    
+screen train_skills(village, player):
+    $ counter = 0
+    #text "[player.all_skills[0]]" xpos 0.5 ypos 0.5
+    for skill in player.all_skills:
+        if skill.exp < skill.unlock_exp:
+            textbutton "[skill.name] [skill.exp]/[skill.unlock_exp]" action [SetField(current_session, 'village', village), 
+                                                                             SetField(current_session, 'main_player', player), 
+                                                                             SetField(current_session, 'skill', skill),
+                                                                             SetField(current_session, 'time_to_advance', {'hours': 4}),
+                                                                             Hide("train_skills"),
+                                                                             Jump("train_skill_label")] xpos grid_place[counter][0] ypos grid_place[counter][1]
+            $ counter += 1
+            
+    textbutton "Back" action [SetField(current_session, 'village', village), 
+                              SetField(current_session, 'main_player', player),
+                              Hide("train_skills"),
+                              SetField(current_session, 'location', l_training_ground), 
+                              Jump('location_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
+
+screen levelup(village, player):
+    $ STATS = ['strength', 'speed', 'evasion', 'defence', 'stamina', 'taijutsu', 'ninjutsu', 'genjutsu']
+    $ counter = 0
+    text "Allocation Points: [player.allocation_points]" xpos 0.1
+    text "Str: [player.strength] Def: [player.defence] Eva: [player.evasion]" xpos 0.50
+    text "Sta: [player.stamina] Speed: [player.speed] Hit: [player.base_hit_rate]" xpos 0.50 ypos 0.05
+    text "Tai: [player.taijutsu] Nin: [player.ninjutsu] Gen: [player.genjutsu]" xpos 0.50 ypos 0.1
+    
+    if player.allocation_points:
+        for stat in STATS:
+            textbutton "[stat] +1" action [SetField(player, stat, getattr(player, stat) + 1), 
+                                           SetField(player, 'allocation_points', getattr(player, 'allocation_points') - 1), 
+                                           SetField(current_session, 'village', village), 
+                                           SetField(current_session, 'main_player', player), 
+                                           SetField(current_session, 'location', l_level_up), 
+                                           Jump('location_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
+            $ counter +=1 
+    else:
+        text "No allocation points" xpos 0.5 ypos 0.5
+    textbutton "Back to Location select" action [SetField(current_session, 'village', village), 
+                                                 SetField(current_session, 'main_player', player), 
+                                                 Hide('levelup'), 
+                                                 Jump('village_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
+
+screen villagetravel(village, player):
+    $ counter = 0
+    $ village_time = 0
+    
+    for v in other_villages(village):
+        $ village_time = time_between_village(v, village)
+        textbutton "[v.name] [village_time]" action [SetField(current_session, 'village', v), 
+                                                     SetField(current_session, 'main_player', player), 
+                                                     SetField(current_session, 'time_to_advance', {'days': village_time}),
+                                                     Jump('village_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
+        $ counter += 1
+        
+    textbutton "Back to Location select" action [SetField(current_session, 'village', village), 
+                                                 SetField(current_session, 'main_player', player), 
+                                                 Jump('village_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
+
+screen villagehome(village, player):
+    $ counter = 0
+    
+    textbutton "Show Calendar" action [SetField(current_session, 'village', village), 
+                                       SetField(current_session, 'main_player', player), 
+                                       Hide('villagehome'),
+                                       Show('calendar_screen', player=player, village=village, current_month=get_current_month())] xpos grid_place[0][0] ypos grid_place[0][1]
+    
+    textbutton "Rest" action [SetField(current_session, 'village', village), 
+                              SetField(current_session, 'main_player', player), 
+                              Hide('villagehome'),
+                              Show('rest_screen', player=player, village=village)] xpos grid_place[1][0] ypos grid_place[1][1]
+        
+    textbutton "Back to Location select" action [SetField(current_session, 'village', village), 
+                                                 SetField(current_session, 'main_player', player), 
+                                                 Hide('villagehome'),
+                                                 Jump('village_redirect')] xpos grid_place[2][0] ypos grid_place[2][1]
+    
+screen rest_screen(village, player):
+    
+    textbutton "1 Hour" action [SetField(current_session, 'village', village), 
+                                SetField(current_session, 'main_player', player),
+                                SetField(current_session, 'time_to_advance', {'hours': 1}),
+                                SetField(current_session, 'rest', True),
+                                Hide("rest_screen"),
+                                SetField(current_session, 'location', l_home), 
+                                Jump('location_redirect')] xpos grid_place[0][0] ypos grid_place[0][1]
+    
+    textbutton "2 Hours" action [SetField(current_session, 'village', village), 
+                                 SetField(current_session, 'main_player', player),
+                                 SetField(current_session, 'time_to_advance', {'hours': 2}),
+                                 SetField(current_session, 'rest', True),
+                                 Hide("rest_screen"),
+                                 SetField(current_session, 'location', l_home), 
+                                 Jump('location_redirect')] xpos grid_place[1][0] ypos grid_place[1][1]
+    
+    textbutton "12 Hours" action [SetField(current_session, 'village', village), 
+                                  SetField(current_session, 'main_player', player),
+                                  SetField(current_session, 'time_to_advance', {'hours': 12}),
+                                  SetField(current_session, 'rest', True),
+                                  Hide("rest_screen"),
+                                  SetField(current_session, 'location', l_home), 
+                                  Jump('location_redirect')] xpos grid_place[2][0] ypos grid_place[2][1]
+    
+    textbutton "1 Day" action [SetField(current_session, 'village', village), 
+                               SetField(current_session, 'main_player', player),
+                               SetField(current_session, 'time_to_advance', {'days': 1}),
+                               SetField(current_session, 'rest', True),
+                               Hide("rest_screen"),
+                               SetField(current_session, 'location', l_home), 
+                               Jump('location_redirect')] xpos grid_place[3][0] ypos grid_place[3][1]
+    
+    textbutton "1 Week" action [SetField(current_session, 'village', village), 
+                                SetField(current_session, 'main_player', player),
+                                SetField(current_session, 'time_to_advance', {'days': 7}),
+                                SetField(current_session, 'rest', True),
+                                Hide("rest_screen"),
+                                SetField(current_session, 'location', l_home), 
+                                Jump('location_redirect')] xpos grid_place[4][0] ypos grid_place[4][1]
+    
+    textbutton "1 Month" action [SetField(current_session, 'village', village), 
+                                 SetField(current_session, 'main_player', player),
+                                 SetField(current_session, 'time_to_advance', {'months': 1}),
+                                 SetField(current_session, 'rest', True),
+                                 Hide("rest_screen"),
+                                 SetField(current_session, 'location', l_home), 
+                                 Jump('location_redirect')] xpos grid_place[5][0] ypos grid_place[5][1]
+    
+    textbutton "Back" action [SetField(current_session, 'village', village), 
+                              SetField(current_session, 'main_player', player),
+                              Hide("rest_screen"),
+                              SetField(current_session, 'location', l_home), 
+                              Jump('location_redirect')] xpos grid_place[6][0] ypos grid_place[6][1]
+
+screen villagemap(village, player):
+    # show player time details here
+    $ counter = 0
+    $ npc_counter = 0
+    $ x_adj = 0.05
+    $ npc_x_adj = 0.2
+    
+    #text "[current_session.initial_pos]" xpos 0.1
+    
+    imagebutton idle "black_fade_small" hover "black_fade_small"
+    
+    for today_e in get_today().events:
+        if today_e.npc and not today_e.stop:
+            textbutton today_e.npc.name action [SetField(current_session, 'main_player', player), 
+                                                SetField(current_session, 'village', village), 
+                                                SetField(current_session, 'time_to_advance', {'hours': 4}),
+                                                Hide("villagemap"), 
+                                                Jump(today_e.label.format(today_e.count))] xpos (grid_place[npc_counter][0]-npc_x_adj) ypos grid_place[npc_counter][1]
+            $ npc_counter += 1
+    
+    for location in village.locations:
+        if player.home_village:
+            if not player.home_village == village:
+                if location.name == 'Home':
+                    $ location.name = 'Hotel'
+        else:
+            if location.name == 'Home':
+                $ location.name = 'Hotel'
+        textbutton [location.name] action [SetField(current_session, 'main_player', player), 
+                                           SetField(current_session, 'village', village), 
+                                           SetField(current_session, 'location', location), 
+                                           Hide("villagemap"), 
+                                           Jump('location_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
+        
+        
+        if location.events:
+            for e in location.events:
+                for today_e in get_today().events:
+                    if e.small_name == today_e.small_name and counter < 5:
+                        text "[e.small_name]" xpos (grid_place[counter][0]-x_adj) ypos grid_place[counter][1]
+                    elif e.small_name == today_e.small_name and counter >= 5:
+                        text "[e.small_name]" xpos (grid_place[counter][0]-x_adj) ypos grid_place[counter][1]
+            
+        $ counter += 1 
+                
+        
+screen time_screen:
+    #text "[current_session.initial_pos]" xpos 0.1
+    text "{color=#000}[main_time.current_time]{/color}" xpos 0.1 ypos 0.1
+        
+screen stats_screen(player):
+    
+    #python:
+     #   screen_on = screen_on
+    
+    if screen_on:
+        imagebutton idle "stats_idle" hover "stats_idle" xpos 0.62 ypos 0.0
+        imagebutton idle "body" hover "body" xpos 0.62 ypos 0.00
+    
+        if player.head.injury:
+            imagebutton idle "head_injured" hover "head_injured" xpos 0.655 ypos 0.01
+        
+        if player.torso.injury:
+            imagebutton idle "torso_injured" hover "torso_injured" xpos 0.662 ypos 0.055
+        
+        if player.left_arm.injury:
+            imagebutton idle "left_arm_injured" hover "left_arm_injured" xpos 0.634 ypos 0.05
+        
+        if player.right_arm.injury:
+            imagebutton idle "right_arm_injured" hover "right_arm_injured" xpos 0.701 ypos 0.05
+        
+        if player.left_leg.injury:
+            imagebutton idle "left_leg_injured" hover "left_leg_injured" xpos 0.645 ypos 0.145
+        
+        if player.right_leg.injury:
+            imagebutton idle "right_leg_injured" hover "right_leg_injured" xpos 0.685 ypos 0.145
+    
+        text "{size=-5}[player.name]{/size}" xpos 0.75 ypos 0.05
+        text "{size=-5}Lv.[player.level]{/size}" xpos 0.85 ypos 0.05
+        # TODO: this needs to be bar
+        $ next_level_exp = LEVELS[player.level + 1]
+        text "{size=-5}Exp [player.exp]/[next_level_exp]{/size}" xpos 0.75 ypos 0.08
+        text "{size=-5}Str: [player.strength]{/size}" xpos 0.735 ypos 0.12
+        text "{size=-5}Def: [player.defence]{/size}" xpos 0.735 ypos 0.16
+        text "{size=-5}Eva: [player.evasion]{/size}" xpos 0.735 ypos 0.20
+        text "{size=-5}Sta: [player.stamina]{/size}" xpos 0.83 ypos 0.12
+        text "{size=-5}Spd: [player.speed]{/size}" xpos 0.83 ypos 0.16
+        text "{size=-5}Hit: [player.base_hit_rate]{size=-5}" xpos 0.83 ypos 0.20
+        text "{size=-5}Tai: [player.taijutsu]{/size}" xpos 0.915 ypos 0.12
+        text "{size=-5}Nin: [player.ninjutsu]{/size}" xpos 0.915 ypos 0.16
+        text "{size=-5}Gen: [player.genjutsu]{/size}" xpos 0.915 ypos 0.20
+    
+        textbutton "Hide Stats" action [Hide("stats_screen"), Jump("toggle_screen_off")] xpos 0.4 ypos 0.0
+    
+screen player_stats:
+    if not screen_on:
+        textbutton "Show Stats" action [Show("stats_screen", player=current_session.main_player), Jump("toggle_screen_on")] xpos 0.4 ypos 0.0
+        
+screen calendar_screen_toggle:
+    if not calendar_on:
+        textbutton "Show Calendar" action Jump("toggle_calendar_on") xpos 0.2 ypos 0.0
+        
+screen calendar_screen(village, player, current_month):
+    #$ current_month.days = [current_month.days[0]]
+    $ stuff = [(d.day, d.month) for d in e_chunin_exams.date_range()]
+    #$ stuff = DAY_RANGES
+    
+    #text "[stuff]" ypos 0.4
+    #if calendar_on:
+    imagebutton idle "black_fade" hover "black_fade" # "gfx/black.png" hover "gfx/black.png"
+    
+    textbutton "Last month" action [Hide('calendar_screen'), 
+                                    Show('calendar_screen', village=village, player=player, current_month=get_month(current_month.number - 1))] xpos 0.15 ypos 0.1
+    text "[current_month]" xpos 0.43 ypos 0.11
+    textbutton "Next month" action [Hide('calendar_screen'), 
+                                    Show('calendar_screen', village=village, player=player, current_month=get_month(current_month.number + 1))] xpos 0.65 ypos 0.1
+    
+    grid 6 5 spacing -200 ypos 0.2 xpos 0.15 xfill True yfill True: #6, 5 # area (0.1, 0.1, 240, 200):
+        for day in current_month.days:
+            $ how_many = day.parse_events()
+            #if day.events:
+            if main_time.day == day.number and current_month.number == main_time.month:
+                text "[day.number]\n([how_many])" color "#F00"
+            else:
+                text "[day.number]\n([how_many])" 
+            #else:
+            #    text "[day.number]"
+                    
+    textbutton "Hide Calendar" action [Hide('calendar_screen'), Show("villagehome", player=player, village=village)] xpos 0.2 ypos 0.0
+
+label toggle_screen_on:
+    $ screen_on = True
+    python:
+        if current_session.location:
+            renpy.jump("location_redirect")
+        #elif current_session.location
+        else:
+            renpy.jump("village_redirect")
+    
+label toggle_screen_off:
+    $ screen_on = False
+    python:
+        if current_session.location:
+            renpy.jump("location_redirect")
+        else:
+            renpy.jump("village_redirect")
+            
+label toggle_calendar_on:
+    $ calendar_on = True
+    hide screen villagemap
+    python:
+        renpy.jump("village_redirect")
+    
+label toggle_calendar_off:
+    $ calendar_on = False
+    python:
+        renpy.jump("village_redirect")
+
+
+##############################################################################
+# WORLD EVENTS
+#
+screen worldevents(village):
+    text "Wealth: [village.wealth]" xpos 0.3 ypos 0.03
+    text "Control:" xpos 0.3 ypos 0.08
+    text "Influence:" xpos 0.3 ypos 0.13
+    text "Uprising:" xpos 0.3 ypos 0.18
+    bar value village.control range 100 xpos 0.45 ypos 0.08 xmaximum 100 ymaximum 30
+    bar value village.influence range 100 xpos 0.45 ypos 0.13 xmaximum 100 ymaximum 30
+    bar value village.uprising range 100 xpos 0.45 ypos 0.18 xmaximum 100 ymaximum 30
+        
+
+##############################################################################
+# BATTLE SCREENS
+#
+screen taiactions:
+    vbox:
+        for skill in player.taiskills:
+            if skill.range >= abs(player.tile.position - enemy.tile.position):
+                if player.chakra > skill.chakra_cost:
+                    textbutton "[skill.name]" action [SetField(current_session, 'skill', skill), 
+                                                      SetField(current_session, 'skill_type', 'attack'),
+                                                      Jump('skill_redirect')]  xpos 0.6
+                else:
+                    textbutton "[skill.name]" xpos 0.6
+            else:
+                textbutton "[skill.name]" xpos 0.6
+        
+screen ninactions:
+    vbox:
+        for skill in player.ninskills:
+            if skill.range >= abs(player.tile.position - enemy.tile.position):
+                if player.chakra > skill.chakra_cost:
+                    textbutton "[skill.name]" action [SetField(current_session, 'skill', skill), 
+                                                      SetField(current_session, 'skill_type', 'attack'),
+                                                      Jump('skill_redirect')]  xpos 0.6
+                else:
+                    textbutton "[skill.name]" xpos 0.6
+            else:
+                textbutton "[skill.name]" xpos 0.6
+        
+screen genactions:
+    vbox:
+        for skill in player.genskills:
+            if skill.range >= abs(player.tile.position - enemy.tile.position):
+                if player.chakra > skill.chakra_cost:
+                    textbutton "[skill.name]" action [SetField(current_session, 'skill', skill),
+                                                      SetField(current_session, 'skill_type', 'attack'),
+                                                      Jump('skill_redirect')]  xpos 0.6
+                else:
+                    textbutton "[skill.name]" xpos 0.6
+            else:
+                textbutton "[skill.name]" xpos 0.6
+                
+screen defenceactions:
+    vbox:
+        for skill in player.defensiveskills:
+            if skill.range >= abs(player.tile.position - enemy.tile.position):
+                if player.chakra > skill.chakra_cost:
+                    textbutton "[skill.name]" action [SetField(current_session, 'skill', skill), 
+                                                      SetField(current_session, 'skill_type', 'defence'),
+                                                      Jump('skill_redirect')]  xpos 0.6
+                else:
+                    textbutton "[skill.name]" xpos 0.6
+            else:
+                textbutton "[skill.name]" xpos 0.6
+
+screen weaponselection:
+    vbox:
+        for skill in player.weapons:
+            if skill.range >= abs(player.tile.position - enemy.tile.position):
+                if player.chakra > skill.chakra_cost:
+                    textbutton "[skill.name]" action [SetField(current_session, 'skill', skill), 
+                                                      SetField(current_session, 'skill_type', 'attack'),
+                                                      Jump('skill_redirect')]  xpos 0.6
+                else:
+                    textbutton "[skill.name]" xpos 0.6
+            else:
+                textbutton "[skill.name]" xpos 0.6
+
+screen battlemenu(player, tag_p):
+    vbox:
+        # TODO: Add items menu
+        textbutton "Tai" action [Hide("ninactions"), Hide("genactions"), Hide("movemenu"), Hide("weaponselection"), Hide("defenceactions"), Show("taiactions")]
+        textbutton "Nin" action [Hide("taiactions"), Hide("genactions"), Hide("movemenu"), Hide("weaponselection"), Hide("defenceactions"), Show("ninactions")]
+        textbutton "Gen" action [Hide("ninactions"), Hide("taiactions"), Hide("movemenu"), Hide("weaponselection"), Hide("defenceactions"), Show("genactions")]
+        if not moved:
+            textbutton "Move" action [Hide("ninactions"), Hide("genactions"), Hide("taiactions"), Hide("weaponselection"), Hide("defenceactions"), Show("movemenu")]
+        textbutton "Weapons" action [Hide("ninactions"), Hide("genactions"), Hide("movemenu"), Show("weaponselection"), Hide("defenceactions"), Hide("taiactions")]
+        textbutton "Trap" action [Hide("ninactions"), Hide("genactions"), Hide("taiactions"), Hide("weaponselection"), Hide("defenceactions"), Show("settrap")]
+        textbutton "Defence" action [Hide("ninactions"), Hide("genactions"), Hide("movemenu"), Hide("weaponselection"), Show("defenceactions"), Hide("taiactions")]
+        textbutton "Standby" action Jump("standby")
+        for partner in tag_p:
+            textbutton "Tag [partner.name]" action [SetField(partner, 'main', True), SetField(partner, 'tile', player.tile), SetField(player, 'main', False), Jump('tag_partner')] ypos 3.5
+        
+screen stats:
+    text "Str: [player.strength] Def: [player.defence] Eva: [player.evasion]" xpos 0.30
+    text "Sta: [player.stamina] Hit: [player.base_hit_rate]" xpos 0.30 ypos 0.05
+    text "Str: [enemy.strength] Def: [enemy.defence] Eva: [enemy.evasion]" xpos 0.65
+    text "Sta: [enemy.stamina] Hit: [enemy.base_hit_rate]" xpos 0.65 ypos 0.05
+        
+screen battlebars(tag_p, tag_e):
+    #frame:
+        #has vbox 
+    $ rel_pos = abs(player.tile.position - enemy.tile.position)
+
+    text "[player.name]" xpos 0.5 ypos 0.15
+    text "[player.chakra]" xpos 0.49 ypos 0.45
+    text "[player.hp]" xpos 0.55 ypos 0.45
+    vbar value player.chakra range player.maxchakra xpos 0.5 ypos 0.2 ymaximum 150
+    vbar value player.hp range player.maxhp xpos 0.55 ypos 0.2 ymaximum 150
+    if enemy.damage_dealt > 0:
+        text "-[enemy.damage_dealt]" xpos 0.59 ypos 0.3
+    
+    #text "[player.facing]" xpos 0.2 ypos 0.25
+    if player.check_active_skill(damage_reduction_p):
+        text "DR" xpos 0.3 ypos 0.15
+        
+    if player.check_active_skill(chakra_defence):
+        text "CD" xpos 0.3 ypos 0.15
+        
+    if player.check_active_skill(reflect):
+        text "Ref" xpos 0.3 ypos 0.15
+        
+    if player.check_active_skill(dampen):
+        text "Dam" xpos 0.3 ypos 0.15
+        
+    if player.check_active_skill(yata_mirror):
+        text "Yata" xpos 0.3 ypos 0.15
+    
+    text "[enemy.name]" xpos 0.65 ypos 0.15
+    text "[enemy.chakra]" xpos 0.64 ypos 0.45
+    text "[enemy.hp]" xpos 0.70 ypos 0.45
+    vbar value enemy.hp range enemy.maxhp xpos 0.7 ypos 0.2 ymaximum 150
+    vbar value enemy.chakra range enemy.maxchakra xpos 0.66 ypos 0.2 ymaximum 150
+    if player.damage_dealt > 0:
+        text "-[player.damage_dealt]" xpos 0.75 ypos 0.3
+        
+    if enemy.check_active_skill(damage_reduction_e):
+        text "DR" xpos 0.75 ypos 0.15
+        
+    if enemy.check_active_skill(chakra_defence_e):
+        text "CD" xpos 0.75 ypos 0.15
+        
+    #text "[tag_e]" xpos 0.45 ypos 0.10
+        
+    # show tag partners health here
+    for position, partner in enumerate(tag_p):
+        if position == 0:
+            text "[partner.name]" xpos 0.25 ypos 0.75
+            vbar value partner.hp range partner.maxhp xpos 0.28 ypos 0.8 ymaximum 100 xmaximum 20
+            vbar value partner.chakra range partner.maxchakra xpos 0.25 ypos 0.8 ymaximum 100 xmaximum 20
+        else:
+            text "[partner.name]" xpos 0.35 ypos 0.75
+            vbar value partner.hp range partner.maxhp xpos 0.38 ypos 0.8 ymaximum 100 xmaximum 20
+            vbar value partner.chakra range partner.maxchakra xpos 0.35 ypos 0.8 ymaximum 100 xmaximum 20
+        
+    # show tag partners health here
+    for position, partner in enumerate(tag_e):
+        if position == 0:
+            text "[partner.name]" xpos 0.65 ypos 0.75
+            vbar value partner.hp range partner.maxhp xpos 0.68 ypos 0.8 ymaximum 100 xmaximum 20
+            vbar value partner.chakra range partner.maxchakra xpos 0.65 ypos 0.8 ymaximum 100 xmaximum 20
+        else:
+            text "[partner.name]" xpos 0.75 ypos 0.75
+            vbar value partner.hp range partner.maxhp xpos 0.78 ypos 0.8 ymaximum 100 xmaximum 20
+            vbar value partner.chakra range partner.maxchakra xpos 0.75 ypos 0.8 ymaximum 100 xmaximum 20
+
+label movemenu:
+    call hidetiles
+    show screen movemenu
+    
+screen movemenu:
+    
+    $ highlight_position(player, enemy, clearing)
+    
+    for tile in TILES:
+        if tile.potential:
+            imagebutton idle tile.idle hover tile.hover xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos - 0.05) action Jump("move{}".format(tile.position))
+        elif tile.trap:
+            imagebutton idle TILETRAPPIC hover TILETRAPPIC xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos - 0.05)
+        else:
+            imagebutton idle tile.idle hover tile.idle xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos - 0.05)
+        text "{}".format(tile.idle.split('.')[0]) xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos + 0.15)
+        if player.tile == tile:
+            text "P" xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos + 0.25)
+            
+        if enemy.tile == tile:
+            text "E" xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos + 0.25)
+    
+label settrap:
+    call hidetiles
+    hide screen movemenu
+    show screen settrap
+    player.character "Where should I place the trap?"
+    
+screen settrap:
+    $ highlight_position(player, enemy, clearing)
+    
+    for tile in TILES:
+        if tile.potential:
+            imagebutton idle tile.idle hover TILETRAPPIC xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos - 0.05) action Jump("trap{}".format(tile.position))
+        else:
+            imagebutton idle tile.idle hover tile.idle xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos - 0.05)
+        #imagebutton idle tile.idle hover TILETRAPPIC xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos - 0.05) action Jump("trap{}".format(tile.position))
+    
+label move1:
+    $ moved = True
+    $ show_player_at_pos(player, enemy, clearing, tile1)
+    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    
+label move2:
+    $ moved = True
+    $ show_player_at_pos(player, enemy, clearing, tile2)
+    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    
+label move3:
+    $ moved = True
+    $ show_player_at_pos(player, enemy, clearing, tile3)
+    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    
+label move4:
+    $ moved = True
+    $ show_player_at_pos(player, enemy, clearing, tile4)
+    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+
+label move5:
+    $ moved = True
+    $ show_player_at_pos(player, enemy, clearing, tile5)
+    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+
+label move6:
+    $ moved = True
+    $ show_player_at_pos(player, enemy, clearing, tile6)
+    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    
+label move7:
+    $ moved = True
+    $ show_player_at_pos(player, enemy, clearing, tile7)
+    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    
+label move8:
+    $ moved = True
+    $ show_player_at_pos(player, enemy, clearing, tile8)
+    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    
+label move9:
+    $ moved = True
+    $ show_player_at_pos(player, enemy, clearing, tile9)
+    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    
+label move10:
+    $ moved = True
+    $ show_player_at_pos(player, enemy, clearing, tile10)
+    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    
+label move11:
+    $ moved = True
+    $ show_player_at_pos(player, enemy, clearing, tile11)
+    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    
+label move12:
+    $ moved = True
+    $ show_player_at_pos(player, enemy, clearing, tile12)
+    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    
+label trap1:
+    $ set_trap_at_pos(player, enemy, clearing, tile1)
+    jump enemymove
+    #call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    
+label trap2:
+    $ set_trap_at_pos(player, enemy, clearing, tile2)
+    jump enemymove
+    #call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    
+label trap3:
+    $ set_trap_at_pos(player, enemy, clearing, tile3)
+    jump enemymove
+    #call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    
+label trap4:
+    $ set_trap_at_pos(player, enemy, clearing, tile4)
+    jump enemymove
+    #call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    
+label trap5:
+    $ set_trap_at_pos(player, enemy, clearing, tile5)
+    jump enemymove
+    #call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    
+label trap6:
+    $ set_trap_at_pos(player, enemy, clearing, tile6)
+    jump enemymove
+    #call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    
+label trap7:
+    $ set_trap_at_pos(player, enemy, clearing, tile7)
+    jump enemymove
+    #call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    
+label trap8:
+    $ set_trap_at_pos(player, enemy, clearing, tile8)
+    jump enemymove
+    #call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    
+label trap9:
+    $ set_trap_at_pos(player, enemy, clearing, tile9)
+    jump enemymove
+    #call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    
+label trap10:
+    $ set_trap_at_pos(player, enemy, clearing, tile10)
+    jump enemymove
+    #call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    
+label trap11:
+    $ set_trap_at_pos(player, enemy, clearing, tile11)
+    jump enemymove
+    #call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    
+label trap12:
+    $ set_trap_at_pos(player, enemy, clearing, tile12)
+    jump enemymove
+    #call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+
+screen send_detective_screen:
+
+    # A map as background.
+    add "bg.jpg"
+
+    # A drag group ensures that the detectives and the cities can be
+    # dragged to each other.
+    draggroup:
+
+        # Our detectives.
+        drag:
+            drag_name "Ivy"
+            child "enemy.png"
+            droppable False
+            dragged detective_dragged
+            xpos 100 ypos 100
+        drag:
+            drag_name "Zack"
+            child "itachi.png"
+            droppable False
+            dragged detective_dragged
+            xpos 150 ypos 100
+
+        # The cities they can go to.
+        drag:
+            drag_name "London"
+            child "button_hover.png"
+            draggable False
+            xpos 450 ypos 140
+        drag:
+            drag_name "Paris"
+            draggable False
+            child "button_idle.png"
+            xpos 500 ypos 280
+
+
+
 ##############################################################################
 # Say
 #

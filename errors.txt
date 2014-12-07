@@ -1,0 +1,8 @@
+﻿I'm sorry, but errors were detected in your script. Please correct the
+errors listed below, and try again.
+
+
+File "game/script.rpy", line 1933: is not terminated with a newline. (Check strings and parenthesis.)
+                enemy_tile = get_tile_from_position((abs(enemy_position))
+
+Ren'Py Version: Ren'Py 6.15.7.374
