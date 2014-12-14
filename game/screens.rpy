@@ -92,9 +92,9 @@ screen weaponshop(village, player):
 screen villagemissions(village, player):
     $ counter = 0
     $ village_time = 0
-    $ mission_levels = [('D', 10), ('C', 20), ('B', 30), ('A', 40), ('S', 50)]
-    $ player.level = 40
-    $ avaliable_missions = [mission[0] for mission in mission_levels if player.level > mission[1]]
+    $ mission_levels = [('D', 1), ('C', 20), ('B', 30), ('A', 40), ('S', 50)]
+    #$ player.level = 40
+    $ avaliable_missions = [mission[0] for mission in mission_levels if player.level >= mission[1]]
     
     for rank in avaliable_missions:
         textbutton "[rank]" action [SetField(current_session, 'village', village), 
@@ -371,7 +371,7 @@ screen stats_screen(player):
      #   screen_on = screen_on
     
     if screen_on:
-        imagebutton idle "stats_idle" hover "stats_idle" xpos 0.62 ypos 0.0
+        imagebutton idle "stats_idle" hover "stats_idle" xpos 0.38 ypos 0.0
         imagebutton idle "body" hover "body" xpos 0.62 ypos 0.00
     
         if player.head.injury:
@@ -493,65 +493,50 @@ screen worldevents(village):
 screen taiactions:
     vbox:
         for skill in player.taiskills:
-            if skill.range >= abs(player.tile.position - enemy.tile.position):
-                if player.chakra > skill.chakra_cost:
-                    textbutton "[skill.name]" action [SetField(current_session, 'skill', skill), 
-                                                      SetField(current_session, 'skill_type', 'attack'),
-                                                      Jump('skill_redirect')]  xpos 0.6
-                else:
-                    textbutton "[skill.name]" xpos 0.6
+            if skill.is_usable(player, enemy):
+                textbutton "[skill.name]" action [SetField(current_session, 'skill', skill), 
+                                                  SetField(current_session, 'skill_type', 'attack'),
+                                                  Jump('skill_redirect')]  xpos 0.6
             else:
                 textbutton "[skill.name]" xpos 0.6
         
 screen ninactions:
     vbox:
         for skill in player.ninskills:
-            if skill.range >= abs(player.tile.position - enemy.tile.position):
-                if player.chakra > skill.chakra_cost:
-                    textbutton "[skill.name]" action [SetField(current_session, 'skill', skill), 
-                                                      SetField(current_session, 'skill_type', 'attack'),
-                                                      Jump('skill_redirect')]  xpos 0.6
-                else:
-                    textbutton "[skill.name]" xpos 0.6
+            if skill.is_usable(player, enemy):
+                textbutton "[skill.name]" action [SetField(current_session, 'skill', skill), 
+                                                  SetField(current_session, 'skill_type', 'attack'),
+                                                  Jump('skill_redirect')]  xpos 0.6
             else:
                 textbutton "[skill.name]" xpos 0.6
         
 screen genactions:
     vbox:
         for skill in player.genskills:
-            if skill.range >= abs(player.tile.position - enemy.tile.position):
-                if player.chakra > skill.chakra_cost:
-                    textbutton "[skill.name]" action [SetField(current_session, 'skill', skill),
-                                                      SetField(current_session, 'skill_type', 'attack'),
-                                                      Jump('skill_redirect')]  xpos 0.6
-                else:
-                    textbutton "[skill.name]" xpos 0.6
+            if skill.is_usable(player, enemy):
+                textbutton "[skill.name]" action [SetField(current_session, 'skill', skill), 
+                                                  SetField(current_session, 'skill_type', 'attack'),
+                                                  Jump('skill_redirect')]  xpos 0.6
             else:
                 textbutton "[skill.name]" xpos 0.6
                 
 screen defenceactions:
     vbox:
         for skill in player.defensiveskills:
-            if skill.range >= abs(player.tile.position - enemy.tile.position):
-                if player.chakra > skill.chakra_cost:
-                    textbutton "[skill.name]" action [SetField(current_session, 'skill', skill), 
-                                                      SetField(current_session, 'skill_type', 'defence'),
-                                                      Jump('skill_redirect')]  xpos 0.6
-                else:
-                    textbutton "[skill.name]" xpos 0.6
+            if skill.is_usable(player, enemy):
+                textbutton "[skill.name]" action [SetField(current_session, 'skill', skill), 
+                                                  SetField(current_session, 'skill_type', 'defence'),
+                                                  Jump('skill_redirect')]  xpos 0.6
             else:
                 textbutton "[skill.name]" xpos 0.6
 
 screen weaponselection:
     vbox:
         for skill in player.weapons:
-            if skill.range >= abs(player.tile.position - enemy.tile.position):
-                if player.chakra > skill.chakra_cost:
-                    textbutton "[skill.name]" action [SetField(current_session, 'skill', skill), 
-                                                      SetField(current_session, 'skill_type', 'attack'),
-                                                      Jump('skill_redirect')]  xpos 0.6
-                else:
-                    textbutton "[skill.name]" xpos 0.6
+            if skill.is_usable(player, enemy):
+                textbutton "[skill.name]" action [SetField(current_session, 'skill', skill), 
+                                                  SetField(current_session, 'skill_type', 'attack'),
+                                                  Jump('skill_redirect')]  xpos 0.6
             else:
                 textbutton "[skill.name]" xpos 0.6
 

@@ -2,21 +2,22 @@
 # PLAYER, TEAM AND LIMB DEFINITIONS
 #
 
+init -4:
+    image body = im.Scale("gfx/body.png", 100, 150)
+    image left_arm_normal = "gfx/arm.png"
+    image right_arm_normal = im.Flip("gfx/arm.png", horizontal=True)
+    image left_leg_normal = "gfx/leg.png"
+    image right_leg_normal = im.Flip("gfx/leg.png", horizontal=True)
+    image torso_normal = "gfx/torso.png"
+    image head_normal = "gfx/head.png"
+    image left_arm_injured = LiveComposite((25, 55), (0, 0), anim.Blink(im.Scale("gfx/arm.png", 25, 55)))
+    image right_arm_injured = LiveComposite((25, 55), (0, 0), anim.Blink(im.Flip(im.Scale("gfx/arm.png", 25, 55), horizontal=True)))
+    image left_leg_injured = LiveComposite((30, 60), (0, 0), anim.Blink(im.Scale("gfx/leg.png", 30, 60)))
+    image right_leg_injured = LiveComposite((30, 60), (0, 0), anim.Blink(im.Flip(im.Scale("gfx/leg.png", 30, 60), horizontal=True)))
+    image torso_injured = LiveComposite((35, 55), (0, 0), anim.Blink(im.Scale("gfx/torso.png", 35, 55)))
+    image head_injured = LiveComposite((45, 30), (0, 0), anim.Blink(im.Scale("gfx/head.png", 45, 30)))
+
 init -4 python:
-    
-    body = im.Scale("gfx/body.png", 100, 150)
-    left_arm_normal = "gfx/arm.png"
-    right_arm_normal = im.Flip("gfx/arm.png", horizontal=True)
-    left_leg_normal = "gfx/leg.png"
-    right_leg_normal = im.Flip("gfx/leg.png", horizontal=True)
-    torso_normal = "gfx/torso.png"
-    head_normal = "gfx/head.png"
-    left_arm_injured = LiveComposite((25, 55), (0, 0), anim.Blink(im.Scale("gfx/arm.png", 25, 55)))
-    right_arm_injured = LiveComposite((25, 55), (0, 0), anim.Blink(im.Flip(im.Scale("gfx/arm.png", 25, 55), horizontal=True)))
-    left_leg_injured = LiveComposite((30, 60), (0, 0), anim.Blink(im.Scale("gfx/leg.png", 30, 60)))
-    right_leg_injured = LiveComposite((30, 60), (0, 0), anim.Blink(im.Flip(im.Scale("gfx/leg.png", 30, 60), horizontal=True)))
-    torso_injured = LiveComposite((35, 55), (0, 0), anim.Blink(im.Scale("gfx/torso.png", 35, 55)))
-    head_injured = LiveComposite((45, 30), (0, 0), anim.Blink(im.Scale("gfx/head.png", 45, 30)))
     
     INJURY_LEVELS = {1: "minor", 
                      2: "significant", 
@@ -323,7 +324,7 @@ init -4 python:
                 self.sensei = self.team.sensei
             
         def is_injured(self):
-            for limb in self.limbs:
+            for limb in self.get_limbs():
                 if limb.injury:
                     return True
             return False
@@ -335,7 +336,7 @@ init -4 python:
         def injury_chance(self, chance=0.00):
             percent = chance * 100
             if random.randint(1,101) > percent:
-                random.choice(self.limbs).injure()
+                random.choice(self.get_limbs()).injure()
                 
         def increase_hp(self, health):
             self.hp += health
@@ -385,7 +386,7 @@ init -4 python:
             return False
             
         def bleeding_limbs_count(self):
-            bad_limbs = [limb for limb in self.limbs if limb.bleeding]
+            bad_limbs = [limb for limb in self.get_limbs() if limb.bleeding]
             return len(bad_limbs)
             
         def get_skill(self, name):
@@ -401,7 +402,7 @@ init -4 python:
         def assign_all_skills(self):
             for skill in self.all_skills:
                 skill.limbs = self.get_limbs()
-                setattr(self, skill.label, skill)
+                setattr(self, skill.label, copy.deepcopy(skill))
                 
         def remove_skill(self, skill):
             delattr(self, skill.label)

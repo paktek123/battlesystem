@@ -1,7 +1,7 @@
 ﻿#### RISER BATTLE SYSTEM #####
 
 
-init:
+init -1:
     $ current_skill = None
     
     $ maxhp_increase = 0
@@ -17,7 +17,7 @@ init:
     image leader_pic = im.Scale("leader_pic.png", 100, 150)
     define world_events = Character('World Events', color='#3399FF', window_left_padding=150, show_side_image=Image("leader_pic.png", xpos=0.03, yalign=0.96))
     image map = im.Scale("map.png", 800, 600)
-    image stats_idle = im.Scale("gfx/stats_idle.png", 300, 150)
+    image stats_idle = Solid((0, 0, 0, 200), area=(0.62, 0.0, 300,150))
     
     image playerpic_r = im.Scale("player.png", 40, 50)
     image enemypic_r = im.Scale("enemy.png", 40, 50)
@@ -41,7 +41,7 @@ init 1 python:
     import copy
     import random
     for fname in os.listdir(config.gamedir + '/gfx'):
-        if fname.endswith(('.jpg', '.png')):
+        if fname.endswith(('.jpg', '.png')) and fname not in ('body.png', 'arm.png', 'leg.png', 'torso.png', 'head.png'):
             tag = fname[:-4]
             fname =  'gfx/' + fname
             renpy.image(tag, im.Scale(fname, 800, 600))
@@ -125,7 +125,7 @@ init 1 python:
                     
     e_chunin_exams = Event("Chunin Exams", "CE", start=(15, 5), finish=(14, 7), label="chunin_exam")
     e_jounin_training = Event("Jounin Training", "JT", frequency=(1, ))
-    e_jinchurri_attack = Event("Jinchurri Attack", "???",chance=0.05, label="jinchurri_attack", occurrence=0)
+    e_jinchurri_attack = Event("Jinchurri Attack", "???",chance=0.02, label="jinchurri_attack", occurrence=0)
     e_weapon_discount = Event("Weapon Discount", "WD", frequency=(random.randint(2,30),)) 
     e_hospital_discount = Event("Hospital Discount", "HD", frequency=(random.randint(2,30),)) 
     
@@ -182,10 +182,8 @@ init 1 python:
     substitution = Skill('Substitution', 'gen', "substitution", 8, 20, 15, 0, stun=True)
     
     # defensive skills
-    damage_reduction_p = Skill('Focus', 'defence', 'damagereduction', 12, 1, 10, duration=2, unlock_exp=300)
-    damage_reduction_e = Skill('Focus', 'defence', 'damagereduction', 12, 1, 10, duration=2)
+    damage_reduction = Skill('Focus', 'defence', 'damagereduction', 12, 1, 10, duration=2, unlock_exp=300)
     chakra_defence = Skill('Chakra Defence', 'defence', 'chakradefence', 12, 2, 15, duration=3, unlock_exp=500)
-    chakra_defence_e = Skill('Chakra Defence', 'defence', 'chakradefence', 12, 2, 15, duration=3)
     substitution = Skill('Substitution', 'counter', "substitution", 8, 20, 15, 0, stun=True)
     reflect = Skill('Reflect', 'defence', 'reflect', 12, 20, 20, duration=2, unlock_exp=1500)
     dampen = Skill('Dampen', 'defence', 'dampen', 6, 30, 30, duration=3, unlock_exp=2000)
@@ -225,20 +223,20 @@ init 1 python:
     ori_c = Character('Orichimaru', color="#FF0000")
     
     naruto = Player('Naruto', "playerpic_r", naruto_c, Image('player.png'), None, 100, 100, 80, 80, 10, 4, 3, 4, 5, 80, tile1, 'right', 
-                    [onetwocombo, lioncombo], [rasengan], [substitution], [],
-                    [damage_reduction_p, chakra_defence, reflect, dampen, yata_mirror], [], "leader_pic", 
+                    [onetwocombo], [rasengan], [substitution], [],
+                    [damage_reduction, chakra_defence, reflect, dampen, yata_mirror], [], "leader_pic", 
                     weapons=[shiruken, kunai], home_village=hidden_leaf)
     sasuke = Player('Sasuke', "enemypic_r", sasuke_c, Image('enemy.png'), None, 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
-                    [onetwocombo, lioncombo], [chidori], [], [], [damage_reduction_e, chakra_defence_e], 
+                    [onetwocombo, lioncombo], [chidori], [], [], [damage_reduction, chakra_defence], 
                     battle_ai=nin_enemy_pattern, weapons=[shiruken, kunai], home_village=hidden_leaf, interaction={'frequency': (1,)})
     
     sakura = Player('Sakura', "sakurapic_r", sakura_c, Image('sakura.png'), None, 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
-                    [onetwocombo, lioncombo], [chidori], [], [], [damage_reduction_e, chakra_defence_e], weapons=[shiruken, kunai], home_village=hidden_leaf)
+                    [onetwocombo, lioncombo], [chidori], [], [], [damage_reduction, chakra_defence], weapons=[shiruken, kunai], home_village=hidden_leaf)
     kakashi = Player('Kakashi', "kakashipic_r", kakashi_c, Image('kakashi.png'), None, 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
-                    [onetwocombo, lioncombo], [raikiri], [], [], [damage_reduction_e, chakra_defence_e], level=32,
+                    [onetwocombo, lioncombo], [raikiri], [], [], [damage_reduction, chakra_defence], level=32,
                     battle_ai=nin_enemy_pattern, weapons=[shiruken, kunai], home_village=hidden_leaf)
     anko = Player('Anko', "kakashipic_r", kakashi_c, Image('kakashi.png'), None, 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
-                    [onetwocombo, lioncombo], [raikiri], [], [], [damage_reduction_e, chakra_defence_e], level=32,
+                    [onetwocombo, lioncombo], [raikiri], [], [], [damage_reduction, chakra_defence], level=32,
                     battle_ai=nin_enemy_pattern, weapons=[shiruken, kunai], home_village=hidden_leaf)
     
     itachi = copy.deepcopy(sasuke)
@@ -364,6 +362,7 @@ init 1 python:
         renpy.show_screen("player_stats")
         renpy.show_screen("stats_screen", player)
         renpy.show_screen("time_screen")
+        # Upon reload in debug mode village and player are None
         renpy.hide(village.map) # remove it first otherwise it does not show the new image on top
         time_tag_show(village.map)
         renpy.show_screen('villagemap', village, player)

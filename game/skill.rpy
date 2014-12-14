@@ -30,6 +30,26 @@ init -2 python:
             new_skill = self
             player.assign_skill(new_skill)
             
+        def is_usable(self, player, enemy):
+            if self.is_chakra_requirement_met(player) and self.is_within_range(player, enemy) and self.is_unlocked():
+                return True
+            return False
+            
+        def is_chakra_requirement_met(self, player):
+            if player.chakra > self.chakra_cost:
+                return True
+            return False
+            
+        def is_within_range(self, player, enemy):
+            if self.range >= abs(player.tile.position - enemy.tile.position):
+                return True
+            return False
+            
+        def is_unlocked(self):
+            if self.exp == self.unlock_exp:
+                return True
+            return False
+            
         def gain_exp(self, exp):
             self.exp += exp
             if self.exp > self.unlock_exp:
