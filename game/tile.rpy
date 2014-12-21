@@ -4,17 +4,17 @@
 
 init -10 python:
     tile1im = im.Scale("tile.png", 50, 30)
-    tile2im = im.Scale("tile.png", 50, 30)
-    tile3im = im.Scale("tile.png", 50, 30)
-    tile4im = im.Scale("tile.png", 50, 30)
-    tile5im = im.Scale("tile.png", 50, 30)
-    tile6im = im.Scale("tile.png", 50, 30)
-    tile7im = im.Scale("tile.png", 50, 30)
-    tile8im = im.Scale("tile.png", 50, 30)
-    tile9im = im.Scale("tile.png", 50, 30)
-    tile10im = im.Scale("tile.png", 50, 30)
-    tile11im = im.Scale("tile.png", 50, 30)
-    tile12im = im.Scale("tile.png", 50, 30)
+    #tile2im = im.Scale("tile.png", 50, 30)
+    #tile3im = im.Scale("tile.png", 50, 30)
+    #tile4im = im.Scale("tile.png", 50, 30)
+    #tile5im = im.Scale("tile.png", 50, 30)
+    #tile6im = im.Scale("tile.png", 50, 30)
+    #tile7im = im.Scale("tile.png", 50, 30)
+    #tile8im = im.Scale("tile.png", 50, 30)
+    #tile9im = im.Scale("tile.png", 50, 30)
+    #tile10im = im.Scale("tile.png", 50, 30)
+    #tile11im = im.Scale("tile.png", 50, 30)
+    #tile12im = im.Scale("tile.png", 50, 30)
     
     TILE1POS = 100
     TILE2POS = 150
@@ -31,6 +31,11 @@ init -10 python:
     
     TILEYPOS = 0.7
     PLAYERYPOS = 0.65
+    
+    TILEIDLEPIC = "tile.png"
+    TILEHOVERPIC = "tileh.png"
+    TILEPROJECTPIC = "tilep.png"
+    TILETRAPPIC = "tiletrap.png"
     
     # Positions
     tile1pos = Position(xpos=TILE1POS+25, ypos=TILEYPOS)

@@ -35,13 +35,15 @@ init -1:
     $ player1currentpos = 1
     $ enemy1currentpos = 12
 
-init 1 python:
+init python:
+    
+    IMAGE_EXCEPTIONS =  ('body.png', 'arm.png', 'leg.png', 'torso.png', 'head.png', 'tile.png', 'tileh.png', 'tilep.png', 'tiletrap.png')
     
     import os
     import copy
     import random
     for fname in os.listdir(config.gamedir + '/gfx'):
-        if fname.endswith(('.jpg', '.png')) and fname not in ('body.png', 'arm.png', 'leg.png', 'torso.png', 'head.png'):
+        if fname.endswith(('.jpg', '.png')) and fname not in IMAGE_EXCEPTIONS:
             tag = fname[:-4]
             fname =  'gfx/' + fname
             renpy.image(tag, im.Scale(fname, 800, 600))
@@ -68,11 +70,6 @@ init 1 python:
                   (start_x + 2*x_delta,start_y), (start_x + 2*x_delta,start_y + y_delta), (start_x+2*x_delta, start_y + 2*y_delta), (start_x+2*x_delta, start_y + 3*y_delta), (start_x+2*x_delta,start_y+4*y_delta), ]
     
     ### TILES ###
-    
-    TILEIDLEPIC = "tile.png"
-    TILEHOVERPIC = "tileh.png"
-    TILEPROJECTPIC = "tilep.png"
-    TILETRAPPIC = "tiletrap.png"
     
     tile1 = Tile(tile1pos, TILEIDLEPIC, TILEHOVERPIC, 1)
     tile2 = Tile(tile2pos, TILEIDLEPIC, TILEHOVERPIC, 2)
@@ -1076,6 +1073,7 @@ label jinchurri_attack(player, village):
         
 label village_arena_level5:
     # TODO: Add arena background
+    scene dream_2
     current_session.main_player.character "Time to fight in the arena."
     itachi.character "I will be your opponent!"
     call fight(current_session.main_player, itachi, [], [], clearing, 'generic_win', 'generic_lose', None)
@@ -1085,6 +1083,14 @@ label village_arena_level10:
     current_session.main_player.character "Time to fight in the arena."
     ori.character "I will be your opponent!"
     call fight(current_session.main_player, ori, [], [], clearing, 'generic_win', 'generic_lose', None)
+            
+### LABEL MISSIONS ###
+            
+label labelmissiontest(player, village):
+    player.character "This is a test mission."
+    player.character "Anything can go here."
+    jump village_redirect
+    
             
 ### NPC LABELS ###
 label sasuke1:
@@ -1158,7 +1164,7 @@ label fight(player, enemy, tag_p, tag_e, stage=clearing, win_label, lose_label, 
     $ remove_all_skill_affects(player, enemy)
     
     show screen battlebars(tag_p, tag_e)
-    show screen stats
+    #show screen stats
     call screen battlemenu(player, tag_p)
     
 label initial_pos(player, enemy):
@@ -1265,17 +1271,17 @@ label enemymove:
     
 label showtiles:
     show tile1im at tile1pos
-    show tile2im at tile2pos
-    show tile3im at tile3pos
-    show tile4im at tile4pos
-    show tile5im at tile5pos
-    show tile6im at tile6pos
-    show tile7im at tile7pos
-    show tile8im at tile8pos
-    show tile9im at tile9pos
-    show tile10im at tile10pos
-    show tile11im at tile11pos
-    show tile12im at tile12pos
+    #show tile2im at tile2pos
+    #show tile3im at tile3pos
+    #show tile4im at tile4pos
+    #show tile5im at tile5pos
+    #show tile6im at tile6pos
+    #show tile7im at tile7pos
+    #show tile8im at tile8pos
+    #show tile9im at tile9pos
+    #show tile10im at tile10pos
+    #show tile11im at tile11pos
+    #show tile12im at tile12pos
     return
     
 label hidetiles:

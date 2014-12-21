@@ -392,6 +392,7 @@ screen stats_screen(player):
         if player.right_leg.injury:
             imagebutton idle "right_leg_injured" hover "right_leg_injured" xpos 0.685 ypos 0.145
     
+        text "{size=-5}Ryo: [player.ryo]{/size}" xpos 0.75 ypos 0.024
         text "{size=-5}[player.name]{/size}" xpos 0.75 ypos 0.05
         text "{size=-5}Lv.[player.level]{/size}" xpos 0.85 ypos 0.05
         # TODO: this needs to be bar
@@ -575,7 +576,7 @@ screen battlebars(tag_p, tag_e):
         text "-[enemy.damage_dealt]" xpos 0.59 ypos 0.3
     
     #text "[player.facing]" xpos 0.2 ypos 0.25
-    if player.check_active_skill(damage_reduction_p):
+    if player.check_active_skill(damage_reduction):
         text "DR" xpos 0.3 ypos 0.15
         
     if player.check_active_skill(chakra_defence):
@@ -598,10 +599,10 @@ screen battlebars(tag_p, tag_e):
     if player.damage_dealt > 0:
         text "-[player.damage_dealt]" xpos 0.75 ypos 0.3
         
-    if enemy.check_active_skill(damage_reduction_e):
+    if enemy.check_active_skill(damage_reduction):
         text "DR" xpos 0.75 ypos 0.15
         
-    if enemy.check_active_skill(chakra_defence_e):
+    if enemy.check_active_skill(chakra_defence):
         text "CD" xpos 0.75 ypos 0.15
         
     #text "[tag_e]" xpos 0.45 ypos 0.10
@@ -643,7 +644,7 @@ screen movemenu:
             imagebutton idle TILETRAPPIC hover TILETRAPPIC xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos - 0.05)
         else:
             imagebutton idle tile.idle hover tile.idle xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos - 0.05)
-        text "{}".format(tile.idle.split('.')[0]) xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos + 0.15)
+        #text "{}".format(tile.idle.split('.')[0]) xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos + 0.15)
         if player.tile == tile:
             text "P" xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos + 0.25)
             
