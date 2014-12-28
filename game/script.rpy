@@ -9,6 +9,7 @@ init -1:
     $ exp_increase = 0
     $ bond_increase = 0
     $ moved = False
+    $ battle_turn = 0
     
     image bg = im.Scale("bg.jpg", 800, 600)
     image black_fade = Solid((0, 0, 0, 150))
@@ -189,10 +190,9 @@ init python:
     ### WEAPONS ###
     w_kunai = Weapon("Kunai", price=50, range=4, chakra_cost=4, damage=20)
     w_paper_bomb = Weapon("Paper Bomb", price=100, range=2, chakra_cost=5, damage=50)
-    # these need to be weapons
-    shiruken = Skill('Shiruken', 'weapon', "shiruken", 12, 7, 1, 20)
-    kunai = Skill('Kunai', 'weapon', "kunai", 12, 4, 1, 20)
-    trap = Skill('Trap', 'weapon', "trap", 3, 1, 2, 30)
+    shiruken = Weapon('Shiruken', 'weapon', "shiruken", 12, 7, 1, 20)
+    kunai = Weapon('Kunai', 'weapon', "kunai", 12, 4, 1, 20)
+    trap = Weapon('Trap', 'weapon', "trap", 3, 1, 2, 30)
     
     ### PLAYERS AND TEAMS ###
     
@@ -268,7 +268,6 @@ init python:
             
     clearing = Stage('Clearing', 1, 1)        
             
-
     ### SHOP ITEMS ###
     i_heal_paste = ShopItem("Heal Paste", 300, 30, health=30)
     i_chakra_paste = ShopItem("Chakra Paste", 300, 40, chakra=30)
@@ -356,6 +355,7 @@ init python:
             renpy.show((image_name, 'night'))
     
     def show_village_map(village, player):
+        current_session.location = None
         renpy.show_screen("player_stats")
         renpy.show_screen("stats_screen", player)
         renpy.show_screen("time_screen")
@@ -438,7 +438,8 @@ init python:
         
         # Handle traps
         if tile.trap:
-            renpy.say(player.character, "Oh no there is a trap here!")
+            # This causes a ui.close() exception, commenting for now
+            #renpy.say(player.character, "Oh no there is a trap here!")
             player.hp -= 30
             remove_trap(tile)
         
@@ -605,7 +606,7 @@ init python:
             #renpy.say("HELLO", "Enemy position is {}.".format(enemy_position))
             enemy_tile = get_tile_from_position(abs(enemy_position))
             
-            if not enemy.tile:
+            if not enemy.tile or enemy_tile:
                 enemy_tile = old_tile
             show_player_at_pos(enemy, player, None, enemy_tile)
             #renpy.show(enemy.picname, [ POSITIONS[enemy.tile.position] ])
@@ -683,6 +684,22 @@ init python:
                 s.used = 0
                 s.remove()
                 setattr(enemy, s.label, s)
+                
+    def remove_traps_from_all_tiles():
+        for tile in TILES:
+            remove_trap(tile)
+                
+    def end_match_teardown(player, enemy, match_result):
+        """Things to do when match ends, avoid putting labels here"""
+        player.damage_dealt = 0
+        enemy.damage_dealt = 0
+        current_session.enemy_tag = None
+        current_session.player_tag = None
+        current_session.initial_pos = True
+        moved = False
+        current_session.last_match_result = match_result
+        battle_turn = 0
+        remove_traps_from_all_tiles()
         
     def end_match(player, enemy, tag_p, tag_e, win_label, lose_label, draw_label):
         # if player hp reaches zero force tag to partner with good hp
@@ -713,25 +730,15 @@ init python:
                            current_session.lose_label,
                            current_session.draw_label)
                 
-        
-        # tear down
-        current_session.enemy_tag = None
-        current_session.player_tag = None
-        
-        if draw_label:
-            current_session.last_match_result = 'draw'
-            current_session.initial_pos = True
-            moved = False
+        if battle_turn == current_session.fight_limit:
+            end_match_teardown(player, enemy, 'draw')
             renpy.call(draw_label, current_session.main_player)
-        elif player.hp == 0:
-            current_session.last_match_result = 'lose'
-            current_session.initial_pos = True
-            moved = False
+        
+        if player.hp == 0:
+            end_match_teardown(player, enemy, 'lose')
             renpy.call(lose_label, current_session.main_player)
         elif enemy.hp == 0:
-            current_session.last_match_result = 'win'
-            current_session.initial_pos = True
-            moved = False
+            end_match_teardown(player, enemy, 'win')
             renpy.call(win_label, current_session.main_player)
             
     def get_tag_info(player, tag_p):
@@ -814,6 +821,7 @@ label world_update(village):
     return
     
 label village_redirect:
+    $ current_session.location = None
     hide screen villagetravel
     python:
         main_time.advance_time(hours=current_session.time_to_advance.get('hours'),
@@ -885,6 +893,34 @@ label statscreen_hide_redirect:
     hide screen stats_screen
     jump village_redirect
     
+label injury_revert:
+    
+    if current_session.main_player.hp < current_session.main_player.maxhp:
+        menu:
+            "HP is not full, do you still want to continue?"
+            
+            "Yes":
+                return
+            "No":
+                "HP/Chakra can be healed either at the hospital or by resting at home."
+                $ current_session.clear_time_to_advance()
+                jump village_redirect
+    
+    python:
+        if current_session.main_player.get_injured_limbs():
+            renpy.say(current_session.main_player.character, "I can't do this, I am injured and have to heal my injuries first by resting or from hospital.")
+            current_session.clear_time_to_advance()
+            renpy.jump("village_redirect")
+            
+label time_revert(opening_hour=6, closing_hour=18):
+    python:
+        if not main_time.hour in range(opening_hour, closing_hour):
+            current_session.clear_time_to_advance()
+            renpy.say("Guard",  "Sorry this place is only open between [opening_hour]AM and [closing_hour]PM.")
+            renpy.jump("village_redirect")
+            
+    return
+    
 label village_travel(player, village):
     show screen villagetravel(village, player)
     player.character "I need to choose a destination"
@@ -900,6 +936,8 @@ label village_training(player, village):
     if player.hp < 50 or player.chakra < 50:
         player.character "I don't have enough hp or chakra to continue, I need to rest before I can train."
         jump village_redirect
+    hide train_with_team
+    hide train_skills
     show screen training(village, player)
     player.character "What should I do?"
     $ renpy.call('village_training', player, village)
@@ -923,8 +961,8 @@ label train_skill_label:
             renpy.say(current_session.main_player.character, "I can't train, I am injured and have to heal my injuries first.")
             current_session.clear_time_to_advance()
         else:
-            setattr(getattr(current_session.main_player, current_session.skill.label), current_session.skill.label,  current_session.skill.gain_exp(10))
-            renpy.say(current_session.main_player.character, "I have gained 10 exp for {}.".format(current_session.skill.name))
+            setattr(getattr(current_session.main_player, current_session.skill.label), current_session.skill.label,  current_session.skill.gain_exp(2000))
+            renpy.say(current_session.main_player.character, "I have gained 200 exp for {}.".format(current_session.skill.name))
     jump location_redirect
     
 label train_gain_exp:
@@ -937,16 +975,21 @@ label train_gain_exp:
     jump location_redirect
     
 label training_spar:
+    # heal the spar partners before the fight
+    python:
+        for p in current_session.spar:
+            p.full_heal()
+    
     if len(current_session.spar) == 1:
         current_session.main_player.character "Lets spar [current_session.spar[0].name]."
         current_session.spar[0].character "Lets go."
-        call fight(player, current_session.spar[0], [], [], clearing, 'generic_win', 'generic_lose', None)
+        call fight(current_session.main_player, current_session.spar[0], [], [], clearing)
     
     if len(current_session.spar) > 1:
         current_session.main_player.character "Lets spar [current_session.spar[0].name] and [current_session.spar[1].name]."
         current_session.spar[0].character "Lets go."
         current_session.spar[1].character "Lets do this."
-        call fight(player, current_session.spar[0], [], [current_session.spar[1]], clearing, 'generic_win', 'generic_lose', None)
+        call fight(current_session.main_player, current_session.spar[0], [], [current_session.spar[1]], clearing)
     
 label village_arena(player, village):
     show screen villagearena(village, player)
@@ -960,6 +1003,7 @@ label village_hospital(player, village):
     $ renpy.call('village_hospital', player, village)
     
 label hospital_injury:
+    #call time_revert
     # TODO: special events, etc
     $ injury_bill = player.get_injury_bill()
     "Nurse" "Looks like you are injured."
@@ -981,7 +1025,7 @@ label hospital_injury:
 label village_jounin_station(player, village):
     # TODO: handle npc events
     python:
-        if is_event_active_today(e_jounin_training) and main_time.hour in range(6, 19):
+        if is_event_active_today(e_jounin_training) and main_time.hour in range(6, 18):
             renpy.jump("event_jounin_training")
             
     "Jounin" "Sorry, no training events today, please come back on the 1st of next month between 6AM and 6PM."
@@ -1028,17 +1072,20 @@ label village_intelligence_division(player, village):
     jump start
     
 label village_ninja_tool_facility(player, village):
+    call time_revert
     # maybe show different weapon shop here
     show screen weaponshop(village, player)
     player.character "I need to choose weapons to buy."
     $ renpy.call('village_ninja_tool_facility', player, village)
     
 label village_missions(player, village):
+    hide screen missionselect
     show screen villagemissions(village, player)
     player.character "I need to choose mission."
     $ renpy.call('village_missions', player, village)
     
 label village_home(player, village):
+    hide rest_screen
     show screen villagehome(village, player)
     #show screen calendar_screen_toggle
     player.character "I need choose an action."
@@ -1058,10 +1105,10 @@ label jinchurri_attack(player, village):
             player.character "No! Lets fight him."
             # affects and stuff
             player.character "The huge beast faces us."
-            call fight(player, kyuubi, player.team.members, [], clearing, 'generic_win', 'generic_lose', None)
+            call fight(player, kyuubi, player.team.members, [], clearing)
         else:
             player.character "The huge beast faces me."
-            call fight(player, anko, [], [], clearing, 'generic_win', 'generic_lose', None)
+            call fight(player, anko, [], [], clearing)
             
     else:
         player.character "I can't find my team mates."
@@ -1069,20 +1116,25 @@ label jinchurri_attack(player, village):
         $ jounin_1 = get_random_jounin(player, village, exclude=[])
         $ jounin_2 = get_random_jounin(player, village, exclude=[jounin_1])
         jounin_1.character "Lets go!"
-        call fight(player, anko, [jounin_1, jounin_2], [], clearing, 'generic_win', 'generic_lose', None)
+        call fight(player, anko, [jounin_1, jounin_2], [], clearing)
         
 label village_arena_level5:
+    call time_revert
+    call injury_revert
     # TODO: Add arena background
     scene dream_2
     current_session.main_player.character "Time to fight in the arena."
     itachi.character "I will be your opponent!"
-    call fight(current_session.main_player, itachi, [], [], clearing, 'generic_win', 'generic_lose', None)
+    call fight(current_session.main_player, itachi, [], [], clearing)
     
 label village_arena_level10:
+    call time_revert
+    call injury_revert
     # TODO: Add arena background
+    scene dream_2
     current_session.main_player.character "Time to fight in the arena."
     ori.character "I will be your opponent!"
-    call fight(current_session.main_player, ori, [], [], clearing, 'generic_win', 'generic_lose', None)
+    call fight(current_session.main_player, ori, [], [], clearing)
             
 ### LABEL MISSIONS ###
             
@@ -1138,9 +1190,9 @@ label start:
     $ show_village_map(current_session.village, naruto)
     #show screen calendar_screen
     #$ start_world_events()
-    call fight(naruto, sasuke, [sakura], [kakashi], clearing, 'generic_win', 'generic_lose', None)
+    call fight(naruto, sasuke, [sakura], [kakashi], clearing)
     
-label fight(player, enemy, tag_p, tag_e, stage=clearing, win_label, lose_label, draw_label=None):
+label fight(player, enemy, tag_p, tag_e, stage=clearing, win_label='generic_win', lose_label='generic_lose', draw_label='generic_draw', fight_limit=20):
     #scene bg
     $ hide_battle_screen(all=True)
     
@@ -1151,7 +1203,9 @@ label fight(player, enemy, tag_p, tag_e, stage=clearing, win_label, lose_label, 
     $ current_session.win_label = win_label
     $ current_session.lose_label = lose_label
     $ current_session.draw_label = draw_label
+    $ current_session.fight_limit = fight_limit
     
+    call hidetiles
     call showtiles
     hide screen movemenu
     hide screen settrap
@@ -1183,6 +1237,7 @@ label remove_projections:
     
 label generic_win(player):
     $ hide_battle_screen(all=True)
+    $ battle_turn = 0
     $ exp = renpy.random.randint(100,200) + 200
     $ player.gain_exp(exp)
     if current_session.spar:
@@ -1203,12 +1258,13 @@ label generic_win(player):
                                years=current_session.time_to_advance.get('years'))
     
     $ current_session.clear_time_to_advance() # this clears rest too
-    call mission_report(current_session.main_player, current_session.mission)
-    $ show_village_map(current_session.main_player.home_village, current_session.main_player)
+    call mission_report(player, current_session.mission)
+    $ show_village_map(current_session.village, current_session.main_player)
 
 label generic_lose(player):
     $ hide_battle_screen(all=True)
-    $ exp = renpy.random.randint(100,200) + 70
+    $ battle_turn = 0
+    $ exp = renpy.random.randint(50,100) + 50
     $ player.gain_exp(exp)
     if current_session.spar:
         $ chemistry = renpy.random.randint(10, 15)
@@ -1227,12 +1283,33 @@ label generic_lose(player):
                                years=current_session.time_to_advance.get('years'))
     
     $ current_session.clear_time_to_advance() # this clears rest too
-    call mission_report(current_session.main_player, current_session.mission)
-    $ show_village_map(current_session.main_player.home_village, current_session.main_player)
+    call mission_report(player, current_session.mission)
+    $ show_village_map(current_session.village, current_session.main_player)
     
-label fight1_d:
-    "Sample" "I DRAW EVERYTHING"
-    #return
+label generic_draw(player):
+    $ hide_battle_screen(all=True)
+    $ battle_turn = 0
+    $ exp = renpy.random.randint(100,200) + 100
+    $ player.gain_exp(exp)
+    if current_session.spar:
+        $ chemistry = renpy.random.randint(10, 15)
+        $ player.team.increase_chemistry(chemistry)
+        player.character "I gained [chemistry] team chemistry."
+        $ current_session.spar = []
+    player.character "I draw the match and gained [exp] exp."
+    player.character "Now to head back to the village."
+    player.character "..."
+    player.character "..........."
+    player.character "......................."
+    python:
+        main_time.advance_time(hours=current_session.time_to_advance.get('hours'),
+                               days=current_session.time_to_advance.get('days'),
+                               months=current_session.time_to_advance.get('months'),
+                               years=current_session.time_to_advance.get('years'))
+    
+    $ current_session.clear_time_to_advance() # this clears rest too
+    call mission_report(player, current_session.mission)
+    $ show_village_map(current_session.village, current_session.main_player)
     
 label mission_report(player, mission):
     # scene mission table?? TODO 
@@ -1246,6 +1323,7 @@ label mission_report(player, mission):
                 renpy.say(player.home_village.leader.character, "It is unfortunate {} but you failed.".format(player.name))
                 reward = mission.reward(player, half=True)
                 renpy.say(player.home_village.leader.character, "Here is your reward ryo {} and exp {} for your trouble.".format(reward['ryo'], reward['exp']))
+    $ current_session.mission = None
     return
     
 label standby:
@@ -1267,21 +1345,22 @@ label enemymove:
             else:
                 enemy_move(player, enemy, clearing, tag_p, tag_e)
 
+    $ battle_turn += 1
     call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
     
 label showtiles:
     show tile1im at tile1pos
-    #show tile2im at tile2pos
-    #show tile3im at tile3pos
-    #show tile4im at tile4pos
-    #show tile5im at tile5pos
-    #show tile6im at tile6pos
-    #show tile7im at tile7pos
-    #show tile8im at tile8pos
-    #show tile9im at tile9pos
-    #show tile10im at tile10pos
-    #show tile11im at tile11pos
-    #show tile12im at tile12pos
+    show tile2im at tile2pos
+    show tile3im at tile3pos
+    show tile4im at tile4pos
+    show tile5im at tile5pos
+    show tile6im at tile6pos
+    show tile7im at tile7pos
+    show tile8im at tile8pos
+    show tile9im at tile9pos
+    show tile10im at tile10pos
+    show tile11im at tile11pos
+    show tile12im at tile12pos
     return
     
 label hidetiles:
@@ -1298,4 +1377,3 @@ label hidetiles:
     hide tile11im
     hide tile12im
     return
-

@@ -57,6 +57,9 @@ init -4 python:
         def injure(self):
             self.injury_severity += 1
             self.injury = True
+            # it can't go above 5
+            if self.injury_severity > 5:
+                self.injury_severity = 5
             self.injury_length = INJURY_LENGTH[self.injury_severity]
             
         def rest(self, days):
@@ -185,6 +188,11 @@ init -4 python:
             self.set_sensei()
             self.add_to_village_ranks()
             self.generate_events_for_interaction()
+            
+        def full_heal(self):
+            self.hp = self.maxhp
+            self.chakra = self.maxchakra
+            self.heal_all_injuries()
             
         def generate_events_for_interaction(self):
             # this will jump to label called for Sasuke Uchiha sasuke_uchiha1, 1 is number of visits
@@ -335,7 +343,7 @@ init -4 python:
             
         def injury_chance(self, chance=0.00):
             percent = chance * 100
-            if random.randint(1,101) > percent:
+            if random.randint(1,101) < percent:
                 random.choice(self.get_limbs()).injure()
                 
         def increase_hp(self, health):

@@ -22,6 +22,7 @@ init -5 python:
             self.win_label = None
             self.lose_label = None
             self.draw_label = None
+            self.fight_limit = 0
             self.last_match_result = None
             self.initial_pos = True
             self.rest = False
@@ -43,6 +44,7 @@ init -5 python:
             self.win_label = None
             self.lose_label = None
             self.draw_label = None
+            self.fight_limit = 0
             self.last_match_result = None
             self.initial_pos = True
             self.rest = False

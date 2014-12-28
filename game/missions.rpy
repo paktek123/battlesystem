@@ -52,6 +52,8 @@ init -7 python:
             main_time.advance_time(hours=self.hours, days=self.days)
             self.success = True
             self.reward(player)
+            # clear the mission because it does not need to carry on
+            current_session.mission = None
             show_village_map(village, player)
             
     class LabelMission(Mission):

@@ -2,19 +2,21 @@
 # TILE DEFINITIONS
 #
 
+init -10:
+    image tile1im = im.Scale("tile.png", 50, 30)
+    image tile2im = im.Scale("tile.png", 50, 30)
+    image tile3im = im.Scale("tile.png", 50, 30)
+    image tile4im = im.Scale("tile.png", 50, 30)
+    image tile5im = im.Scale("tile.png", 50, 30)
+    image tile6im = im.Scale("tile.png", 50, 30)
+    image tile7im = im.Scale("tile.png", 50, 30)
+    image tile8im = im.Scale("tile.png", 50, 30)
+    image tile9im = im.Scale("tile.png", 50, 30)
+    image tile10im = im.Scale("tile.png", 50, 30)
+    image tile11im = im.Scale("tile.png", 50, 30)
+    image tile12im = im.Scale("tile.png", 50, 30)
+
 init -10 python:
-    tile1im = im.Scale("tile.png", 50, 30)
-    #tile2im = im.Scale("tile.png", 50, 30)
-    #tile3im = im.Scale("tile.png", 50, 30)
-    #tile4im = im.Scale("tile.png", 50, 30)
-    #tile5im = im.Scale("tile.png", 50, 30)
-    #tile6im = im.Scale("tile.png", 50, 30)
-    #tile7im = im.Scale("tile.png", 50, 30)
-    #tile8im = im.Scale("tile.png", 50, 30)
-    #tile9im = im.Scale("tile.png", 50, 30)
-    #tile10im = im.Scale("tile.png", 50, 30)
-    #tile11im = im.Scale("tile.png", 50, 30)
-    #tile12im = im.Scale("tile.png", 50, 30)
     
     TILE1POS = 100
     TILE2POS = 150

@@ -32,6 +32,7 @@ screen hospitalshop(village, player):
     $ injury_bill = player.get_injury_bill()
     text "Ryo: [player.ryo]" xpos 0.1
     text "Items: [player.items]" xpos 0.1 ypos 0.2
+    text "[player.head.injury_severity] [player.torso.injury_severity] [player.left_arm.injury_severity] [player.right_arm.injury_severity] [player.left_leg.injury_severity] [player.right_leg.injury_severity]"
     
     python:
         if is_event_active_today(e_hospital_discount) and not hospital_shop.price_halved:
@@ -180,6 +181,12 @@ screen train_with_team(village, player):
                                                                      SetField(current_session, 'spar', [player.sensei]),
                                                                      Hide("train_with_team"), 
                                                                      Jump("training_spar")] xpos grid_place[2][0] ypos grid_place[2][1]
+        
+    textbutton "Back" action [SetField(current_session, 'village', village), 
+                              SetField(current_session, 'main_player', player),
+                              Hide("train_with_team"),
+                              SetField(current_session, 'location', l_training_ground), 
+                              Jump('location_redirect')] xpos grid_place[3][0] ypos grid_place[3][1]
     
     
 screen train_skills(village, player):
@@ -204,10 +211,10 @@ screen train_skills(village, player):
 screen levelup(village, player):
     $ STATS = ['strength', 'speed', 'evasion', 'defence', 'stamina', 'taijutsu', 'ninjutsu', 'genjutsu']
     $ counter = 0
-    text "Allocation Points: [player.allocation_points]" xpos 0.1
-    text "Str: [player.strength] Def: [player.defence] Eva: [player.evasion]" xpos 0.50
-    text "Sta: [player.stamina] Speed: [player.speed] Hit: [player.base_hit_rate]" xpos 0.50 ypos 0.05
-    text "Tai: [player.taijutsu] Nin: [player.ninjutsu] Gen: [player.genjutsu]" xpos 0.50 ypos 0.1
+    #text "Allocation Points: [player.allocation_points]" xpos 0.1
+    #text "Str: [player.strength] Def: [player.defence] Eva: [player.evasion]" xpos 0.50
+    #text "Sta: [player.stamina] Speed: [player.speed] Hit: [player.base_hit_rate]" xpos 0.50 ypos 0.05
+    #text "Tai: [player.taijutsu] Nin: [player.ninjutsu] Gen: [player.genjutsu]" xpos 0.50 ypos 0.1
     
     if player.allocation_points:
         for stat in STATS:
@@ -392,12 +399,14 @@ screen stats_screen(player):
         if player.right_leg.injury:
             imagebutton idle "right_leg_injured" hover "right_leg_injured" xpos 0.685 ypos 0.145
     
-        text "{size=-5}Ryo: [player.ryo]{/size}" xpos 0.75 ypos 0.024
-        text "{size=-5}[player.name]{/size}" xpos 0.75 ypos 0.05
-        text "{size=-5}Lv.[player.level]{/size}" xpos 0.85 ypos 0.05
+        text "{size=-5}Ryo: [player.ryo]{/size}" xpos 0.73 ypos 0.023
+        text "{size=-5}HP: [player.hp]/[player.maxhp]{/size}" xpos 0.85 ypos 0.024
+        text "{size=-5}[player.name]{/size}" xpos 0.73 ypos 0.05
+        text "{size=-5}Lv.[player.level]{/size}" xpos 0.83 ypos 0.05
         # TODO: this needs to be bar
         $ next_level_exp = LEVELS[player.level + 1]
-        text "{size=-5}Exp [player.exp]/[next_level_exp]{/size}" xpos 0.75 ypos 0.08
+        text "{size=-5}Exp [player.exp]/[next_level_exp]{/size}" xpos 0.73 ypos 0.08
+        text "{size=-5}CP: [player.chakra]/[player.maxchakra]{/size}" xpos 0.85 ypos 0.08
         text "{size=-5}Str: [player.strength]{/size}" xpos 0.735 ypos 0.12
         text "{size=-5}Def: [player.defence]{/size}" xpos 0.735 ypos 0.16
         text "{size=-5}Eva: [player.evasion]{/size}" xpos 0.735 ypos 0.20
@@ -566,6 +575,8 @@ screen battlebars(tag_p, tag_e):
     #frame:
         #has vbox 
     $ rel_pos = abs(player.tile.position - enemy.tile.position)
+    
+    text "[battle_turn]" xpos 0.7 ypos 0.05
 
     text "[player.name]" xpos 0.5 ypos 0.15
     text "[player.chakra]" xpos 0.49 ypos 0.45

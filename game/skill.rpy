@@ -52,8 +52,9 @@ init -2 python:
             
         def gain_exp(self, exp):
             self.exp += exp
-            if self.exp > self.unlock_exp:
+            if self.exp >= self.unlock_exp:
                 self.exp = self.unlock_exp
+                self.unlock(current_session.main_player)
             return self.exp
             
         def activate(self):
@@ -123,16 +124,17 @@ init -2 python:
                 renpy.say(target.character, "Reflect!".format(target.name))
                 player.hp -= int((self.damage - player.defence)) 
                 target.reflect.used += 1
+                target.damage_dealt = int((self.damage - player.defence)) 
+                return
             elif check_active_skill(target, "yatamirror"):
                 renpy.say(target.character, "Your skills won't affect me!".format(target.name))
                 damage = 0
                 target.yatamirror.used += 1
             else:
-                # only defensive skills
+                # only offensive skills
                 if self.skill_type in ('attack', 'tai', 'nin', 'gen', 'weapon'):
                     target.hp -= int(damage)
-                
-            player.damage_dealt = int(damage) + self.tech
+                    player.damage_dealt = int(damage)
             
            
         def hit_successful(self, player, enemy):
