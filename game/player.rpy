@@ -126,8 +126,8 @@ init -4 python:
     class Player:
         def __init__(self, name, picname, character, tilepic, hudpic, hp, maxhp, chakra, maxchakra, 
                      strength, speed, evasion, defence, stamina, base_hit_rate, tile, facing,
-                     taiskills=[], ninskills=[], genskills=[], items=[], defensiveskills=[], bloodlineskills=[],
-                     leader_pic=None, taijutsu=1, ninjutsu=1, genjutsu=1, weapons=[], battle_ai=[], home_village=None, level=1,
+                     meleeskills=[], specialskills=[], rangedskills=[], items=[], defensiveskills=[], bloodlineskills=[],
+                     leader_pic=None, melee=1, special=1, ranged=1, weapons=[], battle_ai=[], home_village=None, level=1,
                      interaction={}):
             self.name = name
             self.picname = picname
@@ -144,19 +144,19 @@ init -4 python:
             self.defence = defence
             self.stamina = stamina
             self.base_hit_rate = base_hit_rate
-            self.taijutsu = taijutsu
-            self.ninjutsu = ninjutsu
-            self.genjutsu = genjutsu
+            self.melee = melee
+            self.special = special
+            self.ranged = ranged
             self.tile = tile # position 
             self.facing = facing
-            self.taiskills = taiskills
-            self.ninskills = ninskills
-            self.genskills = genskills
+            self.meleeskills = meleeskills
+            self.specialskills = specialskills
+            self.rangedskills = rangedskills
             self.items = items
             self.weapons = weapons
             self.defensiveskills = defensiveskills
             self.bloodlineskills = bloodlineskills
-            self.all_skills = self.taiskills + self.ninskills + self.genskills + self.items + self.defensiveskills + self.bloodlineskills + self.weapons
+            self.all_skills = self.meleeskills + self.specialskills + self.rangedskills + self.items + self.defensiveskills + self.bloodlineskills + self.weapons
             self.action_counter = 0
             self.battlescreen = None
             self.stunned = False

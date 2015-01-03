@@ -1,6 +1,43 @@
 ﻿# This file is in the public domain. Feel free to modify it as a basis
 # for your own screens.
 
+##############################################################################
+# CHARACTER CREATION
+#
+
+screen allocatepoints(player):
+    $ STATS = ['strength', 'speed', 'evasion', 'defence', 'stamina', 'melee', 'special', 'ranged']
+    $ counter = 0
+    text "Allocation Points: [player.allocation_points]" xpos 0.1
+    text "Str: [player.strength] Def: [player.defence] Eva: [player.evasion]" xpos 0.50
+    text "Sta: [player.stamina] Speed: [player.speed] Hit: [player.base_hit_rate]" xpos 0.50 ypos 0.05
+    text "Melee: [player.melee] Special: [player.special] Ranged: [player.ranged]" xpos 0.50 ypos 0.1
+    
+    if player.allocation_points:
+        for stat in STATS:
+            textbutton "[stat] +1" hovered Show('explanation', stat=stat) unhovered Hide('explanation') action [SetField(player, stat, getattr(player, stat) + 1), 
+                                                                                                                SetField(player, 'allocation_points', getattr(player, 'allocation_points') - 1), 
+                                                                                                                SetField(current_session, 'main_player', player), 
+                                                                                                                Jump('allocate_points')] xpos grid_place[counter][0] ypos grid_place[counter][1]
+            $ counter +=1 
+            
+screen explanation(stat):
+    if stat == 'strength':
+        text "This is how much damage melee attacks do." ypos 0.25
+    elif stat == 'speed':
+        text "This is how much distance the player can cover per move." ypos 0.25
+    elif stat == 'evasion':
+        text "Chance of dodging the opponents attack." ypos 0.25
+    elif stat == 'defence':
+        text "Resistance against all types of attacks." ypos 0.25
+    elif stat == 'stamina':
+        text "Rate of recovering and endurance." ypos 0.25
+    elif stat == 'melee':
+        text "Proficiency in close combat." ypos 0.25
+    elif stat == 'special':
+        text "Proficiency in mana skills." ypos 0.25
+    elif stat == 'ranged':
+        text "Proficiency in ranged combat." ypos 0.25
 
 ##############################################################################
 # VILLAGE SCREENS
