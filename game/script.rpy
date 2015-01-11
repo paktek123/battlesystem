@@ -33,6 +33,13 @@ init -1:
     image oripic_l = im.Flip(im.Scale("ori.png", 40, 50), horizontal=True)
     image itachipic_l = im.Flip(im.Scale("itachi.png", 40, 50), horizontal=True)
     
+    ### SPRITES ###
+    image thug_1 = im.Scale("thug_1.png", 270, 500)
+    
+    ### SPECIAL EFFECTS ###
+    $ sshake = Shake((0, 0, 0, 0), 1.0, dist=15)
+
+    
     $ player1currentpos = 1
     $ enemy1currentpos = 12
 
@@ -370,6 +377,15 @@ label start:
     call fight(naruto, sasuke, [sakura], [kakashi], clearing)
     
 label character_creation:
+    
+    
+    $ player_name="Maxwell"
+    $ hero_c.name = player_name
+    $ hero.name = player_name
+    $ current_session.main_player = hero
+    
+    jump prologue # remove the above
+    
     scene black
     $ player_name = renpy.input("Set player name: ")
     $ player_name = player_name.strip()
@@ -393,8 +409,79 @@ label allocate_points:
         jump prologue
     
 label prologue:
-    "THE STORY NOW CONTINUES"
-    current_session.main_player.character "Hello my name is [current_session.main_player.name]."
+    #"THE STORY NOW CONTINUES"
+    #hero_c "Hello my name is [current_session.main_player.name]."
+    scene street_3 night with dissolve
+    "The sunsets and I finally end my shift."
+    "It is a little late, I usually leave before its dark."
+    "...."
+    "I make my way towards the underpass."
+    scene underpass_1 night with dissolve
+    "My house is about a fifteen minute walk from my work place."
+    "..."
+    "In the distance I see two people wrestling on the road in front of me."
+    "They clearly don't care about getting run over by cars."
+    show thug_1 with dissolve
+    "Thug 1" "You bastard! I'll make sure you never stand up again!"
+    "Thug 2" "I'll.... oooff."
+    hide thug_1 with dissolve
+    "Both of them are throwing punches at each other and rolling on the ground."
+    "Just seeing those two go at it, puts me at unease."
+    "My heart starts pounding faster and body fills up with adrenaline."
+    "..."
+    "They are fighting in front of me, I need to somehow get round them and call the police."
+    "Thug 2" "Oooooffff." with sshake
+    "One of the thugs flies off to the side and bangs his head against the wall."
+    "There are blood stains everywhere, he soon looses conciousness."
+    show thug_1 with dissolve
+    "Thug 1" "You!"
+    "He looks at me, I freeze."
+    "My heart is pounding, I really don't want to be involved in this..."
+    "...."
+    hide thug_1 with dissolve
+    "I turn around and make a run for it."
+    scene street_2 night with dissolve 
+    "I quickly take a turn into a side street." with sshake
+    "Hufff.... hufff...."
+    "I hear police sirens in the background... what is going on!?"
+    "My head is going crazy with random thoughts, I need to get it together."
+    "Hufff...  hufff...."
+    ".... I get pushed to the ground." with sshake
+    hero_c "Owww...."
+    "There is a sharp pain in my upper arm."
+    "I look around to try to work out what just happenned."
+    show thug_1 with dissolve
+    "Thug" "You thought you could get away from me!?"
+    hero_c "How... did..."
+    "I am lost for words, how did he get behind me?"
+    "He must have pushed me to the ground from behind."
+    "Thug" "You saw me do that, I can't let you just leave without making sure you don't squeak."
+    "He grabs me by the collar of my shirt."
+    hero_c "Ughhh...."
+    "My heart is pounding very hard... I don't want to get hurt..."
+    hero_c "Why are you doing this? I won't tell the cops, please let me go."
+    "Thug" "Here is a present." with sshake
+    hero_c "Ooooffff...." 
+    "He punches me in my stomach and throws me to the ground."
+    "A sharp pain starts building up around my abdomen."
+    "Thug" "If I ever see your face again, I will pound your face in."
+    "Thug" "Don't even think of talking to the police."
+    hide thug_1 with dissolve
+    "He turns around and starts to walk away."
+    ### TODO: Add some motivation for our hero to get back on this feet and challenge Mr Thug to a fight
+    ### Maybe some sort of past flashback or something
+    "I fix my collar and stand up."
+    hero_c "Ohey... Bastard..."
+    hero_c "You think you can do whatever you want, let me kick your ass."
+    "As soon as he hears this, he turns around with an angry expression."
+    show thug_1 with dissolve
+    "Thug" "Say that again!"
+    "He throws a punch..."
+    "... I grab his fist and push him away."
+    "Thug" "Heh.... I'll pound you to death!"
+    "I know I can't go back now but maybe that is what I want."
+    hide thug_1 with dissolve
+    
     # continue here
     return
     
