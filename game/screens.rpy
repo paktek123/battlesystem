@@ -618,7 +618,7 @@ screen battlebars(tag_p, tag_e):
     text "[player.name]" xpos 0.5 ypos 0.15
     text "[player.chakra]" xpos 0.49 ypos 0.45
     text "[player.hp]" xpos 0.55 ypos 0.45
-    vbar value player.chakra range player.maxchakra xpos 0.5 ypos 0.2 ymaximum 150
+    bar value player.chakra range player.maxchakra xpos 0.3 ypos 0.2 xmaximum 150 ymaximum 30 thumb "blue_bar" bar_resizing True
     vbar value player.hp range player.maxhp xpos 0.55 ypos 0.2 ymaximum 150
     if enemy.damage_dealt > 0:
         text "-[enemy.damage_dealt]" xpos 0.59 ypos 0.3

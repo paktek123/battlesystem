@@ -82,7 +82,7 @@ init -1 python:
         player.tile = tile
         player.tile.activate()
         
-        renpy.hide(player.picname)
+        renpy.hide(player.tilepic)
         
         if player.tile.position < enemy.tile.position:
             player.facing = 'right'
@@ -94,7 +94,7 @@ init -1 python:
         #if not initial_movement:
             #player.chakra -= (stage.remove_chakra() + (difference * stage.pull))
             
-        renpy.show(player.picname, [ POSITIONS[tile.position] ])
+        renpy.show(player.tilepic, [ POSITIONS[tile.position] ])
         
         # Handle traps
         if tile.trap:
@@ -141,7 +141,7 @@ init -1 python:
                     partner.main = True
                     enemy.main = False
                     partner.tile = enemy.tile
-                    renpy.hide(enemy.picname)
+                    renpy.hide(enemy.tilepic)
                     info = get_tag_info(enemy, tag_e)
         
                     renpy.call('fight', 
@@ -157,12 +157,12 @@ init -1 python:
     def enemy_pattern(enemy):
         PATTERN_HASH = {'d': enemy.defensiveskills,
                         'f': enemy.weapons,
-                        'a': enemy.taiskills + enemy.ninskills + enemy.genskills,
+                        'a': enemy.meleeskills + enemy.specialskills + enemy.rangedskills,
                         #'t': None, # need logic for trap here
                         #'c': None, # need logic for team combinations
-                        'tai': enemy.taiskills,
-                        'nin': enemy.ninskills,
-                        'gen': enemy.genskills}
+                        'tai': enemy.meleeskills,
+                        'nin': enemy.specialskills,
+                        'gen': enemy.rangedskills}
         
         #renpy.say(enemy.character, "skill: {}".format(len(enemy.battle_ai)))
         try:
@@ -187,7 +187,7 @@ init -1 python:
         new_tile = get_tile_from_position(enemy_tile_position)
         enemy_tile = new_tile
         show_player_at_pos(enemy, player, None, new_tile)
-        #renpy.show(enemy.picname, [ POSITIONS[enemy.tile.position] ])
+        #renpy.show(enemy.tilepic, [ POSITIONS[enemy.tile.position] ])
         
     def enemy_use_item(enemy, player):
         if enemy.hp < (enemy.maxhp*0.3):
@@ -218,7 +218,7 @@ init -1 python:
             enemy_tile = old_tile
             
         show_player_at_pos(enemy, player, None, enemy_tile)
-        #renpy.show(enemy.picname, [ POSITIONS[enemy.tile.position] ])
+        #renpy.show(enemy.tilepic, [ POSITIONS[enemy.tile.position] ])
         
     def enemy_move(player, enemy, stage, tag_p, tag_e):
         hide_battle_screen()
@@ -244,7 +244,7 @@ init -1 python:
                 
         if current_skill.range >= abs(player.tile.position - enemy.tile.position):
             show_player_at_pos(enemy, player, None, enemy.tile)
-            #renpy.show(enemy.picname, [ POSITIONS[enemy.tile.position] ])
+            #renpy.show(enemy.tilepic, [ POSITIONS[enemy.tile.position] ])
             current_skill.action(enemy, player)
         else:
             # move enemy to near player
@@ -269,7 +269,7 @@ init -1 python:
             if not enemy.tile or enemy_tile:
                 enemy_tile = old_tile
             show_player_at_pos(enemy, player, None, enemy_tile)
-            #renpy.show(enemy.picname, [ POSITIONS[enemy.tile.position] ])
+            #renpy.show(enemy.tilepic, [ POSITIONS[enemy.tile.position] ])
             
             # Do the attack
             current_skill.action(enemy, player)
@@ -316,7 +316,7 @@ init -1 python:
             
         player.counter_state = False
         renpy.say(player.character, "Got you!")
-        renpy.show(player.picname, [ POSITIONS[player.tile.position] ])
+        renpy.show(player.tilepic, [ POSITIONS[player.tile.position] ])
         Jump("fight")    
         
     def set_trap_at_pos(player, enemy, stage, tile):
@@ -377,7 +377,7 @@ init -1 python:
                 partner.main = True
                 enemy.main = False
                 partner.tile = enemy.tile
-                renpy.hide(enemy.picname)
+                renpy.hide(enemy.tilepic)
                 info = get_tag_info(enemy, tag_e)
         
                 renpy.call('fight', 

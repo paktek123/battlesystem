@@ -20,6 +20,18 @@ init -1:
     image map = im.Scale("map.png", 800, 600)
     image stats_idle = Solid((0, 0, 0, 200), area=(0.62, 0.0, 300,150))
     
+    ### HUD PICS ###
+    image hero_1_hud = im.Scale("hero_1_hud.png", 150, 200)
+    image thug_1_hud = im.Scale("thug_1_hud.png", 150, 200)
+    
+    ### TILE PICS ###
+    
+    image hero_tile_l = im.Scale("hero_1_tile.png", 40, 50)
+    image hero_tile_r = im.Flip(im.Scale("hero_1_tile.png", 40, 50), horizontal=True)
+    image thug_tile_l = im.Scale("thug_1_tile.png", 40, 50)
+    image thug_tile_r = im.Flip(im.Scale("thug_1_tile.png", 40, 50), horizontal=True)
+    
+    
     image playerpic_r = im.Scale("player.png", 40, 50)
     image enemypic_r = im.Scale("enemy.png", 40, 50)
     image sakurapic_r = im.Scale("sakura.png", 40, 50)
@@ -32,6 +44,9 @@ init -1:
     image kakashipic_l = im.Flip(im.Scale("kakashi.png", 40, 50), horizontal=True)
     image oripic_l = im.Flip(im.Scale("ori.png", 40, 50), horizontal=True)
     image itachipic_l = im.Flip(im.Scale("itachi.png", 40, 50), horizontal=True)
+    
+    ### BARS ###
+    image blue_bar = im.Scale("bar_blue.png", 130, 20) 
     
     ### SPRITES ###
     image thug_1 = im.Scale("thug_1.png", 270, 500)
@@ -220,6 +235,8 @@ init python:
     gen_enemy_pattern = 3*['gen'] + 2*['d'] + ['f']
     
     hero_c = Character('NO NAME',color="#FFFF00")
+    thug_c =  Character('Thug',color="#FFFFFF")
+    
     naruto_c = Character('Naruto',color="#FFFF00") 
     sasuke_c = Character('Sasuke', color="#3399FF")
     sakura_c = Character('Sakura', color="#FA58F4")
@@ -227,10 +244,20 @@ init python:
     itachi_c = Character('Itachi', color="#FFFFFF")
     ori_c = Character('Orichimaru', color="#FF0000")
     
-    hero = Player(name='NO NAME', picname="playerpic_r", character=hero_c, tilepic=Image('player.png'), hudpic=None, 
+    hero = Player(name='NO NAME', picname="hero_tile_r", character=hero_c, tilepic="hero_tile_r", hudpic='hero_1_hud', 
                   hp=100, maxhp=100, chakra=80, maxchakra=80, 
                   strength=1, speed=1, evasion=1, defence=1, stamina=1, base_hit_rate=80, 
                   tile=tile1, facing='right', 
+                  meleeskills=[onetwocombo], specialskills=[rasengan], rangedskills=[substitution], 
+                  items=[], defensiveskills=[damage_reduction, chakra_defence, reflect, dampen, yata_mirror], bloodlineskills=[], 
+                  leader_pic="leader_pic", 
+                  weapons=[shiruken, kunai], 
+                  home_village=None)
+    
+    thug = Player(name='Thug', picname="thug_tile_r", character=thug_c, tilepic="thug_tile_r", hudpic='thug_1_hud', 
+                  hp=100, maxhp=100, chakra=80, maxchakra=80, 
+                  strength=5, speed=5, evasion=1, defence=1, stamina=1, base_hit_rate=80, 
+                  tile=tile1, facing='left', 
                   meleeskills=[onetwocombo], specialskills=[rasengan], rangedskills=[substitution], 
                   items=[], defensiveskills=[damage_reduction, chakra_defence, reflect, dampen, yata_mirror], bloodlineskills=[], 
                   leader_pic="leader_pic", 
@@ -412,6 +439,7 @@ label prologue:
     #"THE STORY NOW CONTINUES"
     #hero_c "Hello my name is [current_session.main_player.name]."
     scene street_3 night with dissolve
+    $ renpy.call('fight', hero, thug, [], [], clearing)
     "The sunsets and I finally end my shift."
     "It is a little late, I usually leave before its dark."
     "...."

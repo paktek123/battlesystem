@@ -380,12 +380,12 @@ init -4 python:
             return self.exp
         
         def change_direction(self, direction):
-            #renpy.say(self.character, "I was {} : {}".format(direction, self.picname))
+            #renpy.say(self.character, "I was {} : {}".format(direction, self.tilepic))
             if direction == 'left':
-                self.picname = self.picname.replace("_r", "_l")
+                self.tilepic = self.tilepic.replace("_r", "_l")
             else:
-                self.picname = self.picname.replace("_l", "_r")
-            #renpy.say(self.character, "Now I am {} : {}".format(direction, self.picname))
+                self.tilepic = self.tilepic.replace("_l", "_r")
+            #renpy.say(self.character, "Now I am {} : {}".format(direction, self.tilepic))
             
         def is_bleeding(self):
             for limb in self.get_limbs():
