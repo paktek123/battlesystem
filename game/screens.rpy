@@ -537,70 +537,64 @@ screen worldevents(village):
 ##############################################################################
 # BATTLE SCREENS
 #
-screen taiactions:
+screen skill_actions(action_type):
+    $ initial_pos = 0.8
+    $ interval = 0.1
+    $ counter = 0
+    
     vbox:
-        for skill in player.taiskills:
+        for skill in getattr(player, action_type):
+            
             if skill.is_usable(player, enemy):
                 textbutton "[skill.name]" action [SetField(current_session, 'skill', skill), 
                                                   SetField(current_session, 'skill_type', 'attack'),
                                                   Jump('skill_redirect')]  xpos 0.6
             else:
-                textbutton "[skill.name]" xpos 0.6
-        
-screen ninactions:
-    vbox:
-        for skill in player.ninskills:
-            if skill.is_usable(player, enemy):
-                textbutton "[skill.name]" action [SetField(current_session, 'skill', skill), 
-                                                  SetField(current_session, 'skill_type', 'attack'),
-                                                  Jump('skill_redirect')]  xpos 0.6
-            else:
-                textbutton "[skill.name]" xpos 0.6
-        
-screen genactions:
-    vbox:
-        for skill in player.genskills:
-            if skill.is_usable(player, enemy):
-                textbutton "[skill.name]" action [SetField(current_session, 'skill', skill), 
-                                                  SetField(current_session, 'skill_type', 'attack'),
-                                                  Jump('skill_redirect')]  xpos 0.6
-            else:
-                textbutton "[skill.name]" xpos 0.6
-                
-screen defenceactions:
-    vbox:
-        for skill in player.defensiveskills:
-            if skill.is_usable(player, enemy):
-                textbutton "[skill.name]" action [SetField(current_session, 'skill', skill), 
-                                                  SetField(current_session, 'skill_type', 'defence'),
-                                                  Jump('skill_redirect')]  xpos 0.6
-            else:
-                textbutton "[skill.name]" xpos 0.6
-
-screen weaponselection:
-    vbox:
-        for skill in player.weapons:
-            if skill.is_usable(player, enemy):
-                textbutton "[skill.name]" action [SetField(current_session, 'skill', skill), 
-                                                  SetField(current_session, 'skill_type', 'attack'),
-                                                  Jump('skill_redirect')]  xpos 0.6
-            else:
-                textbutton "[skill.name]" xpos 0.6
+                $ reason = skill.unusable_reason(player, enemy)
+                # show another type of imagebutton here
+                textbutton "[skill.name]" hovered Show('move_explanation', reason=reason) unhovered Hide('move_explanation') xpos 0.6 action [[]]
 
 screen battlemenu(player, tag_p):
+    $ move_types = ["melee", "special", "ranged", "weapons", "defensive"]
     vbox:
         # TODO: Add items menu
-        textbutton "Tai" action [Hide("ninactions"), Hide("genactions"), Hide("movemenu"), Hide("weaponselection"), Hide("defenceactions"), Show("taiactions")]
-        textbutton "Nin" action [Hide("taiactions"), Hide("genactions"), Hide("movemenu"), Hide("weaponselection"), Hide("defenceactions"), Show("ninactions")]
-        textbutton "Gen" action [Hide("ninactions"), Hide("taiactions"), Hide("movemenu"), Hide("weaponselection"), Hide("defenceactions"), Show("genactions")]
+        for move_type in move_types:
+            $ capital = move_type.capitalize()
+            if move_type == "weapons":
+                $ player_atr = "weapons"
+            else:
+                $ player_atr = move_type + "skills"
+                
+            #text "[player_atr]" xpos 0.5
+                
+            if getattr(player, player_atr):
+                textbutton "[capital]" hovered Show('battle_explanation', stat=move_type) unhovered Hide('battle_explanation') action [Hide("skill_actions"), Show("skill_actions", action_type=player_atr)]
+            else:
+                textbutton "[capital]"
+       
         if not moved:
-            textbutton "Move" action [Hide("ninactions"), Hide("genactions"), Hide("taiactions"), Hide("weaponselection"), Hide("defenceactions"), Show("movemenu")]
-        textbutton "Weapons" action [Hide("ninactions"), Hide("genactions"), Hide("movemenu"), Show("weaponselection"), Hide("defenceactions"), Hide("taiactions")]
-        textbutton "Trap" action [Hide("ninactions"), Hide("genactions"), Hide("taiactions"), Hide("weaponselection"), Hide("defenceactions"), Show("settrap")]
-        textbutton "Defence" action [Hide("ninactions"), Hide("genactions"), Hide("movemenu"), Hide("weaponselection"), Show("defenceactions"), Hide("taiactions")]
-        textbutton "Standby" action Jump("standby")
+            textbutton "Move" hovered Show('battle_explanation', stat='move') unhovered Hide('battle_explanation') action [Hide("skill_actions"), Show("movemenu")]
+        textbutton "Standby" hovered Show('battle_explanation', stat='standby') unhovered Hide('battle_explanation') action Jump("standby")
+        
+        # TODO: move trap to weapons
+        #textbutton "Trap" action [Hide("specialactions"), Hide("rangedactions"), Hide("meleeactions"), Hide("weaponselection"), Hide("defenceactions"), Show("settrap")]
         for partner in tag_p:
             textbutton "Tag [partner.name]" action [SetField(partner, 'main', True), SetField(partner, 'tile', player.tile), SetField(player, 'main', False), Jump('tag_partner')] ypos 3.5
+        
+screen move_explanation(reason):
+    text "[reason]" ypos 0.8 xpos 0.2
+        
+screen battle_explanation(stat):
+    $ expl_dict = {'melee': 'Close ranged attacks.', 
+                   'special': 'Attacks that use magic.', 
+                   'ranged': 'Attacks from distance.',
+                   'move': 'Move across the battle area.', 
+                   'weapons': 'Fixed damage attacks limited by quantity.', 
+                   'defence': 'Reduce enemy damage for a limited amount of time.',
+                   'standby': 'Regain magic, slightly heal health.'}
+    $ expl = expl_dict[stat]
+    
+    text "[expl]" ypos 0.8 xpos 0.2
         
 screen stats:
     text "Str: [player.strength] Def: [player.defence] Eva: [player.evasion]" xpos 0.30
@@ -613,12 +607,12 @@ screen battlebars(tag_p, tag_e):
         #has vbox 
     $ rel_pos = abs(player.tile.position - enemy.tile.position)
     
-    text "[battle_turn]" xpos 0.7 ypos 0.05
+    text "[battle_turn] [current_session.fight_limit]" xpos 0.7 ypos 0.05
 
     text "[player.name]" xpos 0.5 ypos 0.15
     text "[player.chakra]" xpos 0.49 ypos 0.45
     text "[player.hp]" xpos 0.55 ypos 0.45
-    bar value player.chakra range player.maxchakra xpos 0.3 ypos 0.2 xmaximum 150 ymaximum 30 thumb "blue_bar" bar_resizing True
+    vbar value player.chakra range player.maxchakra xpos 0.5 ypos 0.2 ymaximum 150 #ymaximum 30 left_bar "blue_bar"
     vbar value player.hp range player.maxhp xpos 0.55 ypos 0.2 ymaximum 150
     if enemy.damage_dealt > 0:
         text "-[enemy.damage_dealt]" xpos 0.59 ypos 0.3
@@ -714,66 +708,58 @@ screen settrap:
         else:
             imagebutton idle tile.idle hover tile.idle xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos - 0.05)
         #imagebutton idle tile.idle hover TILETRAPPIC xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos - 0.05) action Jump("trap{}".format(tile.position))
+
+label move_continue:
+    $ moved = True
+    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label, fight_limit)
     
 label move1:
-    $ moved = True
     $ show_player_at_pos(player, enemy, clearing, tile1)
-    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    jump move_continue
     
 label move2:
-    $ moved = True
     $ show_player_at_pos(player, enemy, clearing, tile2)
-    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    jump move_continue
     
 label move3:
-    $ moved = True
     $ show_player_at_pos(player, enemy, clearing, tile3)
-    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    jump move_continue
     
 label move4:
-    $ moved = True
     $ show_player_at_pos(player, enemy, clearing, tile4)
-    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    jump move_continue
 
 label move5:
-    $ moved = True
     $ show_player_at_pos(player, enemy, clearing, tile5)
-    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    jump move_continue
 
 label move6:
-    $ moved = True
     $ show_player_at_pos(player, enemy, clearing, tile6)
-    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    jump move_continue
     
 label move7:
-    $ moved = True
     $ show_player_at_pos(player, enemy, clearing, tile7)
-    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    jump move_continue
     
 label move8:
-    $ moved = True
     $ show_player_at_pos(player, enemy, clearing, tile8)
-    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    jump move_continue
     
 label move9:
-    $ moved = True
     $ show_player_at_pos(player, enemy, clearing, tile9)
-    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    jump move_continue
     
 label move10:
-    $ moved = True
     $ show_player_at_pos(player, enemy, clearing, tile10)
-    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    jump move_continue
     
 label move11:
-    $ moved = True
     $ show_player_at_pos(player, enemy, clearing, tile11)
-    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    jump move_continue
     
 label move12:
-    $ moved = True
     $ show_player_at_pos(player, enemy, clearing, tile12)
-    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    jump move_continue
     
 label trap1:
     $ set_trap_at_pos(player, enemy, clearing, tile1)

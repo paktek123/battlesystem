@@ -105,10 +105,7 @@ init -1 python:
         
     def hide_battle_screen(all=False):
         renpy.hide_screen("battlemenu")
-        renpy.hide_screen("taiactions")
-        renpy.hide_screen("ninactions")
-        renpy.hide_screen("defenceactions")
-        renpy.hide_screen("weaponselection")
+        renpy.hide_screen("skill_actions")
         renpy.hide_screen("player_stats")
         renpy.hide_screen("stats_screen")
         renpy.hide_screen("time_screen")
@@ -160,9 +157,9 @@ init -1 python:
                         'a': enemy.meleeskills + enemy.specialskills + enemy.rangedskills,
                         #'t': None, # need logic for trap here
                         #'c': None, # need logic for team combinations
-                        'tai': enemy.meleeskills,
-                        'nin': enemy.specialskills,
-                        'gen': enemy.rangedskills}
+                        'melee': enemy.meleeskills,
+                        'special': enemy.specialskills,
+                        'ranged': enemy.rangedskills}
         
         #renpy.say(enemy.character, "skill: {}".format(len(enemy.battle_ai)))
         try:
@@ -240,7 +237,7 @@ init -1 python:
                 enemy.apply_skill(current_skill)
                 Jump("fight")
             else:
-                current_skill = random.choice(enemy.taiskills)
+                current_skill = random.choice(enemy.meleeskills)
                 
         if current_skill.range >= abs(player.tile.position - enemy.tile.position):
             show_player_at_pos(enemy, player, None, enemy.tile)
@@ -390,16 +387,25 @@ init -1 python:
                            current_session.lose_label,
                            current_session.draw_label)
                 
-        if battle_turn == current_session.fight_limit:
+        if store.battle_turn == current_session.fight_limit:
             end_match_teardown(player, enemy, 'draw')
-            renpy.call(draw_label, current_session.main_player)
+            if 'generic' in draw_label:
+                renpy.call(draw_label, current_session.main_player)
+            else:
+                renpy.call(draw_label)
         
         if player.hp == 0:
             end_match_teardown(player, enemy, 'lose')
-            renpy.call(lose_label, current_session.main_player)
+            if 'generic' in lose_label:
+                renpy.call(lose_label, current_session.main_player)
+            else:
+                renpy.call(lose_label)
         elif enemy.hp == 0:
             end_match_teardown(player, enemy, 'win')
-            renpy.call(win_label, current_session.main_player)
+            if 'generic' in win_label:
+                renpy.call(win_label, current_session.main_player)
+            else:
+                renpy.call(win_label)
             
     def get_tag_info(player, tag_p):
         one_list = [player] + tag_p

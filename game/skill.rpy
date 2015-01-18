@@ -30,6 +30,16 @@ init -2 python:
             new_skill = self
             player.assign_skill(new_skill)
             
+        def unusable_reason(self, player, enemy):
+            if not self.is_chakra_requirement_met(player):
+                return 'Not enough CP.'
+                
+            if not self.is_within_range(player, enemy):
+                return "Out of range, must be within {}.".format(self.range)
+                
+            if not self.is_unlocked():
+                return "Skill is learnt but not cannot be used in combat, can be unlocked by training."
+            
         def is_usable(self, player, enemy):
             if self.is_chakra_requirement_met(player) and self.is_within_range(player, enemy) and self.is_unlocked():
                 return True
@@ -132,7 +142,7 @@ init -2 python:
                 target.yatamirror.used += 1
             else:
                 # only offensive skills
-                if self.skill_type in ('attack', 'tai', 'nin', 'gen', 'weapon'):
+                if self.skill_type in ('attack', 'melee', 'weapon'):
                     target.hp -= int(damage)
                     player.damage_dealt = int(damage)
             
@@ -157,7 +167,7 @@ init -2 python:
             
     class Weapon(Skill):
         def __init__(self, name, price, range, chakra_cost,  damage=0, stun=False, duration=None, element=None, tech=0, quantity=0):
-            super(self.__class__, self).__init__(name, 'weapon', name, range, tech, chakra_cost, damage, stun, duration)
+            super(self.__class__, self).__init__(name, 'weapon', name.lower(), range, tech, chakra_cost, damage, stun, duration)
             self.price = price
             self.element = element
             self.tech = tech

@@ -189,17 +189,20 @@ init python:
     
     ### SKILLS ###
     
-    # tai skills
-    onetwocombo = Skill('One Two Combo', 'tai', "onetwocombo", 3, 1, 3, 10)
-    lioncombo = Skill('Lion Combo', 'tai', "lioncombo", 3, 2, 5, 20, unlock_exp=300)
+    # melee skills
+    punching_flurry = Skill(name='Punching Flurry', skill_type='melee', label="punchingflurry", range=2, damage=20)
+    onetwocombo = Skill(name='One Two Combo', skill_type='melee', label="onetwocombo", range=3, damage=30)
     
-    # nin skills
-    rasengan = Skill('Rasengan', 'nin', "rasengan", 2, 1, 25, 30, unlock_exp=500)
-    chidori = Skill('Chidori', 'nin', "chidori", 2, 1, 25, 30, unlock_exp=1000)
-    raikiri = Skill('Raikiri', 'nin', "raikiri", 2, 1, 50, 50, unlock_exp=1500)
     
-    # gen skills # replace with something new
-    substitution = Skill('Substitution', 'gen', "substitution", 8, 20, 15, 0, stun=True)
+    lioncombo = Skill('Lion Combo', 'melee', "lioncombo", 3, 2, 5, 20, unlock_exp=300)
+    
+    # special skills
+    rasengan = Skill('Rasengan', 'special', "rasengan", 2, 1, 25, 30, unlock_exp=500)
+    chidori = Skill('Chidori', 'special', "chidori", 2, 1, 25, 30, unlock_exp=1000)
+    raikiri = Skill('Raikiri', 'special', "raikiri", 2, 1, 50, 50, unlock_exp=1500)
+    
+    # ranged skills # replace with something new
+    substitution = Skill('Substitution', 'ranged', "substitution", 8, 20, 15, 0, stun=True)
     
     # defensive skills
     damage_reduction = Skill('Focus', 'defence', 'damagereduction', 12, 1, 10, duration=2, unlock_exp=300)
@@ -210,6 +213,8 @@ init python:
     yata_mirror = Skill('Yata Mirror', 'defence', 'yatamirror', 12, 50, 50, duration=2, unlock_exp=2500)
     
     ### WEAPONS ###
+    w_knife = Weapon(name='Knife', price=30, range=3, chakra_cost=5, damage=25)
+    
     w_kunai = Weapon("Kunai", price=50, range=4, chakra_cost=4, damage=20)
     w_paper_bomb = Weapon("Paper Bomb", price=100, range=2, chakra_cost=5, damage=50)
     shiruken = Weapon('Shiruken', 'weapon', "shiruken", 12, 7, 1, 20)
@@ -223,16 +228,16 @@ init python:
     # a = attack (use any attack)
     # t = set trap
     # c = use team combo (formation attacks)
-    # tai = use taijutsu skills
-    # nin = use ninjustsu skills
-    # gen = use genjutsu skills
+    # melee = use taijutsu skills
+    # special = use ninjustsu skills
+    # ranged = use genjutsu skills
     # healing items and tagging will be in enemy_move itself
     defensive_enemy_pattern = 2*['d'] + 2*['f'] + 2*['a'] + 2*['t']
     attack_enemy_pattern = 3*['a'] + 2*['f']
     ranged_attack_pattern = 4*['f'] + 2*['d']
-    tai_enemy_pattern = 3*['tai'] + 2*['d']
-    nin_enemy_pattern = 3*['nin'] + ['d'] + ['a'] + ['f']
-    gen_enemy_pattern = 3*['gen'] + 2*['d'] + ['f']
+    melee_enemy_pattern = 3*['melee'] + 2*['d']
+    special_enemy_pattern = 3*['special'] + ['d'] + ['a'] + ['f']
+    ranged_enemy_pattern = 3*['ranged'] + 2*['d'] + ['f']
     
     hero_c = Character('NO NAME',color="#FFFF00")
     thug_c =  Character('Thug',color="#FFFFFF")
@@ -246,22 +251,22 @@ init python:
     
     hero = Player(name='NO NAME', picname="hero_tile_r", character=hero_c, tilepic="hero_tile_r", hudpic='hero_1_hud', 
                   hp=100, maxhp=100, chakra=80, maxchakra=80, 
-                  strength=1, speed=1, evasion=1, defence=1, stamina=1, base_hit_rate=80, 
+                  strength=5, speed=5, evasion=1, defence=1, stamina=1, base_hit_rate=80, 
                   tile=tile1, facing='right', 
-                  meleeskills=[onetwocombo], specialskills=[rasengan], rangedskills=[substitution], 
-                  items=[], defensiveskills=[damage_reduction, chakra_defence, reflect, dampen, yata_mirror], bloodlineskills=[], 
+                  meleeskills=[punching_flurry], specialskills=[], rangedskills=[], 
+                  items=[], defensiveskills=[], bloodlineskills=[], 
                   leader_pic="leader_pic", 
-                  weapons=[shiruken, kunai], 
+                  weapons=[], 
                   home_village=None)
     
     thug = Player(name='Thug', picname="thug_tile_r", character=thug_c, tilepic="thug_tile_r", hudpic='thug_1_hud', 
                   hp=100, maxhp=100, chakra=80, maxchakra=80, 
                   strength=5, speed=5, evasion=1, defence=1, stamina=1, base_hit_rate=80, 
                   tile=tile1, facing='left', 
-                  meleeskills=[onetwocombo], specialskills=[rasengan], rangedskills=[substitution], 
-                  items=[], defensiveskills=[damage_reduction, chakra_defence, reflect, dampen, yata_mirror], bloodlineskills=[], 
+                  meleeskills=[onetwocombo], specialskills=[], rangedskills=[], 
+                  items=[], defensiveskills=[], bloodlineskills=[], 
                   leader_pic="leader_pic", 
-                  weapons=[shiruken, kunai], 
+                  weapons=[w_knife], 
                   home_village=None)
     
     naruto = Player('Naruto', "playerpic_r", naruto_c, Image('player.png'), None, 100, 100, 80, 80, 10, 4, 3, 4, 5, 80, tile1, 'right', 
@@ -270,16 +275,16 @@ init python:
                     weapons=[shiruken, kunai], home_village=hidden_leaf)
     sasuke = Player('Sasuke', "enemypic_r", sasuke_c, Image('enemy.png'), None, 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
                     [onetwocombo, lioncombo], [chidori], [], [], [damage_reduction, chakra_defence], 
-                    battle_ai=nin_enemy_pattern, weapons=[shiruken, kunai], home_village=hidden_leaf, interaction={'frequency': (1,)})
+                    battle_ai=special_enemy_pattern, weapons=[shiruken, kunai], home_village=hidden_leaf, interaction={'frequency': (1,)})
     
     sakura = Player('Sakura', "sakurapic_r", sakura_c, Image('sakura.png'), None, 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
                     [onetwocombo, lioncombo], [chidori], [], [], [damage_reduction, chakra_defence], weapons=[shiruken, kunai], home_village=hidden_leaf)
     kakashi = Player('Kakashi', "kakashipic_r", kakashi_c, Image('kakashi.png'), None, 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
                     [onetwocombo, lioncombo], [raikiri], [], [], [damage_reduction, chakra_defence], level=32,
-                    battle_ai=nin_enemy_pattern, weapons=[shiruken, kunai], home_village=hidden_leaf)
+                    battle_ai=special_enemy_pattern, weapons=[shiruken, kunai], home_village=hidden_leaf)
     anko = Player('Anko', "kakashipic_r", kakashi_c, Image('kakashi.png'), None, 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
                     [onetwocombo, lioncombo], [raikiri], [], [], [damage_reduction, chakra_defence], level=32,
-                    battle_ai=nin_enemy_pattern, weapons=[shiruken, kunai], home_village=hidden_leaf)
+                    battle_ai=special_enemy_pattern, weapons=[shiruken, kunai], home_village=hidden_leaf)
     
     itachi = copy.deepcopy(sasuke)
     itachi.name, itachi.picname, itachi.character, itachi.level = "Itachi", "itachipic_r", itachi_c, 46
@@ -411,7 +416,7 @@ label character_creation:
     $ hero.name = player_name
     $ current_session.main_player = hero
     
-    jump prologue # remove the above
+    jump prologue1 # remove the above
     
     scene black
     $ player_name = renpy.input("Set player name: ")
@@ -433,13 +438,13 @@ label allocate_points:
     else:
         hide screen explanation
         "Stats have been set, game is starting now."
-        jump prologue
+        jump prologue1
     
-label prologue:
+label prologue1:
     #"THE STORY NOW CONTINUES"
     #hero_c "Hello my name is [current_session.main_player.name]."
     scene street_3 night with dissolve
-    $ renpy.call('fight', hero, thug, [], [], clearing)
+    $ renpy.call('fight', hero, thug, [], [], clearing, lose_label='prologue2', draw_label='prologue2', fight_limit=5)
     "The sunsets and I finally end my shift."
     "It is a little late, I usually leave before its dark."
     "...."
@@ -511,6 +516,10 @@ label prologue:
     hide thug_1 with dissolve
     
     # continue here
+    return
+    
+label prologue2:
+    hero_c "I WINNNNN!!!!!"
     return
     
             
@@ -1057,7 +1066,7 @@ label enemymove:
                 enemy_move(player, enemy, clearing, tag_p, tag_e)
 
     $ battle_turn += 1
-    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
+    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label, fight_limit)
     
 label showtiles:
     show tile1im at tile1pos
