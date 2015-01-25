@@ -1,0 +1,313 @@
+PLAN
+
+1st iteration (get functionality working)
+
+1. Character creation screen (the story doesn't matter here since you don't have a choice on which party to join) (DONE)
+2. protagonist doing his job , finishes the day a little late, its dark (DONE)
+3. gets attacked by 'thugs', combat tutorial, etc (DONE)
+4. other members of the 'rebel' group save the hero (DONE)
+5. the rebel group explain the situation, introduce team mates, teacher (DONE)
+7. introductory mission
+6. tutorial on the 'open world' aspect (hospital, missions, home, weapons etc)
+8. Group 1 missions appear
+9. Lets decide when we get here...
+
+2nd iteration (make menus look good, art etc)
+
+3rd iteration (DRY code, cleanup)
+
+4th Testing, fixes
+
+5th Release
+
+6th Android build
+
+
+
+
+TO DO LIST BATTLE SYSTEM
+- different types of damage (DROPPED)
+  - piercing (DROPPED)
+  - affliction (DROPPED)
+  - normal (DROPPED)
+
+- skill range (DONE)
+
+- defence (DONE)
+  - reduce damage (50%, etc) (DONE)
+  - dodging (DONE)
+
+- items (DONE)
+  - stun (DONE)
+
+- enemy movements (DONE)
+  - need to be more varied and complex (DONE)
+  - defence mode (DONE)
+  - attack mode (DONE)
+  - netural mode (DONE)
+
+- setting traps (DONE)
+- substitution skill (counter)
+
+WORLD
+
+Time based (DONE)
+- calendar will start on 1 April 1354 (DONE)
+- can do 1-4 things everyday (morning, afternoon, evening, night) (DONE)
+- each event will have a weighting from 1 to 4 (DONE)
+- some missions or events may take several days to months (DONE)
+
+Injuries (DONE)
+- injuries take time to heal, weeks maybe months (DONE)
+- will show limb diagram with each damaged limb after a fight (DONE)
+- injured limbs can fight but cannot perform certian attacks (DONE)
+
+Power Balance between villages
+- each sector on the map will have 3 bars (DONE) 
+- green for control, more green more stable (DONE)
+- yellow - influence, more influence can have affect on other countries around (DONE)
+- red for uprising - if it gets above 25% riots happen, if above 50% leadership changes (DONE)
+- these will change every game week (DONE)
+- picture of leader shown and special events (rance or Daiteikoku like) (DONE)
+- nations take over other ones, new ones emerge
+
+RANK - S, A, B, C, D
+- New skill unlockable in each rank
+- D - Level 1 - 10 
+- C - Level 11 - 20
+- B - Level 21 - 30
+- A - Level 31 - 40
+- S - Level 41 +
+
+Titles
+- Academy student - in academy
+- Genin - graduate from academy
+- Chunin - Pass chunin exam
+- Anbu - Join Anbu corps Hokage
+- Root - Join Anbu corps root
+- missing nin - leave the village
+- Tokubetsu Jonin - perform 3 B rank, 4 A rank 
+- Jonin - perform 10 B rank, 8 A rank and 1 S rank mission
+- Akatsuki - join ataksuki
+- Kage - 10 S rank
+
+Genin
+- Can do missions, train, interact
+- can only use the given squad
+- level D missions
+
+Chunin exams
+- happen every 6 months
+- can choose own squads
+- level D, C missions unlocked
+
+Anbu
+- special secret missions
+- assination missions
+- harder missions
+
+Root
+- defy rank
+- special secret missions
+- can turn into spy and leave the village
+
+Missing Nin
+- travel to other villages
+- high chance of death or joining other organisations
+
+Tokubetsu Jonin
+- rank B machines unlocked
+
+Jonin
+- Rank A and S unlocked
+- Can manage own ninja teams, train them
+
+Akatsuki
+- do what akatsuki does
+
+Kage
+- make political decisions
+- influence other nations
+- invade other nations
+- more of a management role
+- can choose to end game
+
+Village Locations
+
+Travel (ALL villages) (DONE)
+- travel to different villages (DONE)
+- purpose: leisure, spy (lie), mission
+
+Increasing stats (Hokage Residence) (1) (ALL) (DONE)
+- going to next level unlocks points to increase stats (DONE)
+- go here to distribute points and use EXP (DONE)
+- interact with chars
+
+Training (3rd Training Ground) (1 - 4) (ALL) (DONE)
+- develop new skills (skills exp, if skill exp hits limit it is unlocked) (DONE)
+- train with team mate (+ team chemistry) (team mates cover you, unlock team moves, reduce damage taken, enhances skills)
+- interact with chars (learn new skills from sensei, team mate events) (DONE)
+- train by yourself (increases exp) (DONE)
+
+Arena (1- 3) (ALL) (DONE)
+- after each rank, 3 new battles are unlocked
+- players can fight them in 1, 2 or 3 teams
+
+Konoha Hospital (1 week to 2 months) (ALL)
+- heal injuries, spend time here (costs money) (DONE)
+- buy mediciene (DONE)
+- interact with chars
+
+Home/Hotel (ALL)
+- rest to heal injuries / skip time (DONE)
+- player will be hampered if they train (DONE) / battle when injured (DONE)
+
+Konoha Hot springs (1) (Not ALL)
+- restored some health and full chakra
+- interacts with chars
+
+Jonin Standby Station (1 - 3) (ALL)
+- interact with other chars
+
+kikyo castle (konoha)
+- special event
+
+Intelligence division (ALL)
+- special event during missions
+
+Konoha Library (1) (Not all)
+- interact with chars
+- increase stats
+
+Konoha Orphanage (not all)
+- special event maybe at the start
+
+Ramen Ichiraku (1) (not all)
+- interact with chars
+
+Yamanaka Flowers (1) (not all)
+- interact with ino and sakura
+
+Forest of death (not all)
+- chuunin exams location
+
+Zeroth Training Ground (not all)
+- special event
+
+Konoha Ninja Tool Research Facility (2) (ALL)
+- weapons for buying (DONE)
+- buy kunai, shiruken, paper bombs etc (DONE)
+
+Missions (Mission Assignment Desk) (1 to 3 months) (ALL)
+- 5 ranks depending on rank
+- can be sent to these lands
+- Lands 9, villages 20
+- Land of Earth, Land of Fire, Land of Iron, Land of Lighting, Land of Snow, Land of Sound, Land of Water, Wind, Sky, 
+- Villages: Amegakure (Rain), Getsugakure (Moon), Hacho Village, Hoshigakure (Stars), Ishigakure (Stones), Jomae Village (lock), Kirigakure (Mist), Konoha (Leaf), Kumogakure (Clouds), Kusagakure (Grass), Nadeshiko Village, Otogakure (sound), Shimogakure (Frost), Sunagakure (Sand), Takigakure (waterfall), Takumi Village (weapons), Tanigakure (valleys), Uzushiogakure (whirling tides), Yugakure (hot water), Yumegakure (dreams)
+- Rank D missions - local missions inside village or surrounding towns, 6 generic missions that take 3/4 of day, 4 deadly ones that require fighting (DONE)
+  - generic - farming, retrieve cat, organise festival, help build bulding, stamp kages paper work, clean academy (small chance of injury)
+  - deadly - go to hacho village and deliver letter, guard shop from thugs, fight killer pet, transport patients (DONE)
+- Rank C missions - 6 generic missions, 6 deadly (DONE)
+  - generic - guard shop thugs, stronger killer pet, investigate area, escort npc to surrounding village,  retrieve item, defend gates, 
+  - deadly - zabuza arc, find genmai, retrieve golden statue, defeat tyrant, tonkia village, backup team mates,  
+- Rank B - 6 generic missions, 6 deadly (DONE)
+  - generic - spy on village, bring information hidden away, kill missing nin (chuunin), guard feudal lord, root investigation
+  - deadly - protect the runner, Tsuchigumo Kinjutsu arc, fire temple missions, backup team 10 (akatsuki encounter), kill missing nin (jonin), spy on hidden rain
+- Rank - A - 6 generic, 6 deadly (DONE)
+  - generic - kill missing nin (high jonin), retrieve team mate, poison village water, kill ronins, stop jinchurri rampage, kill akatsuki member, 
+  - deadly - retrieve sasuke, retrieve itachi, meet sasori spy, rescue kazekage (other kage), backup a team, destroy headquarters
+- Rank- S - 6 deadly
+  - kill missing nin (kage level), find jinchuuri, destroy fort, assasinate kage, slaughter clan, naruto movie missions
+
+Mission Layout
+-----------------
+- Simple mission - go to a place, fight, finish mission (DONE)
+- Follow mission - investigate mission, visit a place, go to places to find clues, final fight (DONE)
+- Multi-part mission - Simple + Follow missions but same enemy (DONE)
+- Special mission - jumps to label (DONE)
+- Missions need overhall, need to be more interesting, like deitokokou?
+
+Planned Time events
+--------------
+- Time follows solar calender (DONE)
+- Every year chuunin exams - 15 May XXXX (special event) (DONE)
+- Jinchuuri attack (random junchuuri) - 5% chance every month (special event) (DONE)
+- ninja war may take place - 1% chance every month
+- jounin training session  - 1st of every month  (DONE)
+- team training session - 7th of every month
+- kage summit - every 3 months - change in money, influence etc - 10th
+- weapon sale - every 2 weeks  (DONE)
+- medicene sale - every 2 weeks (DONE)
+- cheaper hot spring - every weekend
+
+Types of events (DONE)
+-----------------
+- events that last a certain duration - missions, have a start date and end date, entry or something (DONE)
+- event for the day (DONE)
+
+unPlanned Time events
+-------------
+- If home village influence below 50% - spy 50% chance entering village every month
+- If below 30% - 20% invasion chance
+- If stable below 50% - 20% riots every month
+- If stable below 30% - 20% invasion chance
+
+Team
+------
+- formations - these are sequential attacks in a row
+- snap team mate out of genjutsu
+- spar with team mates (+chemistry +exp) (DONE)
+  - 1 on 1 (choose team mate) (DONE)
+  - 2 on 1 (vice versa) (DONE)
+  - 3 vs sensei (DROPPPED)
+  - 1 vs sensei (DONE)
+- 
+
+Gameplay
+-----------
+- Devil trigger ??
+- limited movement defined by speed stat (highlight position function) (DONE)
+- only 1 move per turn (changeble stat) (DONE)
+- click for critical attacks
+- npc interactions (DONE)
+- difference between tai and nin attacks?
+
+
+Story
+------
+Modern Mystery?
+- some sort of invasion happens? A little like Attack on titan or Sidinioa no Kishi (survival)
+- human being with super powers
+- the hero joins a certain organisation to fight the threat
+
+Backgrounds
+http://lemmasoft.renai.us/forums/viewtopic.php?p=226871#p226871
+http://wbd.deviantart.com/gallery/146552/Backgrounds
+
+Sprites from here
+http://lemmasoft.renai.us/forums/viewtopic.php?f=52&t=24893&hilit=+free+sprite
+http://lemmasoft.renai.us/forums/viewtopic.php?f=52&t=13775
+http://lemmasoft.renai.us/forums/viewtopic.php?f=52&t=23363
+http://lemmasoft.renai.us/forums/viewtopic.php?f=52&t=23158
+http://lemmasoft.renai.us/forums/viewtopic.php?f=4&t=7522
+http://lemmasoft.renai.us/forums/viewtopic.php?f=52&t=889
+http://wiki.renai.us/wiki/Pre-Made_Sprites
+
+Historical Traditional
+- hero is a samurai and gets involved in a war. 
+- Wants to collect his masters sword but largest nations ruler has it
+- maybe a twist somewhere?
+
+backgrounds
+http://winddorf.oops.jp/4framepage.htm (last option)
+http://winddorf.oops.jp/4framepage.htm (4rd option from left nav)
+http://lemmasoft.renai.us/forums/viewtopic.php?f=4&t=3749 (forest backgrounds)
+http://wbd.deviantart.com/gallery/146552/Backgrounds
+I can rip some backgrounds from gintama and naruto anime, have plently for that era
+
+Sprites
+http://lemmasoft.renai.us/forums/viewtopic.php?f=52&t=11204 - ninjaesque
+http://chocobikies.deviantart.com/art/character-sets-Azura-and-Lee-224922844 (can be used for both modern or traditional)
+http://tmblr.co/ZxGL2r1S38NUV
+http://wiki.renai.us/wiki/Pre-Made_Sprites
+

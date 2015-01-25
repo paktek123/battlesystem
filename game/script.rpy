@@ -50,9 +50,18 @@ init -1:
     
     ### SPRITES ###
     image thug_1 = im.Scale("thug_1.png", 270, 500)
+    image adam_1 = im.Scale("adam_1.png", 270, 500)
+    image adam_2 = im.Scale("adam_2.png", 270, 500)
+    image adam_3 = im.Scale("adam_3.png", 270, 500)
+    image amy_1 = im.Scale("amy_1.png", 270, 400)
+    image amy_2 = im.Scale("amy_2.png", 270, 400)
+    image amy_3 = im.Scale("amy_3.png", 270, 400)
+    image greyson_1 = im.Scale("greyson_1.png", 270, 500)
     
     ### SPECIAL EFFECTS ###
     $ sshake = Shake((0, 0, 0, 0), 1.0, dist=15)
+    $ red_flash = Fade(.25, 0, .75, color="#ff0")
+    $ black_flash = Fade(.5, 0, .5, color="#000")
 
     
     $ player1currentpos = 1
@@ -239,8 +248,14 @@ init python:
     special_enemy_pattern = 3*['special'] + ['d'] + ['a'] + ['f']
     ranged_enemy_pattern = 3*['ranged'] + 2*['d'] + ['f']
     
+    ### CHARACTERS ###
     hero_c = Character('NO NAME',color="#FFFF00")
-    thug_c =  Character('Thug',color="#FFFFFF")
+    thug_c = Character('Thug',color="#FFFFFF")
+    adam_c = Character('Adam',color="#FFFF00")
+    amy_c = Character('Amy',color="#FFFF00")
+    greyson_c = Character('Greyson',color="#FFFF00")
+    will_c = Character('Will',color="#FFFF00")
+    
     
     naruto_c = Character('Naruto',color="#FFFF00") 
     sasuke_c = Character('Sasuke', color="#3399FF")
@@ -444,7 +459,7 @@ label prologue1:
     #"THE STORY NOW CONTINUES"
     #hero_c "Hello my name is [current_session.main_player.name]."
     scene street_3 night with dissolve
-    $ renpy.call('fight', hero, thug, [], [], clearing, lose_label='prologue2', draw_label='prologue2', fight_limit=5)
+    
     "The sunsets and I finally end my shift."
     "It is a little late, I usually leave before its dark."
     "...."
@@ -514,12 +529,163 @@ label prologue1:
     "Thug" "Heh.... I'll pound you to death!"
     "I know I can't go back now but maybe that is what I want."
     hide thug_1 with dissolve
-    
-    # continue here
+    $ renpy.call('fight', hero, thug, [], [], clearing, lose_label='prologue2', draw_label='prologue2', fight_limit=5)
+    # fight redirects to prologue2 label
     return
     
 label prologue2:
-    hero_c "I WINNNNN!!!!!"
+    scene street_2 night with dissolve
+    hero_c "...." with sshake
+    hero_c "Huff...."
+    hero_c "Ughhh...." with red_flash
+    "Blood splatters everywhere."
+    "My body is covered in bruises and cuts from his knife."
+    show thug_1 with dissolve
+    "He is also in a similar condition, I am surprised he is standing."
+    "Thug" "Hehh.... hehhh.... "
+    "He gives off a strange laugh."
+    "Thug" "You haven't seen anything yet!"
+    "He tries to attack me..."
+    "Thug" "Gahhh... cough..." with red_flash
+    "He coughs blood, the damage must have gotten to him."
+    ".... there is a sudden pause, both of us know if we continue this won't end well for us."
+    "Thug" "You are lucky this time, I will find you and finish you off."
+    hero_c "Just try it."
+    "My whole body is in pain, his reply helps me to relax."
+    "Thug" "Let me leave you with a present... heh..." with red_flash
+    "He slashes my body with his knife and throws me to the ground." with sshake
+    hero_c "Gahhh..."
+    "Thug" "Next time I will kill you."
+    hide thug_1 with dissolve
+    "He runs away limping."
+    "...."
+    "My shirt has become red with my blood."
+    "I don't have the strength to get up... as I lay on the ground."
+    "My eyes are closing by themselves."
+    "..."
+    "......"
+    scene black_fade with black_flash
+    "Voice" "Hey! Hey! Stay with me here!"
+    "Voice" "Don't die please!"
+    "...."
+    "........."
+    "..............."
+    scene apartment_1 afternoon with dissolve
+    "......"
+    "The sun shines onto my eyes."
+    "I can hear birds chirping in the background."
+    "I lay on the ground... my body has been bandaged up."
+    "...."
+    "I hear a voice from my right."
+    show amy_2 with dissolve
+    "???" "Adam, he is awake!"
+    "...."
+    "The girl runs away."
+    hide amy_2 with dissolve
+    "......"
+    show adam_1 with dissolve
+    adam_c "Morning, how are you doing?"
+    hero_c "..."
+    adam_c "Sorry... I haven't introduced myself."
+    adam_c "I am Adam and I carried you here after I found you on the street."
+    hero_c "I am [hero_c.name], thanks for helping me out there."
+    adam_c "No problem...."
+    "???" "This one is awake too, Adam!"
+    adam_c "Sorry I have to tend to other people, please try to rest up."
+    hide adam_1 with dissolve
+    "He heads inside the house."
+    "I notice my surroundings..."
+    "There is blood on the ground near me... bandages and surgical tools lying around everywhere."
+    "The whole place is filled with many other people covered in bandages."
+    "It looks like a war zone."
+    "What the heck happened last night!?"
+    "......"
+    "I lay on my bed... hopefully this is a bad dream...."
+    "...."
+    scene black_fade with dissolve
+    "......."
+    "....."
+    "..."
+    scene apartment_1 evening with dissolve
+    "..."
+    "I open my eyes and sit up."
+    "I feel no pain from my wounds."
+    "....."
+    "In the distance I see a gathering of the wounded."
+    "I force myself up and head towards the gathering."
+    show adam_1 with dissolve
+    adam_c "We don't know the situation as of now."
+    adam_c "Hey, please join us."
+    "I take a seat, many others are wrapped up in bandages like me."
+    ### TODO: more descriptions of the wounded and confusion, people speaking
+    adam_c "I found all of you last night either wounded or near death."
+    adam_c "I know that many of you have many questions, I will try my best to explain what happened."
+    "....."
+    "The crowd listens carefully, they are as confused as I am."
+    adam_c "Last night there were many attacks carried out by various gangs... another words..."
+    adam_c "There was a gang war in this town where four or five gangs all decided to go at each other at once."
+    "Person 1" "Are you telling me that some stupid kids just went crazy!?"
+    "The whole crowd starts to talk."
+    "Person 2" "Where is the police!?"
+    adam_c "Everyone please listen."
+    "Everybody lowers their voices."
+    adam_c "I do not know where the police is, I have called them many times but no one picks up the phone!"
+    "Person 1" "What is that is crazy! Does anyone have a phone here, let me try!"
+    "....."
+    "Person 2" "Here, my phone still has some battery."
+    "Person 1" "Give me please."
+    "He dials the three digit number."
+    "...."
+    "Person 1" "He is right... no one is picking up!"
+    "Person 1" "This is crazy, there won't be any law or order."
+    adam_c "Please stay calm."
+    adam_c "We can assume that the gangs have possibly taken over the local police station, preventing the staff from picking up."
+    adam_c "I have fixed many of you up with little medical training I recieved from my time in military service but I have no more supplies."
+    adam_c "We still have many more people that need medical assistance, the lot of you should consider yourself lucky."
+    "Person 1" "We should take them to the hospital."
+    adam_c "There are gang members walking around or riding around on bikes."
+    adam_c "If they spot us they will discover us and the worst can happen."
+    "Person 2" "But why are these people killing other people, have these teenagers gone insane!?"
+    adam_c "I don't know why such violence has taken place, all I know is that many people are injured and we are taking refuge here."
+    adam_c "We need to somehow escape this place, there are limited food supplies here and we cannot stay here forever."
+    "There injured discuss between themselves."
+    # TODO: panic?
+    hero_c "What are our options?"
+    adam_c "We need to organise a party amongst us to venture outside and find out more information."
+    adam_c "We need to move when it is dark to avoid detection."
+    adam_c "Which one of you want to volunteer?"
+    "We cannot stay like this, there are roughly 5 of us here and some wounded inside."
+    hide adam_1 with dissolve
+    show greyson_1 with dissolve
+    "???" "I will go."
+    "???" "My name is Greyson."
+    greyson_c "I do not want to stay here like this."
+    greyson_c "I am worried about my Mom and Sister, who knows what these gangbangers have done to them?"
+    hide greyson_1 with dissolve
+    "???" "I will go too."
+    show will_1 with dissolve
+    will_c "I want to help out too."
+    "That guy looks familiar, like I have seen him before..."
+    "He has a resemblence to that thug I fought last night."
+    "I need to help out too."
+    hero_c "I will help too."
+    hide will_1 with dissolve
+    show adam_1 with dissolve
+    adam_c "I will go too."
+    will_c "No you can't you must stay here and help the wounded."
+    greyson_c "Yes we will go."
+    adam_c "How do you expect to survive out there!?"
+    will_c "We will."
+    hide adam_1 with dissolve
+    "..........."
+    "........"
+    scene apartment_1 night with squares
+    "We finally decide that only 3 of us will go without Adam."
+    "......"
+    show will_1 with dissolve 
+    will_c "Lets move."
+    greyson_c "Yes."
+    
     return
     
             
