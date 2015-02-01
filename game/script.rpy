@@ -201,11 +201,14 @@ init python:
     # melee skills
     punching_flurry = Skill(name='Punching Flurry', skill_type='melee', label="punchingflurry", range=2, damage=20)
     onetwocombo = Skill(name='One Two Combo', skill_type='melee', label="onetwocombo", range=3, damage=30)
+    jaw_breaker = Skill(name="Jaw Breaker", skill_type='melee', label='jaw_breaker', range=2, damage=40)
     
     
     lioncombo = Skill('Lion Combo', 'melee', "lioncombo", 3, 2, 5, 20, unlock_exp=300)
     
     # special skills
+    blasting_kick = Skill(name="Blast Kick", skill_type="special", "blast_kick", range=3, chakra_cost=30, damage=60)
+    
     rasengan = Skill('Rasengan', 'special', "rasengan", 2, 1, 25, 30, unlock_exp=500)
     chidori = Skill('Chidori', 'special', "chidori", 2, 1, 25, 30, unlock_exp=1000)
     raikiri = Skill('Raikiri', 'special', "raikiri", 2, 1, 50, 50, unlock_exp=1500)
@@ -222,7 +225,9 @@ init python:
     yata_mirror = Skill('Yata Mirror', 'defence', 'yatamirror', 12, 50, 50, duration=2, unlock_exp=2500)
     
     ### WEAPONS ###
-    w_knife = Weapon(name='Knife', price=30, range=3, chakra_cost=5, damage=25)
+    w_knife = Weapon(name='Knife', price=30, range=2, chakra_cost=5, damage=25)
+    w_bat = Weapon(name='Bat', price=50, range=3, chakra_cost=10, damage=30)
+    w_brass_knuckles = Weapon(name='Brass Knuckles', price=100, range=1, chakra_cost=5, damage=50)
     
     w_kunai = Weapon("Kunai", price=50, range=4, chakra_cost=4, damage=20)
     w_paper_bomb = Weapon("Paper Bomb", price=100, range=2, chakra_cost=5, damage=50)
@@ -282,6 +287,16 @@ init python:
                   items=[], defensiveskills=[], bloodlineskills=[], 
                   leader_pic="leader_pic", 
                   weapons=[w_knife], 
+                  home_village=None)
+    
+    will = Player(name='Will', picname="will_tile_r", character=thug_c, tilepic="will_tile_r", hudpic='will_1_hud', 
+                  hp=200, maxhp=200, chakra=150, maxchakra=150, 
+                  strength=10, speed=6, evasion=6, defence=10, stamina=10, base_hit_rate=90, 
+                  tile=tile1, facing='left', 
+                  meleeskills=[onetwocombo, jaw_breaker], specialskills=[blast_kick], rangedskills=[], 
+                  items=[], defensiveskills=[], bloodlineskills=[], 
+                  leader_pic="leader_pic", 
+                  weapons=[w_brass_knuckles], 
                   home_village=None)
     
     naruto = Player('Naruto', "playerpic_r", naruto_c, Image('player.png'), None, 100, 100, 80, 80, 10, 4, 3, 4, 5, 80, tile1, 'right', 
@@ -685,8 +700,75 @@ label prologue2:
     show will_1 with dissolve 
     will_c "Lets move."
     greyson_c "Yes."
+    scene street_1 night with squares
+    "We climb over the walls and the streets seem to be clear."
+    show will_1 at left with dissolve
+    show greyson_1 at right with dissolve
+    will_c "We have 3 locations we can possibly take and secure."
+    will_c "There is a hospital to the East of here, a Police Station to the North and a School to the West."
+    greyson_c "The Police station is where we should head first right!?"
+    will_c ".... I would rather try the hospital first, we need to get medical supplies..."
+    greyson_c "What do you think [hero_c.name]?"
+    will_c "Where do you think we should go?"
+    menu:
+        "Hospital":
+            jump prologue_hospital
+        "Police Station":
+            jump prologue_police_station
+        "School":
+            jump prologue_school
     
     return
+    
+label prologue_hospital:
+    hero_c "We should go to the hospital to retrieve medical supplies and heal the wounded."
+    hero_c "Someone there must also know what is going on here."
+    greyson_c "But my family... I want make sure they are safe..."
+    will_c "I think [hero_c.name] is right here, we can split up."
+    # TODO: Some friction between team mates
+    greyson_c "I am going to go to the Police Station myself, I don't care care!"
+    hide greyson_1 with dissolve
+    "We are powerless to stop him as he heads North towards the police station."
+    show will_1 with dissolve
+    will_c "Leave him, we must get medical supplies."
+    "I reluctantly decide to move on."
+    "If we quickly confirm the Hospital is safe we can come to help Greyson."
+    "...."
+    "..."
+    scene street_4 night with squares
+    "There are a few gang members driving around but we manage to avoid most of them."
+    "Survellence is certainly low near the hospital."
+    "....."
+    "We see the hospital nearby, its lights are on."
+    "Looks like it is under lockdown by the gang members."
+    "We hear some voices near the entrance."
+    "Doctor" "Stop this at once!"
+    "Thug" "Shut it Doc, your staying here for now."
+    "He punches the Doctor, which causes him to fall down."
+    "Doctor" "Arghhh...."
+    "....."
+    "A nurse comes out and helps the Doctor up to his feet."
+    "She takes him inside."
+    "Thug" "Hehh... stupid..."
+    "...."
+    show will_1 with dissolve
+    will_c "Looks like they are just guarding the entrance, we should be able to get inside."
+    hero_c "You mean we take out that thug?"
+    "...."
+    "Two other thugs walk out with baseball bats."
+    "We are tucked away behind a wall so they cannot see us."
+    hero_c "These guys are very close, we will have to take them head on."
+    will_c "Heh... we think a like..."
+    "Will rolls up his sleeve and walks out unarmed."
+    hide will_1 with dissolve
+    hero_c "Hey... I didn't mean you walk out like that!?"
+    "I follow him."
+    "Thugs" "Hey! You come here."
+    "The mob rushes at us.... we have no choice but to fight..."
+    # create a weaker thug, a thug generator depending on level
+    $ renpy.call('fight', hero, thug, [will], [copy.deepcopy(thug)], clearing, lose_label='prologue2', draw_label='prologue2', fight_limit=5)
+    
+    
     
             
 ##############################################################################
