@@ -113,6 +113,7 @@ init -6 python:
             self.map_pic_hover = map_pic_hover
             self.npc = npc
             self.visits = visits
+            self.unlocked = False
             
         def interact(self, player, village):
             renpy.call(self.label, player, village)

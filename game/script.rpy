@@ -202,21 +202,30 @@ init python:
     punching_flurry = Skill(name='Punching Flurry', skill_type='melee', label="punchingflurry", range=2, damage=20)
     onetwocombo = Skill(name='One Two Combo', skill_type='melee', label="onetwocombo", range=3, damage=30)
     jaw_breaker = Skill(name="Jaw Breaker", skill_type='melee', label='jaw_breaker', range=2, damage=40)
+    thug_smash = Skill(name='Thug Smash', skill_type='melee', label="thug_smash", range=2, damage=25)
     
     
     lioncombo = Skill('Lion Combo', 'melee', "lioncombo", 3, 2, 5, 20, unlock_exp=300)
     
     # special skills
-    blasting_kick = Skill(name="Blast Kick", skill_type="special", "blast_kick", range=3, chakra_cost=30, damage=60)
+    blasting_kick = Skill(name="Blast Kick", skill_type="special", label="blast_kick", range=3, chakra_cost=30, damage=60)
+    rise_punch = Skill(name="Rise Punch", skill_type="special", label="rise_punch", range=2, chakra_cost=40, damage=35)
     
     rasengan = Skill('Rasengan', 'special', "rasengan", 2, 1, 25, 30, unlock_exp=500)
     chidori = Skill('Chidori', 'special', "chidori", 2, 1, 25, 30, unlock_exp=1000)
     raikiri = Skill('Raikiri', 'special', "raikiri", 2, 1, 50, 50, unlock_exp=1500)
     
-    # ranged skills # replace with something new
+    # ranged skills
+    rock_throw = Skill(name="Rock Throw", skill_type="ranged", label="rock_throw", range=7, chakra_cost=10, damage=15)
+    distance_hit = Skill(name="Distance Hit", skill_type="ranged", label="distance_hit", range=8, chakra_cost=20, damage=20)
+    
     substitution = Skill('Substitution', 'ranged', "substitution", 8, 20, 15, 0, stun=True)
     
     # defensive skills
+    metal_jacket = Skill(name='Metal Jacket', skill_type='defence', label='metal_jacket', range=12, duration=3)
+    intimidate = Skill(name='Intimidate', skill_type='defence', label='intimidate', range=6, duration=3)
+    
+    
     damage_reduction = Skill('Focus', 'defence', 'damagereduction', 12, 1, 10, duration=2, unlock_exp=300)
     chakra_defence = Skill('Chakra Defence', 'defence', 'chakradefence', 12, 2, 15, duration=3, unlock_exp=500)
     substitution = Skill('Substitution', 'counter', "substitution", 8, 20, 15, 0, stun=True)
@@ -228,12 +237,16 @@ init python:
     w_knife = Weapon(name='Knife', price=30, range=2, chakra_cost=5, damage=25)
     w_bat = Weapon(name='Bat', price=50, range=3, chakra_cost=10, damage=30)
     w_brass_knuckles = Weapon(name='Brass Knuckles', price=100, range=1, chakra_cost=5, damage=50)
+    w_bbgun = Weapon(name='BB Gun', price=400, range=10, chakra_cost=0, damage=40)
     
     w_kunai = Weapon("Kunai", price=50, range=4, chakra_cost=4, damage=20)
     w_paper_bomb = Weapon("Paper Bomb", price=100, range=2, chakra_cost=5, damage=50)
     shiruken = Weapon('Shiruken', 'weapon', "shiruken", 12, 7, 1, 20)
     kunai = Weapon('Kunai', 'weapon', "kunai", 12, 4, 1, 20)
     trap = Weapon('Trap', 'weapon', "trap", 3, 1, 2, 30)
+    
+    THUG_MELEE_SKILL_SET = [onetwocombo, jaw_breaker, thug_smash, metal_jacket, intimidate, w_knife, w_bat]
+    THUG_RANGED_SKILL_SET = [rock_throw, distance_hit, metal_jacket, w_bbgun]
     
     ### PLAYERS AND TEAMS ###
     
@@ -268,6 +281,9 @@ init python:
     kakashi_c = Character('Kakashi', color="#3399FF")
     itachi_c = Character('Itachi', color="#FFFFFF")
     ori_c = Character('Orichimaru', color="#FF0000")
+    
+    lvl_1_thug_melee = LevelledEnemy(lvl=1, skill_pool=THUG_MELEE_SKILL_SET)
+    lvl_1_thug_ranged = LevelledEnemy(lvl=1, skill_pool=THUG_RANGED_SKILL_SET)
     
     hero = Player(name='NO NAME', picname="hero_tile_r", character=hero_c, tilepic="hero_tile_r", hudpic='hero_1_hud', 
                   hp=100, maxhp=100, chakra=80, maxchakra=80, 
@@ -765,9 +781,77 @@ label prologue_hospital:
     "I follow him."
     "Thugs" "Hey! You come here."
     "The mob rushes at us.... we have no choice but to fight..."
-    # create a weaker thug, a thug generator depending on level
-    $ renpy.call('fight', hero, thug, [will], [copy.deepcopy(thug)], clearing, lose_label='prologue2', draw_label='prologue2', fight_limit=5)
+    $ renpy.call('fight', hero, copy.deepcopy(lvl_1_thug_melee), [will], [copy.deepcopy(lvl_1_thug_ranged)], clearing, win_label='prologue_hospital2', lose_label='prologue_hospital2', draw_label='prologue_hospital2', fight_limit=15)
     
+label prologue_hospital2:
+    # hero gains experience or level up then hospital is conquered
+    $ hide_battle_screen(all=True)
+    $ battle_turn = 0
+    $ exp = renpy.random.randint(100,200) + 200
+    $ hero.gain_exp(exp)
+    hero_c "I gain [exp] exp."
+    "The battle ends..."
+    "Will completely dominates the fight, his fighting style is very similar..."
+    scene street_4 night with dissolve
+    show will_1 with dissolve
+    "Will holds the thug by his collar."
+    will_c "Who sent you here!?"
+    thug_c "It.. it was... Sam..."
+    "....."
+    "The thug faints."
+    hero_c "Who is Sam?"
+    will_c "I knew it, just had to be him."
+    hero_c "You know him?"
+    "Doctor" "Are you two okay!?"
+    "The Doctor interrupts us."
+    hero_c "Yes we are fine, are there anymore inside?"
+    "Doctor" "No it was just the ones here."
+    "Doctor" "They locked us inside since yesterday, we couldn't escape."
+    "Doctor" "We tried to call the police but no one answered."
+    "Doctor" "Just what is going on in this town?"
+    hero_c "We are heading towards the police station now."
+    "Doctor" "Let me patch you guys up before you go."
+    "He notices the cuts and bruises we got in the fight."
+    will_c "Thanks, Doc."
+    $ l_hospital.unlocked = True
+    "{color=#00ff00}Hospital Secured! New location unlocked!{color}" 
+    "..........."
+    "I have minor injuries I decided to leave early."
+    hero_c "I'll go on ahead, make sure to catch up."
+    will_c "On my way."
+    scene street_1 night with squares
+    "As soon as I am patched up, I head straight for the police station."
+    "...."
+    "I hope Greyson is doing okay but I can't help but worry."
+    jump prologue_school # go to school instead
+    
+label prologue_police_station:
+    hero_c "Lets go to the police station, we need to make sure we have some enforcement otherwise we can't survive."
+    greyson_c "I knew I could count on you."
+    greyson_c "Lets go!"
+    will_c "I'll head to the hospital by myself then."
+    hide will_1 with dissolve
+    "Will walks away."
+    greyson_c "Please stick with me, we have to secure the station."
+    hero_c "Lets go."
+    scene building_1 night with squares
+    ".........."
+    "........"
+    "....."
+    "We arrive at the Police station."
+    "The whole area is trashed with windows smashed and junk everywhere."
+    "We hide behind the corner."
+    "The place looks deserted, this place is usually very busy with all the shopping centres."
+    show greyson_1 with dissolve
+    greyson_c "The police station is intact, maybe we can enter it?"
+    hero_c "Something looks funny, the lights are off and no police are nearby."
+    hide greyson_c with dissolve
+    hero_c "Lets wait a bit."
+    "........."
+    "......."
+    "....."
+    "We hear voices coming from the building."
+    "Two thugs emerge holding baseball bats."
     
     
             

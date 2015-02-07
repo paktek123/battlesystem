@@ -18,6 +18,7 @@ init -4:
     image head_injured = LiveComposite((45, 30), (0, 0), anim.Blink(im.Scale("gfx/head.png", 45, 30)))
 
 init -4 python:
+    import random
     
     INJURY_LEVELS = {1: "minor", 
                      2: "significant", 
@@ -125,7 +126,7 @@ init -4 python:
 
     class Player:
         def __init__(self, name, picname, character, tilepic, hudpic, hp, maxhp, chakra, maxchakra, 
-                     strength, speed, evasion, defence, stamina, base_hit_rate, tile, facing,
+                     strength, speed, evasion, defence, stamina, base_hit_rate, tile=None, facing='left',
                      meleeskills=[], specialskills=[], rangedskills=[], items=[], defensiveskills=[], bloodlineskills=[],
                      leader_pic=None, melee=1, special=1, ranged=1, weapons=[], battle_ai=[], home_village=None, level=1,
                      interaction={}):
@@ -458,3 +459,59 @@ init -4 python:
                 
         def __repr__(self):
             return "<Player>: {}".format(self.name)
+            
+    class LevelledEnemy(Player):
+        def __init__(self, lvl, name='Thug', picname="thug_tile_r", character=thug_c, tilepic="thug_tile_r", hudpic='thug_1_hud', 
+                     skill_pool=[], special_tags=[], home_village=None):
+            self.lvl = lvl
+            self.name = name
+            self.picname = picname
+            self.character = character
+            self.tilepic = tilepic
+            self.hudpic = hudpic
+            
+            self.maxhp = 50 + (10 * self.lvl)
+            self.maxchakra = 30 + (5 * self.lvl)
+            self.strength = 1.5 * self.lvl
+            self.speed = self.lvl / 2
+            if self.speed > 10:
+                self.speed = 10
+            elif self.speed < 1:
+                self.speed = 1
+                
+            self.evasion = self.lvl * 0.8
+            self.defence = self.lvl * 0.6
+            self.stamina = self.lvl * 0.5
+            self.base_hit_rate = 60 + self.lvl
+            
+            self.meleeskills = []
+            self.specialskills = []
+            self.rangedskills = []
+            self.defensiveskills = []
+            self.weapons = []
+            
+            for skill in skill_pool:
+                if skill_type == 'melee':
+                    self.meleeskills.append(skill)
+                elif skill_type == 'special':
+                    self.specialskills.append(skill)
+                elif skill_type == 'ranged':
+                    self.rangedskills.append(skill)
+                elif self.skill_type == 'defence':
+                    self.defensiveskills.append(skill)
+                elif self.skill_type == 'weapon':
+                    self.weapons.append(skill)
+                    
+            for tag in special_tags:
+                ability = getattr(self, tag)
+                ability += random.randint(6,10)
+                setattr(self, tag, ability)
+                
+            super(self.__class__, self).__init__(name=self.name, picname=self.picname, character=self.character, tilepic=self.tilepic, hudpic=self.hudpic, 
+                                                 hp=self.maxhp, maxhp=self.maxhp, chakra=self.maxchakra, maxchakra=self.maxchakra, 
+                                                 strength=self.strength, speed=self.speed, evasion=self.evasion, defence=self.defense, stamina=self.stamina, base_hit_rate=self.base_hit_rate, 
+                                                 meleeskills=self.meleeskills, specialskills=self.specialskills, rangedskills=self.rangedskills, 
+                                                 items=[], defensiveskills=self.defensiveskills, bloodlineskills=[], 
+                                                 weapons=self.weapons, self.level=self.lvl)
+                                                 
+            
