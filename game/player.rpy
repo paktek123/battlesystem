@@ -124,7 +124,7 @@ init -4 python:
     LEVELS = {level: level*100 for level in range(1,100)}
     MAX_BOND = 100
 
-    class Player:
+    class Player(object):
         def __init__(self, name, picname, character, tilepic, hudpic, hp, maxhp, chakra, maxchakra, 
                      strength, speed, evasion, defence, stamina, base_hit_rate, tile=None, facing='left',
                      meleeskills=[], specialskills=[], rangedskills=[], items=[], defensiveskills=[], bloodlineskills=[],
@@ -461,7 +461,7 @@ init -4 python:
             return "<Player>: {}".format(self.name)
             
     class LevelledEnemy(Player):
-        def __init__(self, lvl, name='Thug', picname="thug_tile_r", character=thug_c, tilepic="thug_tile_r", hudpic='thug_1_hud', 
+        def __init__(self, lvl, name='Thug', picname="thug_tile_r", character=None, tilepic="thug_tile_r", hudpic='thug_1_hud', 
                      skill_pool=[], special_tags=[], home_village=None):
             self.lvl = lvl
             self.name = name
@@ -491,15 +491,15 @@ init -4 python:
             self.weapons = []
             
             for skill in skill_pool:
-                if skill_type == 'melee':
+                if skill.skill_type == 'melee':
                     self.meleeskills.append(skill)
-                elif skill_type == 'special':
+                elif skill.skill_type == 'special':
                     self.specialskills.append(skill)
-                elif skill_type == 'ranged':
+                elif skill.skill_type == 'ranged':
                     self.rangedskills.append(skill)
-                elif self.skill_type == 'defence':
+                elif skill.skill_type == 'defence':
                     self.defensiveskills.append(skill)
-                elif self.skill_type == 'weapon':
+                elif skill.skill_type == 'weapon':
                     self.weapons.append(skill)
                     
             for tag in special_tags:
@@ -507,11 +507,28 @@ init -4 python:
                 ability += random.randint(6,10)
                 setattr(self, tag, ability)
                 
-            super(self.__class__, self).__init__(name=self.name, picname=self.picname, character=self.character, tilepic=self.tilepic, hudpic=self.hudpic, 
-                                                 hp=self.maxhp, maxhp=self.maxhp, chakra=self.maxchakra, maxchakra=self.maxchakra, 
-                                                 strength=self.strength, speed=self.speed, evasion=self.evasion, defence=self.defense, stamina=self.stamina, base_hit_rate=self.base_hit_rate, 
-                                                 meleeskills=self.meleeskills, specialskills=self.specialskills, rangedskills=self.rangedskills, 
-                                                 items=[], defensiveskills=self.defensiveskills, bloodlineskills=[], 
-                                                 weapons=self.weapons, self.level=self.lvl)
+            super(self.__class__, self).__init__(name=self.name, 
+                                                 picname=self.picname, 
+                                                 character=self.character, 
+                                                 tilepic=self.tilepic, 
+                                                 hudpic=self.hudpic, 
+                                                 hp=self.maxhp, 
+                                                 maxhp=self.maxhp, 
+                                                 chakra=self.maxchakra, 
+                                                 maxchakra=self.maxchakra, 
+                                                 strength=self.strength, 
+                                                 speed=self.speed, 
+                                                 evasion=self.evasion, 
+                                                 defence=self.defence, 
+                                                 stamina=self.stamina, 
+                                                 base_hit_rate=self.base_hit_rate, 
+                                                 meleeskills=self.meleeskills, 
+                                                 specialskills=self.specialskills, 
+                                                 rangedskills=self.rangedskills, 
+                                                 items=[], 
+                                                 defensiveskills=self.defensiveskills, 
+                                                 bloodlineskills=[], 
+                                                 weapons=self.weapons, 
+                                                 level=self.lvl)
                                                  
             

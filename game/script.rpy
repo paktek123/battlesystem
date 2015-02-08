@@ -50,6 +50,7 @@ init -1:
     
     ### SPRITES ###
     image thug_1 = im.Scale("thug_1.png", 270, 500)
+    image sam_1 = im.Scale("sam_1.png", 270, 500)
     image adam_1 = im.Scale("adam_1.png", 270, 500)
     image adam_2 = im.Scale("adam_2.png", 270, 500)
     image adam_3 = im.Scale("adam_3.png", 270, 500)
@@ -166,13 +167,19 @@ init python:
         return False
             
     ### VILLAGE AND LOCATIONS ###
+    
+    l_hospital = Location('Hospital', 'location_hospital', events=[e_hospital_discount])
+    l_police_station = Location('Police Station', 'location_police_station', events=[e_weapon_discount])
+    l_level_up = Location('Level Up', 'location_levelup')
+    l_training_ground = Location('Training', 'location_training', 'training')
+    l_town_mission = Location('Mission Assignment Desk', 'location_missions', events=[])
+    l_apartment = Location('Apartment', 'location_home')
 
     # locations that exist in each village
     l_travel = Location('Travel', 'village_travel')
     l_level_up = Location('Level Up', 'village_levelup')
     l_training_ground = Location('Training', 'village_training', 'training')
     l_arena = Location('Arena', 'village_arena')
-    l_hospital = Location('Hospital', 'village_hospital', events=[e_hospital_discount])
     l_jounin_station = Location('Jounin Standby Station', 'village_jounin_station', events=[e_jounin_training])
     l_intelligence_division = Location('Intelligence Division', 'village_intelligence_division')
     l_ninja_tool_facility = Location('Ninja Tool Facility', 'village_ninja_tool_facility', events=[e_weapon_discount])
@@ -269,6 +276,7 @@ init python:
     ### CHARACTERS ###
     hero_c = Character('NO NAME',color="#FFFF00")
     thug_c = Character('Thug',color="#FFFFFF")
+    sam_c = Character('Sam', color="#FFFFFF")
     adam_c = Character('Adam',color="#FFFF00")
     amy_c = Character('Amy',color="#FFFF00")
     greyson_c = Character('Greyson',color="#FFFF00")
@@ -282,8 +290,8 @@ init python:
     itachi_c = Character('Itachi', color="#FFFFFF")
     ori_c = Character('Orichimaru', color="#FF0000")
     
-    lvl_1_thug_melee = LevelledEnemy(lvl=1, skill_pool=THUG_MELEE_SKILL_SET)
-    lvl_1_thug_ranged = LevelledEnemy(lvl=1, skill_pool=THUG_RANGED_SKILL_SET)
+    lvl_1_thug_melee = LevelledEnemy(lvl=1, skill_pool=THUG_MELEE_SKILL_SET, character=thug_c)
+    lvl_1_thug_ranged = LevelledEnemy(lvl=1, skill_pool=THUG_RANGED_SKILL_SET, character=thug_c)
     
     hero = Player(name='NO NAME', picname="hero_tile_r", character=hero_c, tilepic="hero_tile_r", hudpic='hero_1_hud', 
                   hp=100, maxhp=100, chakra=80, maxchakra=80, 
@@ -309,7 +317,7 @@ init python:
                   hp=200, maxhp=200, chakra=150, maxchakra=150, 
                   strength=10, speed=6, evasion=6, defence=10, stamina=10, base_hit_rate=90, 
                   tile=tile1, facing='left', 
-                  meleeskills=[onetwocombo, jaw_breaker], specialskills=[blast_kick], rangedskills=[], 
+                  meleeskills=[onetwocombo, jaw_breaker], specialskills=[blasting_kick], rangedskills=[], 
                   items=[], defensiveskills=[], bloodlineskills=[], 
                   leader_pic="leader_pic", 
                   weapons=[w_brass_knuckles], 
@@ -443,6 +451,8 @@ init python:
 #
 
 label start:
+    scene town_map_1
+    "HELLO"
     
     jump character_creation
     
@@ -823,7 +833,7 @@ label prologue_hospital2:
     "As soon as I am patched up, I head straight for the police station."
     "...."
     "I hope Greyson is doing okay but I can't help but worry."
-    jump prologue_school # go to school instead
+    jump prologue_school
     
 label prologue_police_station:
     hero_c "Lets go to the police station, we need to make sure we have some enforcement otherwise we can't survive."
@@ -852,6 +862,200 @@ label prologue_police_station:
     "....."
     "We hear voices coming from the building."
     "Two thugs emerge holding baseball bats."
+    show greyson_1 with dissolve
+    "Greyson erraticly stands up."
+    greyson_c "I... can't take this anymore!"
+    greyson_c "I'm going to rush in!"
+    hero_c "Wait Greyson, we don't know how many are inside!"
+    hide greyson_1 with dissolve
+    "He rushes at them."
+    "Thug" "Wow.... watch out..."
+    "Greyson rugby tackles one on them to the ground and smashes him into the curb."
+    "I stand up and rush at the other one."
+    hero_c "Look here." with sshake
+    "I punch the other thug in the back."
+    "Thug" "You're going to regret that!"
+    "I steady my stance bracing for the fight."
+    $ renpy.call('fight', hero, copy.deepcopy(lvl_1_thug_melee), [], [], clearing, win_label='prologue_police_station2', lose_label='prologue_police_station2', draw_label='prologue_police_station2', fight_limit=15)
+    
+label prologue_police_station2:
+    # hero gains experience or level up then hospital is conquered
+    $ hide_battle_screen(all=True)
+    $ battle_turn = 0
+    $ exp = renpy.random.randint(100,200) + 200
+    $ hero.gain_exp(exp)
+    hero_c "I gain [exp] exp."
+    "The battle ends..."
+    show greyson_1 with dissolve 
+    greyson_c "Take this!"
+    "He smashes the Thug with a baseball bat."
+    "........."
+    "The thug is knocked out on the floor but he did deal me some damage too."
+    greyson_c "I got stabbed on my side."
+    "He is holding his left abdomen and its covered in blood."
+    greyson_c "Please go and check out the station, I'll follow you."
+    hero_c "Just wait here, I'm sure they have a medical kit inside."
+    hide greyson_1 with dissolve
+    "....."
+    "I rush inside."
+    scene night_sky with squares
+    "The officers were locked up in the cells below the station."
+    "I manage to free them and get Greyson and myself treated."
+    "Police Officer" "Thank you for your brave work, we will try to contact neighboring towns to call for backup."
+    $ l_police_station.unlocked = True
+    "{color=#00ff00}Police Station Secured! New location unlocked!{color}"
+    "..........."
+    "........"
+    scene street_1 night with squares
+    "I need to head for the hospital."
+    "......"
+    jump prologue_school
+
+label prologue_school:
+    scene street_1 with sshake
+    "There is a large explosion in the distance."
+    "........."
+    hero_c "What was that!?"
+    "It is coming from the direction of the school."
+    hero_c "Lets check it out."
+    "........."
+    "......"
+    scene school_1 night with squares
+    "......."
+    "I arrive at the scene first."
+    show will_1 at left with dissolve
+    show greyson_1 at right with dissolve
+    will_c "Hey, you heard the explosion right?"
+    greyson_c "Me too, I headed over here, this is my sister's school!"
+    "The windows are smashed and there is fire and smoke coming from all over the building."
+    "Voice" "Ahhhh...."
+    "......"
+    "A body falls from one of the top floors and lands in the distance."
+    will_c "Looks like this place is more dangerous than the rest."
+    will_c "There is something going on."
+    hide will_1 with dissolve
+    "Will rushes inside."
+    greyson_c "Guess he didn't leave us with much choice."
+    greyson_c "Lets head inside."
+    scene night_sky with squares
+    "......"
+    "We head inside following Will, who is knows exactly where he is going."
+    ".........."
+    "......."
+    "Will leaves us behind and Me and Greyson follow."
+    "We seem to be heading towards the rooftop."
+    scene rooftop_1 with squares
+    "........"
+    "The place is littered with bodies of gang members knocked out."
+    "There is blood everywhere."
+    "From a distance I see a familiar face."
+    show will_1 with sshake
+    will_c "Ahhh"
+    hide will_1 with dissolve
+    "Will goes flying in the distance and crashes into a wall."
+    "........"
+    "I see a familiar face."
+    show sam_1 with dissolve
+    "???" "Hey who do we have here."
+    "???" "I might as well introduce myself."
+    sam_c "I am Sam, the leader of this town."
+    hero_c "What are you..."
+    sam_c "You could say that I started all of this."
+    hero_c "Do you know how many lives you have taken for this senseless voilence!?"
+    sam_c "Senseless Violence!?"
+    sam_c "I am protecting this place from the worst."
+    hero_c "I am not going to hear your reasons, I just want to kick your ass."
+    hero_c "Why don't we finish what we started that day?"
+    will_c "No.... you can't stand up to him, he is too strong."
+    sam_c "Lets finish it."
+    hide sam_1 with dissolve
+    "......" with red_flash
+    "......" with sshake
+    "I ... somehow end up on the ground."
+    "There is a sharp pain in my nose and jaw area."
+    "I can't move my body...."
+    "......."
+    "He takes out Greyson with ease."
+    show sam_1 with dissolve
+    sam_c "Is this the best you guys could do?"
+    "What is this guy? Was he holding back, back then?"
+    sam_c "Hahhaaha...."
+    sam_c "Now this town belongs to me."
+    will_c "I won't let that happen!"
+    hide sam_1 with sshake
+    show will_1 with dissolve
+    will_c "Lets retreat for now."
+    scene night_sky with dissolve
+    "Will picks both me and Greyson up and runs downstairs."
+    "I am amazed at his strength."
+    "..............."
+    "I fade in and out of conciousness, my nose is bleeding heavily."
+    "......"
+    "Greyson is totally out cold."
+    will_c "Hufff.... huff....."
+    ".........."
+    scene apartment_1 with squares
+    "............"
+    "Will puts both of us down."
+    will_c "Adam! Help!"
+    show adam_1 with dissolve
+    adam_c "Amy bring the equipment!"
+    "......."
+    "....."
+    scene black_fade with black_flash
+    ".............."
+    ".........."
+    "........."
+    scene apartment_1 afternoon with squares
+    "......"
+    "Sunlight hits my eyes..."
+    "I wake up to find a familiar site."
+    # TODO: review of what happened yesterday
+    "I wake up and head towards the group of people seated."
+    show adam_1 at left with dissolve
+    show will_1 at right with dissolve
+    adam_c "Will can you please explain to all of us, what is going on?"
+    will_c "Okay, there is no point staying quiet now."
+    hide adam_1 with dissolve
+    show will_1 with dissolve
+    will_c "This all started 10 years ago...."
+    will_c "If many of you remember, this town was the center of many gang wars 10 years ago."
+    will_c "These came to an end when both senior leaders of both of the local gangs were killed."
+    will_c "Many gangs drifted or simply broke apart afer that event."
+    will_c "Now there have been rumours that one of the senior leaders is alive."
+    "I interrupt him."
+    hero_c "But who is Sam?"
+    will_c "He... is the leader of the current gang who are trying to claim this town as theirs and my brother..."
+    "......."
+    "The whole crowd are in shock."
+    will_c "One of the leaders that died 10 years ago was my father and now my brother is trying to revive the gang."
+    "The crowd starts to talk amongst themselves."
+    will_c "His actions I think are misleading..."
+    hero_c "What do you mean?"
+    will_c "When the news came that one of the old leaders came back, there was a reaction from the other towns gangs."
+    will_c "Due to the presence of my fathers gang in the past they felt a threatening presence and this town was surrounded from all sides by the nieghboring gangs."
+    will_c "My brother had to organise a force to stop them attacking the town."
+    will_c "I do not agree with his rash methods but he is trying to protect us."
+    hero_c "But why did he attack us when we met him!?"
+    will_c "He is an arrogant fool and won't listen to me ever."
+    will_c "He prides himself in violence and wants to mirror the heartless gang my Father formed all those years ago."
+    will_c "Even if that means he kill his Brother, so be it."
+    will_c "unforetunely we will have to topple him from here in order to move forward."
+    show will_1 at right with dissolve
+    show adam_2 at left with dissolve
+    adam_c "This reminds me of my days in service."
+    "He sighs."
+    adam_c "This violence cannot go on any longer."
+    adam_c "Lets formulate a plan and quickly topple Sam."
+    adam_c "I bought this map with me, when I first moved here."
+    
+    #l_hospital = Location('Hospital', 'location_hospital', events=[e_hospital_discount])
+    #l_police_station = Location('Police Station', 'location_police_station', events=[e_weapon_discount])
+    #l_level_up = Location('Level Up', 'location_levelup')
+    #l_training_ground = Location('Training', 'location_training', 'training')
+    #l_town_mission = Location('Mission Assignment Desk', 'location_missions', events=[])
+    #l_apartment = Location('Apartment', 'location_home')
+    
     
     
             
