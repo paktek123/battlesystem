@@ -142,7 +142,7 @@ init -2 python:
                 target.yatamirror.used += 1
             else:
                 # only offensive skills
-                if self.skill_type in ('attack', 'melee', 'weapon'):
+                if self.skill_type in ('ranged', 'melee', 'weapon', 'special', 'attack'):
                     target.hp -= int(damage)
                     player.damage_dealt = int(damage)
             

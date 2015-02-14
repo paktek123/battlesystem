@@ -7,7 +7,7 @@ PLAN
 3. gets attacked by 'thugs', combat tutorial, etc (DONE)
 4. other members of the 'rebel' group save the hero (DONE)
 5. the rebel group explain the situation, introduce team mates, teacher (DONE)
-7. introductory mission (DONE)
+7. introductory mission
 6. tutorial on the 'open world' aspect (hospital, missions, home, weapons etc)
 8. Group 1 missions appear
 9. Lets decide when we get here...
@@ -21,10 +21,6 @@ PLAN
 5th Release
 
 6th Android build
-
-Bibliography
-
-http://www.fantasticmaps.com/wp-content/uploads/2010/06/townpackunlabelled.jpg
 
 
 

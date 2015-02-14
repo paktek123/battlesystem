@@ -366,9 +366,9 @@ screen villagemap(village, player):
     $ x_adj = 0.05
     $ npc_x_adj = 0.2
     
-    #text "[current_session.initial_pos]" xpos 0.1
+    #text "[village.locations[0].unlocked]" xpos 0.1
     
-    imagebutton idle "black_fade_small" hover "black_fade_small"
+    #imagebutton idle "black_fade_small" hover "black_fade_small"
     
     for today_e in get_today().events:
         if today_e.npc and not today_e.stop:
@@ -387,11 +387,13 @@ screen villagemap(village, player):
         else:
             if location.name == 'Home':
                 $ location.name = 'Hotel'
-        textbutton [location.name] action [SetField(current_session, 'main_player', player), 
-                                           SetField(current_session, 'village', village), 
-                                           SetField(current_session, 'location', location), 
-                                           Hide("villagemap"), 
-                                           Jump('location_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
+                
+        if location.unlocked:
+            textbutton [location.name] hovered Show('location_explanation', stat=location.label) unhovered Hide('location_explanation') action [SetField(current_session, 'main_player', player), 
+                                                                                                                                    SetField(current_session, 'village', village), 
+                                                                                                                                    SetField(current_session, 'location', location), 
+                                                                                                                                    Hide("villagemap"), 
+                                                                                                                                    Jump('location_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
         
         
         if location.events:
@@ -404,6 +406,16 @@ screen villagemap(village, player):
             
         $ counter += 1 
                 
+screen location_explanation(stat):
+    $ expl_dict = {'location_hospital': 'Heal injuries and buy healing items.', 
+                   'location_police_station': 'Buy weapons for combat.', 
+                   'location_levelup': 'Spend points to increase stats like strength, speed, evasion etc.',
+                   'location_training': 'Train with team members, learn new skills, unlock new skills.', 
+                   'location_missions': 'Perform missions.', 
+                   'location_apartment': 'Rest to heal injuries, skip time or view calendar for upcoming events.'}
+    $ expl = expl_dict[stat]
+    
+    text "[expl]" ypos 0.8 xpos 0.2
         
 screen time_screen:
     #text "[current_session.initial_pos]" xpos 0.1
@@ -608,6 +620,7 @@ screen battlebars(tag_p, tag_e):
     $ rel_pos = abs(player.tile.position - enemy.tile.position)
     
     text "[battle_turn] [current_session.fight_limit]" xpos 0.7 ypos 0.05
+    text "[player.facing]" xpos 0.7 ypos 0.1
 
     text "[player.name]" xpos 0.5 ypos 0.15
     text "[player.chakra]" xpos 0.49 ypos 0.45

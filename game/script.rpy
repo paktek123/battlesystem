@@ -30,6 +30,8 @@ init -1:
     image hero_tile_r = im.Flip(im.Scale("hero_1_tile.png", 40, 50), horizontal=True)
     image thug_tile_l = im.Scale("thug_1_tile.png", 40, 50)
     image thug_tile_r = im.Flip(im.Scale("thug_1_tile.png", 40, 50), horizontal=True)
+    image will_tile_l = im.Scale("hero_1_tile.png", 40, 50)
+    image will_tile_r = im.Flip(im.Scale("hero_1_tile.png", 40, 50), horizontal=True)
     
     
     image playerpic_r = im.Scale("player.png", 40, 50)
@@ -50,7 +52,7 @@ init -1:
     
     ### SPRITES ###
     image thug_1 = im.Scale("thug_1.png", 270, 500)
-    image sam_1 = im.Scale("sam_1.png", 270, 500)
+    image sam_2 = im.Scale("sam_2.png", 270, 500)
     image adam_1 = im.Scale("adam_1.png", 270, 500)
     image adam_2 = im.Scale("adam_2.png", 270, 500)
     image adam_3 = im.Scale("adam_3.png", 270, 500)
@@ -58,10 +60,11 @@ init -1:
     image amy_2 = im.Scale("amy_2.png", 270, 400)
     image amy_3 = im.Scale("amy_3.png", 270, 400)
     image greyson_1 = im.Scale("greyson_1.png", 270, 500)
+    image will_1 = im.Scale("will_1.png", 270, 500)
     
     ### SPECIAL EFFECTS ###
     $ sshake = Shake((0, 0, 0, 0), 1.0, dist=15)
-    $ red_flash = Fade(.25, 0, .75, color="#ff0")
+    $ red_flash = Fade(.25, 0, .75, color="#ff0000")
     $ black_flash = Fade(.5, 0, .5, color="#000")
 
     
@@ -172,13 +175,13 @@ init python:
     l_police_station = Location('Police Station', 'location_police_station', events=[e_weapon_discount])
     l_level_up = Location('Level Up', 'location_levelup')
     l_training_ground = Location('Training', 'location_training', 'training')
-    l_town_mission = Location('Mission Assignment Desk', 'location_missions', events=[])
-    l_apartment = Location('Apartment', 'location_home')
+    l_town_mission = Location('Mission', 'location_missions', events=[])
+    l_apartment = Location('Apartment', 'location_apartment')
 
     # locations that exist in each village
     l_travel = Location('Travel', 'village_travel')
-    l_level_up = Location('Level Up', 'village_levelup')
-    l_training_ground = Location('Training', 'village_training', 'training')
+    #l_level_up = Location('Level Up', 'village_levelup')
+    #l_training_ground = Location('Training', 'village_training', 'training')
     l_arena = Location('Arena', 'village_arena')
     l_jounin_station = Location('Jounin Standby Station', 'village_jounin_station', events=[e_jounin_training])
     l_intelligence_division = Location('Intelligence Division', 'village_intelligence_division')
@@ -186,7 +189,11 @@ init python:
     l_villagemission = Location('Mission Assignment Desk', 'village_missions', events=[e_chunin_exams])
     l_home = Location('Home', 'village_home')
     
-    BASE_LOCATIONS = [l_travel, l_level_up, l_training_ground, l_arena, l_hospital, l_jounin_station, l_intelligence_division, l_ninja_tool_facility, l_villagemission, l_home]
+    BASE_LOCATIONS = [l_level_up, l_training_ground, l_town_mission, l_apartment, l_hospital, l_police_station]
+    
+    #BASE_LOCATIONS = [l_travel, l_level_up, l_training_ground, l_arena, l_hospital, l_jounin_station, l_intelligence_division, l_ninja_tool_facility, l_villagemission, l_home]
+    
+    middle_town = Village(1, "Middle Town", None, marker_xpos=0.25, marker_ypos=0.25, map="town_map_1", locations=BASE_LOCATIONS, village_tag="middle_town", mission_locations=2)
         
     hidden_stone = Village(1, "Hidden Stone", None, marker_xpos=0.25, marker_ypos=0.25, map="stones_map", locations=BASE_LOCATIONS, village_tag="stones", mission_locations=2)
     hidden_cloud = Village(2, "Hidden Cloud", None, marker_xpos=0.75, marker_ypos=0.20, map="clouds_map", locations=BASE_LOCATIONS, village_tag="cloud", mission_locations=2)
@@ -290,8 +297,8 @@ init python:
     itachi_c = Character('Itachi', color="#FFFFFF")
     ori_c = Character('Orichimaru', color="#FF0000")
     
-    lvl_1_thug_melee = LevelledEnemy(lvl=1, skill_pool=THUG_MELEE_SKILL_SET, character=thug_c)
-    lvl_1_thug_ranged = LevelledEnemy(lvl=1, skill_pool=THUG_RANGED_SKILL_SET, character=thug_c)
+    lvl_1_thug_melee = LevelledEnemy(lvl=1, skill_pool=THUG_MELEE_SKILL_SET, character=thug_c, tile=tile12)
+    lvl_1_thug_ranged = LevelledEnemy(lvl=1, skill_pool=THUG_RANGED_SKILL_SET, character=thug_c, tile=tile12)
     
     hero = Player(name='NO NAME', picname="hero_tile_r", character=hero_c, tilepic="hero_tile_r", hudpic='hero_1_hud', 
                   hp=100, maxhp=100, chakra=80, maxchakra=80, 
@@ -329,7 +336,7 @@ init python:
                     weapons=[shiruken, kunai], home_village=hidden_leaf)
     sasuke = Player('Sasuke', "enemypic_r", sasuke_c, Image('enemy.png'), None, 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
                     [onetwocombo, lioncombo], [chidori], [], [], [damage_reduction, chakra_defence], 
-                    battle_ai=special_enemy_pattern, weapons=[shiruken, kunai], home_village=hidden_leaf, interaction={'frequency': (1,)})
+                    battle_ai=special_enemy_pattern, weapons=[shiruken, kunai], home_village=hidden_leaf) #, interaction={'frequency': (1,)})
     
     sakura = Player('Sakura', "sakurapic_r", sakura_c, Image('sakura.png'), None, 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
                     [onetwocombo, lioncombo], [chidori], [], [], [damage_reduction, chakra_defence], weapons=[shiruken, kunai], home_village=hidden_leaf)
@@ -383,6 +390,11 @@ init python:
     ### MISSIONS ###
             
     # basic missions
+    m_secure_hospital = LabelMission('Secure Hospital', 'prologue_hospital', hours=11)
+    m_secure_police_station = LabelMission('Secure Police Station', 'prologue_hospital', hours=11)
+    m_infiltrate_hold = SimpleFightMission('Infiltrate Hold', hours=5, rank='D') # TODO: do dialogue
+    #m_defeat_sam = 
+    
     m_d1 = BasicMission('Farming', hours=12)
     m_d2 = BasicMission('Retrieve Cat', hours=8)
     m_d3 = BasicMission('Organise Festival', hours=10, days=2)
@@ -451,9 +463,7 @@ init python:
 #
 
 label start:
-    scene town_map_1
-    "HELLO"
-    
+        
     jump character_creation
     
     # the below is obselete at the moment
@@ -824,7 +834,7 @@ label prologue_hospital2:
     "He notices the cuts and bruises we got in the fight."
     will_c "Thanks, Doc."
     $ l_hospital.unlocked = True
-    "{color=#00ff00}Hospital Secured! New location unlocked!{color}" 
+    "{color=#006400}Hospital Secured! New location unlocked!{/color}" 
     "..........."
     "I have minor injuries I decided to leave early."
     hero_c "I'll go on ahead, make sure to catch up."
@@ -912,7 +922,7 @@ label prologue_police_station2:
     jump prologue_school
 
 label prologue_school:
-    scene street_1 with sshake
+    scene street_1 night with sshake
     "There is a large explosion in the distance."
     "........."
     hero_c "What was that!?"
@@ -944,7 +954,7 @@ label prologue_school:
     "......."
     "Will leaves us behind and Me and Greyson follow."
     "We seem to be heading towards the rooftop."
-    scene rooftop_1 with squares
+    scene rooftop_1 night with squares
     "........"
     "The place is littered with bodies of gang members knocked out."
     "There is blood everywhere."
@@ -955,7 +965,7 @@ label prologue_school:
     "Will goes flying in the distance and crashes into a wall."
     "........"
     "I see a familiar face."
-    show sam_1 with dissolve
+    show sam_2 with dissolve
     "???" "Hey who do we have here."
     "???" "I might as well introduce myself."
     sam_c "I am Sam, the leader of this town."
@@ -976,13 +986,13 @@ label prologue_school:
     "I can't move my body...."
     "......."
     "He takes out Greyson with ease."
-    show sam_1 with dissolve
+    show sam_2 with dissolve
     sam_c "Is this the best you guys could do?"
     "What is this guy? Was he holding back, back then?"
     sam_c "Hahhaaha...."
     sam_c "Now this town belongs to me."
     will_c "I won't let that happen!"
-    hide sam_1 with sshake
+    hide sam_2 with sshake
     show will_1 with dissolve
     will_c "Lets retreat for now."
     scene night_sky with dissolve
@@ -994,7 +1004,7 @@ label prologue_school:
     "Greyson is totally out cold."
     will_c "Hufff.... huff....."
     ".........."
-    scene apartment_1 with squares
+    scene apartment_1 night with squares
     "............"
     "Will puts both of us down."
     will_c "Adam! Help!"
@@ -1048,13 +1058,30 @@ label prologue_school:
     adam_c "This violence cannot go on any longer."
     adam_c "Lets formulate a plan and quickly topple Sam."
     adam_c "I bought this map with me, when I first moved here."
+    scene town_map_1 with dissolve
     
-    #l_hospital = Location('Hospital', 'location_hospital', events=[e_hospital_discount])
-    #l_police_station = Location('Police Station', 'location_police_station', events=[e_weapon_discount])
-    #l_level_up = Location('Level Up', 'location_levelup')
-    #l_training_ground = Location('Training', 'location_training', 'training')
-    #l_town_mission = Location('Mission Assignment Desk', 'location_missions', events=[])
-    #l_apartment = Location('Apartment', 'location_home')
+    show screen villagemap(middle_town, hero)
+    adam_c "Here is the map."
+    adam_c "We have some locations we have already secured."
+    
+    if l_hospital.unlocked:
+        adam_c "We managed to secure the hospital earlier."
+        adam_c "The hospital can be used to heal wounds and buy supplies for healing."
+    elif l_police_station.unlocked:
+        adam_c "We managed to secure the police station earlier."
+        adam_c "The Police Station can be used to buy weapons."
+    
+    $ l_apartment.unlocked = True
+    adam_c "Here is the apartment we are currently in."
+    $ l_training_ground.unlocked = True
+    adam_c "We have the training ground near by where we can train our skills in the mean time and unlock new skills."
+    $ l_level_up.unlocked = True
+    adam_c "Level up location can be used to level up and distribute skill points, make sure to spend these regularly to improve your fighting skills."
+    $ l_town_mission.unlocked = True
+    adam_c "Town missions are missions we must undertake to advance the story."
+    adam_c "I will leave you to decide what needs to be done."
+    
+    $ show_village_map(middle_town, hero)
     
     
     
@@ -1480,8 +1507,8 @@ label fight(player, enemy, tag_p, tag_e, stage=clearing, win_label='generic_win'
 label initial_pos(player, enemy):
     python:
         if current_session.initial_pos:
-            show_player_at_pos(player, enemy, current_session.stage, tile1)
             show_player_at_pos(enemy, player, current_session.stage, tile12)
+            show_player_at_pos(player, enemy, current_session.stage, tile1)
             current_session.initial_pos = False
     return
     

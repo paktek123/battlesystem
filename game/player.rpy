@@ -462,13 +462,14 @@ init -4 python:
             
     class LevelledEnemy(Player):
         def __init__(self, lvl, name='Thug', picname="thug_tile_r", character=None, tilepic="thug_tile_r", hudpic='thug_1_hud', 
-                     skill_pool=[], special_tags=[], home_village=None):
+                     skill_pool=[], special_tags=[], home_village=None, tile=None):
             self.lvl = lvl
             self.name = name
             self.picname = picname
             self.character = character
             self.tilepic = tilepic
             self.hudpic = hudpic
+            self.tile = tile
             
             self.maxhp = 50 + (10 * self.lvl)
             self.maxchakra = 30 + (5 * self.lvl)
@@ -516,6 +517,7 @@ init -4 python:
                                                  maxhp=self.maxhp, 
                                                  chakra=self.maxchakra, 
                                                  maxchakra=self.maxchakra, 
+                                                 tile=self.tile,
                                                  strength=self.strength, 
                                                  speed=self.speed, 
                                                  evasion=self.evasion, 

@@ -356,6 +356,7 @@ init -1 python:
         moved = False
         current_session.last_match_result = match_result
         battle_turn = 0
+        store.battle_turn = 0
         remove_traps_from_all_tiles()
         
     def end_match(player, enemy, tag_p, tag_e, win_label, lose_label, draw_label):
