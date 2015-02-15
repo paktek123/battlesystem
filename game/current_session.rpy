@@ -27,6 +27,8 @@ init -5 python:
             self.initial_pos = True
             self.rest = False
             self.spar = []
+            self.battles = []
+            self.team = []
             
         def clear(self):
             self.main_player = None
@@ -49,6 +51,8 @@ init -5 python:
             self.initial_pos = True
             self.rest = False
             self.spar = []
+            self.battles = []
+            self.team = []
             
         def clear_time_to_advance(self):
             self.rest = False

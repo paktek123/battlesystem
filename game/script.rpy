@@ -361,7 +361,11 @@ init python:
     naruto.team = team7
     naruto.sensei = kakashi
     
-    ALL_PLAYERS = [naruto, sasuke, sakura, kakashi, itachi, ori, gai]
+    team_first = Team("First Team", None, [will, hero])
+    
+    ALL_PLAYERS = [hero, thug, will, lvl_1_thug_melee, lvl_1_thug_ranged]
+    
+    #ALL_PLAYERS = [naruto, sasuke, sakura, kakashi, itachi, ori, gai]
     ALL_CHARACTERS = [c.character for c in ALL_PLAYERS]
         
     def get_random_jounin(player, village, exclude_sensei=False, exclude=[]):
@@ -456,6 +460,9 @@ init python:
     screen_on = False
     calendar_on = False
     
+    battle1 = Battle(id="1", bad_team=[thug])
+    battle2 = Battle(id="2", bad_team=[itachi])
+    
     
             
 ##############################################################################
@@ -463,6 +470,12 @@ init python:
 #
 
 label start:
+    
+    scene street_1 night with dissolve
+    $ current_session.team = team_first
+    $ current_session.battles = [battle1, battle2]
+    show screen battle_prep_screen
+    "HELLO"
         
     jump character_creation
     

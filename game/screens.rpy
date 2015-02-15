@@ -549,6 +549,81 @@ screen worldevents(village):
 ##############################################################################
 # BATTLE SCREENS
 #
+screen battle_prep_screen:
+
+    # A map as background.
+    #add "europe.jpg"
+    $ start = 50
+    $ counter = 1
+    $ battle_c = 1
+    $ team = current_session.team.members
+    $ battles = current_session.battles
+    
+    text "Good: [battle1.good_team] Bad: [battle1.bad_team]" 
+    text "Good: [battle2.good_team] Bad: [battle2.bad_team]" ypos 0.1
+    text "[battle_persist_stop]" ypos 0.15
+    text "[battle_persist_list]" xpos 0.2 ypos 0.15
+
+    draggroup:
+        if len(team) > 0:
+            drag:
+                drag_name team[0].name
+                child team[0].tilepic
+                droppable False
+                dragged player_dragged
+                xpos 50 ypos 300
+                
+        if len(team) > 1:
+            drag:
+                drag_name team[1].name
+                child team[1].tilepic
+                droppable False
+                dragged player_dragged
+                xpos 100 ypos 300
+                
+        if len(team) > 2:
+            drag:
+                drag_name team[2].name
+                child team[2].tilepic
+                droppable False
+                dragged player_dragged
+                xpos 150 ypos 300
+
+        #for p in current_session.team.members:
+        #    drag:
+        #        drag_name p.name
+        #        child p.tilepic
+        #        droppable False
+        #        dragged player_dragged
+        #        xpos (50*counter) ypos 300
+                
+        #    $ counter += 1
+        
+        if len(battles) > 0:
+            drag:
+                drag_name battles[0].id
+                child "marker.png"
+                draggable False
+                xpos 100 ypos 200
+            
+        if len(battles) > 1:
+            drag:
+                drag_name battles[1].id
+                child "marker.png"
+                draggable False
+                xpos 200 ypos 200
+                
+        #for battle in current_session.battles:
+        #    drag:
+        #        drag_name battle.id
+        #        child "marker.png"
+        #        draggable False
+        #        xpos (100*battle_c) ypos 200
+                
+        #    $ battle_c += 1
+
+
+
 screen skill_actions(action_type):
     $ initial_pos = 0.8
     $ interval = 0.1

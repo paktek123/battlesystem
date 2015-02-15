@@ -448,6 +448,45 @@ init -1 python:
         else:
             return None
             
+    def get_player_by_name(name):
+        for player in ALL_PLAYERS:
+            if player.name == name:
+                return player
+                
+    def get_battle_by_id(id):
+        for battle in current_session.battles:
+            if battle.id == id:
+                return battle
+                
+    battle_persist_stop = False
+    battle_persist_list = []
+            
+    def player_dragged(drags, drop):
+        global battle_persist_stop
+
+        if not drop:
+            return
+
+        player_on_good_team = drags[0].drag_name
+        battle_id = drop.drag_name
+        
+        player = get_player_by_name(player_on_good_team)
+        battle = get_battle_by_id(battle_id)
+        
+        battle_persist_list.append(battle_id)
+        
+        if not battle_persist_stop:
+            battle.add_good_member(player)
+        
+        #battle_persist_stop = True
+        
+        #for b in current_session.battles:
+        #    if b != battle:
+        #        b.good_team.remove(player)
+
+        return True
+
+            
     import math
 
     class Shaker(object):
