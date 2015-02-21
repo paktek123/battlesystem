@@ -458,11 +458,7 @@ init -1 python:
             if battle.id == id:
                 return battle
                 
-    battle_persist_stop = False
-    battle_persist_list = []
-            
     def player_dragged(drags, drop):
-        global battle_persist_stop
 
         if not drop:
             return
@@ -473,10 +469,33 @@ init -1 python:
         player = get_player_by_name(player_on_good_team)
         battle = get_battle_by_id(battle_id)
         
-        battle_persist_list.append(battle_id)
+        other_battles = [b for b in current_session.battles if b.id != battle.id]
+        for b in other_battles:
+            for p in b.good_team:
+                if player == p:
+                    b.good_team.remove(p)
         
-        if not battle_persist_stop:
-            battle.add_good_member(player)
+        battle.add_good_member(player)
+        
+       
+        return True
+        
+    def player_dragged_2(drags, drop):
+        global battle_persist_stop
+
+        if not drop:
+            return
+
+        player_on_good_team = drags[0].drag_name
+        battle_id = drop.drag_name
+        
+        player = get_player_by_name(player_on_good_team)
+        #battle1 = get_battle_by_id(battle_id)
+        
+        #battle_persist_list.append(battle_id)
+        
+        #if not battle_persist_stop:
+        battle2.add_good_member(player)
         
         #battle_persist_stop = True
         

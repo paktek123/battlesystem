@@ -5,16 +5,30 @@
 init -6 python:
     
     class Battle:
-        def __init__(self, id, good_team=[], bad_team=[]):
+        def __init__(self, id, good_team=[], bad_team=[], xpos=0, ypos=0):
             self.id = id
             self.good_team = good_team
             self.bad_team = bad_team
+            self.xpos = xpos
+            self.ypos = ypos
             
         def add_good_member(self, player):
             self.good_team.append(player)
             
         def remove_good_member(self, player):
             self.good_team.remove(player)
+            
+        def cleanup(self, other_battles):
+            """
+            This method is required to clean up this race condition 
+            where players are being added to other battles for no reason
+            """
+            iterbattle = [b for b in other_battles if b != self]
+            for b in iterbattle:
+                for p in b.good_team:
+                    if p in self.good_team:
+                        b.good_team.remove(p)
+            
             
         def clean_dead_members(self):
             for p in self.bad_team:

@@ -460,8 +460,9 @@ init python:
     screen_on = False
     calendar_on = False
     
-    battle1 = Battle(id="1", bad_team=[thug])
-    battle2 = Battle(id="2", bad_team=[itachi])
+    battle1 = Battle(id="1", good_team=[], bad_team=[thug], xpos=100, ypos=100)
+    battle2 = Battle(id="2", good_team=[], bad_team=[itachi], xpos=300, ypos=100)
+    battle3 = Battle(id="3", good_team=[], bad_team=[kakashi], xpos=500, ypos=100)
     
     
             
@@ -473,8 +474,41 @@ label start:
     
     scene street_1 night with dissolve
     $ current_session.team = team_first
-    $ current_session.battles = [battle1, battle2]
-    show screen battle_prep_screen
+    # this is used to restore the team back to original once battle is over
+    $ current_session.team_store = copy.deepcopy(team_first)
+    $ current_session.battles = [battle1, battle2, battle3]
+    $ renpy.call('battle_choose', follow_on='battle_start')
+    
+label reset_battle(follow_on):
+    python:
+        for b in current_session.battles:
+            b.good_team = []
+    $ renpy.call('battle_choose', follow_on=follow_on)
+    
+label battle_start:
+    "HUKLLO DONE"
+    
+label battle_choose(follow_on):
+    #hide battle_prep_screen
+    #show screen battle_selection_screen(current_session.battles) #current_session.battles)
+    #menu:
+    #    "Battle1":
+    #        hide screen battle_selection_screen
+    #        show screen battle_prep_screen(battle=battle1)
+    #    "Battle2":
+    #        hide screen battle_selection_screen
+    #        show screen battle_prep_screen(battle=battle2)
+    #    "Battle3":
+    #        hide screen battle_selection_screen
+    #        #$ current_session.battle = battle3
+    #        show screen battle_prep_screen(battle=battle3)
+    #    "Done":
+    #        pass
+            
+    #python:
+    #    for battle in current_session.battles:
+    #        renpy.show_screen('battle_prep_screen', battle=battle)
+    show screen battle_prep_screen(follow_on)
     "HELLO"
         
     jump character_creation
