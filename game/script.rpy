@@ -330,31 +330,31 @@ init python:
                   weapons=[w_brass_knuckles], 
                   home_village=None)
     
-    naruto = Player('Naruto', "playerpic_r", naruto_c, Image('player.png'), None, 100, 100, 80, 80, 10, 4, 3, 4, 5, 80, tile1, 'right', 
+    naruto = Player('Naruto',"thug_tile_r", naruto_c, "thug_tile_r", "thug_tile_r", 100, 100, 80, 80, 10, 4, 3, 4, 5, 80, tile1, 'right', 
                     [onetwocombo], [rasengan], [substitution], [],
                     [damage_reduction, chakra_defence, reflect, dampen, yata_mirror], [], "leader_pic", 
                     weapons=[shiruken, kunai], home_village=hidden_leaf)
-    sasuke = Player('Sasuke', "enemypic_r", sasuke_c, Image('enemy.png'), None, 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
+    sasuke = Player('Sasuke', "thug_tile_r", sasuke_c, "thug_tile_r", "thug_tile_r", 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
                     [onetwocombo, lioncombo], [chidori], [], [], [damage_reduction, chakra_defence], 
                     battle_ai=special_enemy_pattern, weapons=[shiruken, kunai], home_village=hidden_leaf) #, interaction={'frequency': (1,)})
     
-    sakura = Player('Sakura', "sakurapic_r", sakura_c, Image('sakura.png'), None, 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
+    sakura = Player('Sakura', "thug_tile_r", sakura_c, "thug_tile_r", "thug_tile_r", 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
                     [onetwocombo, lioncombo], [chidori], [], [], [damage_reduction, chakra_defence], weapons=[shiruken, kunai], home_village=hidden_leaf)
-    kakashi = Player('Kakashi', "kakashipic_r", kakashi_c, Image('kakashi.png'), None, 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
+    kakashi = Player('Kakashi', "thug_tile_r", kakashi_c, "thug_tile_r", "thug_tile_r", 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
                     [onetwocombo, lioncombo], [raikiri], [], [], [damage_reduction, chakra_defence], level=32,
                     battle_ai=special_enemy_pattern, weapons=[shiruken, kunai], home_village=hidden_leaf)
-    anko = Player('Anko', "kakashipic_r", kakashi_c, Image('kakashi.png'), None, 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
+    anko = Player('Anko', "thug_tile_r", kakashi_c, "thug_tile_r","thug_tile_r", 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
                     [onetwocombo, lioncombo], [raikiri], [], [], [damage_reduction, chakra_defence], level=32,
                     battle_ai=special_enemy_pattern, weapons=[shiruken, kunai], home_village=hidden_leaf)
     
     itachi = copy.deepcopy(sasuke)
-    itachi.name, itachi.picname, itachi.character, itachi.level = "Itachi", "itachipic_r", itachi_c, 46
+    itachi.name, itachi.picname, itachi.character, itachi.level = "Itachi", "thug_tile_r", itachi_c, 46
     ori = copy.deepcopy(naruto)
-    ori.name, ori.picname, ori.character, ori.level = "Orichimaru", "oripic_r", ori_c, 45
+    ori.name, ori.picname, ori.character, ori.level = "Orichimaru", "thug_tile_r", ori_c, 45
     kyuubi = copy.deepcopy(naruto)
-    kyuubi.name, kyuubi.picname, kyuubi.character, kyuubi.level = "Kyuubi", "kakashipic_r", kakashi_c, 79
+    kyuubi.name, kyuubi.picname, kyuubi.character, kyuubi.level = "Kyuubi", "thug_tile_r", kakashi_c, 79
     gai = copy.deepcopy(naruto)
-    gai.name, gai.picname, gai.character, gai.level = "Gai", "oripic_r", ori_c, 32
+    gai.name, gai.picname, gai.character, gai.level = "Gai", "thug_tile_r", ori_c, 32
     gai.add_to_village_ranks()
     
     team7 = Team("Team 7", kakashi, [sasuke, sakura, naruto]) 
@@ -460,56 +460,25 @@ init python:
     screen_on = False
     calendar_on = False
     
-    battle1 = Battle(id="1", good_team=[], bad_team=[thug], xpos=100, ypos=100)
-    battle2 = Battle(id="2", good_team=[], bad_team=[itachi], xpos=300, ypos=100)
-    battle3 = Battle(id="3", good_team=[], bad_team=[kakashi], xpos=500, ypos=100)
+    battle1 = Battle(id="1", good_team=[], bad_team=[thug], xpos=100, ypos=100, battle_label="b_battle_1")
+    battle2 = Battle(id="2", good_team=[], bad_team=[itachi], xpos=300, ypos=100, battle_label="b_battle_2")
+    battle_last = Battle(id="last", good_team=[], bad_team=[kakashi], xpos=500, ypos=100, battle_label="b_battle_last")
     
     
             
 ##############################################################################
 # STORY / GAME START
 #
-
+    
 label start:
     
     scene street_1 night with dissolve
     $ current_session.team = team_first
     # this is used to restore the team back to original once battle is over
     $ current_session.team_store = copy.deepcopy(team_first)
-    $ current_session.battles = [battle1, battle2, battle3]
-    $ renpy.call('battle_choose', follow_on='battle_start')
-    
-label reset_battle(follow_on):
-    python:
-        for b in current_session.battles:
-            b.good_team = []
-    $ renpy.call('battle_choose', follow_on=follow_on)
-    
-label battle_start:
-    "HUKLLO DONE"
-    
-label battle_choose(follow_on):
-    #hide battle_prep_screen
-    #show screen battle_selection_screen(current_session.battles) #current_session.battles)
-    #menu:
-    #    "Battle1":
-    #        hide screen battle_selection_screen
-    #        show screen battle_prep_screen(battle=battle1)
-    #    "Battle2":
-    #        hide screen battle_selection_screen
-    #        show screen battle_prep_screen(battle=battle2)
-    #    "Battle3":
-    #        hide screen battle_selection_screen
-    #        #$ current_session.battle = battle3
-    #        show screen battle_prep_screen(battle=battle3)
-    #    "Done":
-    #        pass
-            
-    #python:
-    #    for battle in current_session.battles:
-    #        renpy.show_screen('battle_prep_screen', battle=battle)
-    show screen battle_prep_screen(follow_on)
-    "HELLO"
+    $ current_session.battles = [battle1, battle2, battle_last]
+    $ current_session.battle_follow_on = 'story_continue'
+    $ renpy.call('battle_choose')
         
     jump character_creation
     
@@ -1130,12 +1099,59 @@ label prologue_school:
     
     $ show_village_map(middle_town, hero)
     
-    
+    label story_continue:
+    "THE STORY CONTINUES"
+    # TODO: create a battle mission
+    # for retreat label gain exp and for story continue too
+    # finish off final mission
     
             
 ##############################################################################
 # MIDDLEWARE LABELS START
 #
+
+label reset_battle:
+    python:
+        for b in current_session.battles:
+            b.good_team = []
+    # battle_follow_on is set in battle_prep_screen
+    $ renpy.call('battle_choose')
+    
+label b_battle_2:
+    $ second_battle = get_battle_from_label('b_battle_2')
+    $ current_session.battle = second_battle
+    $ second_battle.fight(stage=clearing, win_label=second_battle.next_battle_label, lose_label=second_battle.next_battle_label, draw_label=second_battle.next_battle_label, fight_limit=10)
+    
+label b_battle_last:
+    $ last_battle = get_battle_from_label('b_battle_last')
+    $ current_session.battle = last_battle
+    $ last_battle.fight(stage=clearing, win_label='battle_choose', lose_label='battle_choose', draw_label='battle_choose', fight_limit=10)
+    
+label battle_start:
+    
+    $ first_battle = current_session.battles[0]
+    $ current_session.battle = first_battle
+    
+    $ first_battle.fight(stage=clearing, win_label=first_battle.next_battle_label, lose_label=first_battle.next_battle_label, draw_label=first_battle.next_battle_label, fight_limit=10)
+            
+    
+label battle_choose:
+    call hidetiles
+    
+    python:
+        battle_result = battle_finished(current_session.battles)
+        if battle_result['is_finished']:
+            if battle_result['outcome'] == 'lose':
+                # TODO: jump retreat label
+                pass
+            else:
+                renpy.jump(current_session.battle_follow_on) 
+    
+    $ populate_battles(current_session.battles, current_session.battle_follow_on)
+    show screen battle_prep_screen
+    "Choose battlefield for players."
+    jump battle_choose
+    
             
 label skill_redirect:
     python:

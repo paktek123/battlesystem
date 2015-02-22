@@ -556,7 +556,7 @@ screen battle_selection_screen(battles):
         text "[battle.good_team]" xpos battle.xpos ypos battle.ypos
     
 
-screen battle_prep_screen(follow_on):
+screen battle_prep_screen:
 
     # A map as background.
     #add "europe.jpg"
@@ -568,39 +568,14 @@ screen battle_prep_screen(follow_on):
     
     for battle in battles:
         text "[battle.good_team]" xpos battle.xpos ypos battle.ypos
+        text "[battle.bad_team]" xpos battle.xpos ypos (battle.ypos + 50)
+        text "[battle.next_battle_label]" xpos battle.xpos ypos (battle.ypos - 50)
     
     textbutton "Reset" action [Hide('battle_prep_screen'), 
-                               Jump('reset_battle', follow_on=follow_on)] xpos 0.8
-    textbutton "Done" action [Hide('battle_prep_screen'), Jump(follow_on)] xpos 0.7
+                               Jump('reset_battle')] xpos 0.8
+    textbutton "Done" action [Hide('battle_prep_screen'), Jump('battle_start')] xpos 0.7
 
     draggroup:
-        #if len(team) > 0:
-        #    drag:
-        #        drag_name team[0].name
-        #        child team[0].tilepic
-        #        droppable False
-        #        #dropped player_dragged
-        #        dragged player_dragged
-        #        xpos 50 ypos 300
-                
-        #if len(team) > 1:
-        #    drag:
-        #        drag_name team[1].name
-        #        child team[1].tilepic
-        #        droppable False
-        #        #dropped player_dragged
-        #        dragged player_dragged
-        #        xpos 100 ypos 300
-                
-        #if len(team) > 2:
-        #    drag:
-        #        drag_name team[2].name
-        #        child team[2].tilepic
-        #        droppable False
-        #        #dropped player_dragged
-        #        dragged player_dragged
-        #        xpos 150 ypos 300
-
         for p in current_session.team.members:
             drag:
                 drag_name p.name
@@ -610,23 +585,6 @@ screen battle_prep_screen(follow_on):
                 xpos (50*counter) ypos 300
                 
             $ counter += 1
-        
-        #if len(battles) > 0:
-             
-        #drag:
-        #    drag_name battle.id
-        #    child "marker.png"
-        #    draggable False
-        #    xpos battle.xpos ypos battle.ypos
-            
-            
-        #if len(battles) > 1:
-            #text "[battles[1].id]" xpos 0.8
-        #    drag:
-        #        drag_name battles[1].id
-        #        child "marker.png"
-        #        draggable False
-        #        xpos 200 ypos 200
                 
         for battle in current_session.battles:
             drag:
@@ -711,6 +669,8 @@ screen battlebars(tag_p, tag_e):
     
     text "[battle_turn] [current_session.fight_limit]" xpos 0.7 ypos 0.05
     text "[player.facing]" xpos 0.7 ypos 0.1
+    if current_session.battle:
+        text "[current_session.battle.id]" xpos 0.80 ypos 0.1
 
     text "[player.name]" xpos 0.5 ypos 0.15
     text "[player.chakra]" xpos 0.49 ypos 0.45

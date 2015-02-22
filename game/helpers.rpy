@@ -202,7 +202,7 @@ init -1 python:
                 Jump("fight")
                 
     def enemy_move_around(enemy, player):
-        move_to = random.randint(1, 11)
+        move_to = random.randint(1, enemy.speed)
         old_tile = enemy.tile
         if player.tile.position == move_to:
             # TODO: this may lead to player going off grid
@@ -221,7 +221,8 @@ init -1 python:
         hide_battle_screen()
         show_player_at_pos(enemy, player, stage, enemy.tile)
         
-        enemy_move_around(enemy, player)
+        # Only 1 movement, turn this on for multiple movements
+        #enemy_move_around(enemy, player)
         
         # enemy only needs to tag if partner has enough hp
         for partner in tag_e:
@@ -263,7 +264,10 @@ init -1 python:
             #renpy.say("HELLO", "Enemy position is {}.".format(enemy_position))
             enemy_tile = get_tile_from_position(abs(enemy_position))
             
-            if not enemy.tile or enemy_tile:
+            if not enemy.tile or not enemy_tile:
+                enemy_tile = old_tile
+                
+            if enemy.tile == player.tile or enemy_tile == player.tile:
                 enemy_tile = old_tile
             show_player_at_pos(enemy, player, None, enemy_tile)
             #renpy.show(enemy.tilepic, [ POSITIONS[enemy.tile.position] ])
@@ -345,6 +349,11 @@ init -1 python:
     def remove_traps_from_all_tiles():
         for tile in TILES:
             remove_trap(tile)
+            
+    def hide_player_pics(player):
+        renpy.hide(player.tilepic)
+        renpy.hide(player.hudpic)
+        renpy.hide(player.picname)
                 
     def end_match_teardown(player, enemy, match_result):
         """Things to do when match ends, avoid putting labels here"""
@@ -358,6 +367,10 @@ init -1 python:
         battle_turn = 0
         store.battle_turn = 0
         remove_traps_from_all_tiles()
+        hide_player_pics(player)
+        hide_player_pics(enemy)
+        hide_battle_screen(all=True)
+        #renpy.call('hidetiles')
         
     def end_match(player, enemy, tag_p, tag_e, win_label, lose_label, draw_label):
         # if player hp reaches zero force tag to partner with good hp
@@ -470,6 +483,12 @@ init -1 python:
         battle = get_battle_by_id(battle_id)
         
         other_battles = [b for b in current_session.battles if b.id != battle.id]
+        
+        # stop being added to the same battle twice
+        if player in battle.good_team:
+            return True
+        
+        # if put in other battles, remove from other battles
         for b in other_battles:
             for p in b.good_team:
                 if player == p:
@@ -480,30 +499,42 @@ init -1 python:
        
         return True
         
-    def player_dragged_2(drags, drop):
-        global battle_persist_stop
-
-        if not drop:
-            return
-
-        player_on_good_team = drags[0].drag_name
-        battle_id = drop.drag_name
+    def populate_battles(battles, follow_on):
+        if len(battles) < 2:
+            raise Exception("Must have more than 1 battle or at least 2")
+            
+        for index, battle in enumerate(battles):
+            if battle.id == "last":
+                battle.next_battle_label = "battle_choose"
+                battle.follow_on = follow_on
+            else:
+                battle.next_battle_label = battles[index + 1].battle_label
+                
+    def get_battle_from_label(label):
+        for battle in current_session.battles:
+            if battle.battle_label == label:
+                return battle
+                
+    def battle_finished(battles):
         
-        player = get_player_by_name(player_on_good_team)
-        #battle1 = get_battle_by_id(battle_id)
+        result = {'outcome': 'loss', 'is_finished': False}
         
-        #battle_persist_list.append(battle_id)
+        hps = [m.hp for m in current_session.team.members]
         
-        #if not battle_persist_stop:
-        battle2.add_good_member(player)
+        # if the total hps are below 0, end battle
+        if sum(hps) < 0:
+            result['is_finished'] = True
+            return result
         
-        #battle_persist_stop = True
+        for battle in battles:
+            if not battle.finished():
+                return result
+                
+        result['is_finished'] = True
+        result['outcome'] = 'win'
         
-        #for b in current_session.battles:
-        #    if b != battle:
-        #        b.good_team.remove(player)
-
-        return True
+        return result
+        
 
             
     import math

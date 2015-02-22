@@ -458,7 +458,7 @@ init -4 python:
                 self.chakra = self.maxchakra
                 
         def __repr__(self):
-            return "<Player>: {}".format(self.name)
+            return "<Player>: {} {}/{}".format(self.name, self.hp, self.maxhp)
             
     class LevelledEnemy(Player):
         def __init__(self, lvl, name='Thug', picname="thug_tile_r", character=None, tilepic="thug_tile_r", hudpic='thug_1_hud', 
