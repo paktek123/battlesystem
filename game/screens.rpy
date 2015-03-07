@@ -616,30 +616,36 @@ screen skill_actions(action_type):
 
 screen battlemenu(player, tag_p):
     $ move_types = ["melee", "special", "ranged", "weapons", "defensive"]
+    $ counter = 1
+    $ start = 300
+    $ x_pos = 118
     vbox:
         # TODO: Add items menu
         for move_type in move_types:
             $ capital = move_type.capitalize()
             if move_type == "weapons":
                 $ player_atr = "weapons"
+                $ capital = "Weapon"
             else:
                 $ player_atr = move_type + "skills"
                 
             #text "[player_atr]" xpos 0.5
                 
             if getattr(player, player_atr):
-                textbutton "[capital]" hovered Show('battle_explanation', stat=move_type) unhovered Hide('battle_explanation') action [Hide("skill_actions"), Show("skill_actions", action_type=player_atr)]
+                textbutton "[capital]" hovered Show('battle_explanation', stat=move_type) unhovered Hide('battle_explanation') action [Hide("skill_actions"), Show("skill_actions", action_type=player_atr)] xpos (counter*x_pos) ypos  (start - (counter*41))
             else:
-                textbutton "[capital]"
+                textbutton "[capital]" xpos (x_pos*counter) ypos (start - (counter*41))
+
+            $ counter += 1
        
         if not moved:
-            textbutton "Move" hovered Show('battle_explanation', stat='move') unhovered Hide('battle_explanation') action [Hide("skill_actions"), Show("movemenu")]
-        textbutton "Standby" hovered Show('battle_explanation', stat='standby') unhovered Hide('battle_explanation') action Jump("standby")
+            textbutton "Move" hovered Show('battle_explanation', stat='move') unhovered Hide('battle_explanation') action [Hide("skill_actions"), Show("movemenu")] xpos 355 ypos -50
+        textbutton "Standby" hovered Show('battle_explanation', stat='standby') unhovered Hide('battle_explanation') action Jump("standby") xpos 355 ypos -40
         
         # TODO: move trap to weapons
         #textbutton "Trap" action [Hide("specialactions"), Hide("rangedactions"), Hide("meleeactions"), Hide("weaponselection"), Hide("defenceactions"), Show("settrap")]
         for partner in tag_p:
-            textbutton "Tag [partner.name]" action [SetField(partner, 'main', True), SetField(partner, 'tile', player.tile), SetField(player, 'main', False), Jump('tag_partner')] ypos 3.5
+            textbutton "Tag [partner.name]" action [SetField(partner, 'main', True), SetField(partner, 'tile', player.tile), SetField(player, 'main', False), Jump('tag_partner')] ypos 5.0
         
 screen move_explanation(reason):
     text "[reason]" ypos 0.8 xpos 0.2
@@ -650,7 +656,7 @@ screen battle_explanation(stat):
                    'ranged': 'Attacks from distance.',
                    'move': 'Move across the battle area.', 
                    'weapons': 'Fixed damage attacks limited by quantity.', 
-                   'defence': 'Reduce enemy damage for a limited amount of time.',
+                   'defensive': 'Reduce enemy damage for a limited amount of time.',
                    'standby': 'Regain magic, slightly heal health.'}
     $ expl = expl_dict[stat]
     
@@ -667,18 +673,21 @@ screen battlebars(tag_p, tag_e):
         #has vbox 
     $ rel_pos = abs(player.tile.position - enemy.tile.position)
     
-    text "[battle_turn] [current_session.fight_limit]" xpos 0.7 ypos 0.05
-    text "[player.facing]" xpos 0.7 ypos 0.1
-    if current_session.battle:
-        text "[current_session.battle.id]" xpos 0.80 ypos 0.1
+    text "{color=#000}Round [battle_turn]{/color}" xpos 0.43 ypos 0.1
+    #text "[player.facing]" xpos 0.7 ypos 0.1
+    #if current_session.battle:
+    #    text "[current_session.battle.id]" xpos 0.80 ypos 0.1
 
-    text "[player.name]" xpos 0.5 ypos 0.15
-    text "[player.chakra]" xpos 0.49 ypos 0.45
-    text "[player.hp]" xpos 0.55 ypos 0.45
-    vbar value player.chakra range player.maxchakra xpos 0.5 ypos 0.2 ymaximum 150 #ymaximum 30 left_bar "blue_bar"
-    vbar value player.hp range player.maxhp xpos 0.55 ypos 0.2 ymaximum 150
-    if enemy.damage_dealt > 0:
-        text "-[enemy.damage_dealt]" xpos 0.59 ypos 0.3
+    #text "[player.name]" xpos 0.20 ypos 0.05
+    #text "[player.chakra]" xpos 0.49 ypos 0.45
+    imagebutton idle player.hudpic hover player.hudpic xpos 0.16 ypos 0.05 #action NullAction()
+    #text "[player.hp]" xpos 0.55 ypos 0.45
+    text "{color=#000}HP{/color}" xpos 0.10 ypos 0.3
+    text "{color=#000}MP{/color}" xpos 0.10 ypos 0.35
+    bar value player.hp range player.maxhp xpos 0.15 ypos 0.30 xmaximum 150 #ymaximum 30 left_bar "blue_bar"
+    bar value player.chakra range player.maxchakra xpos 0.15 ypos 0.35 xmaximum 150
+    #if enemy.damage_dealt > 0:
+    #    text "-[enemy.damage_dealt]" xpos 0.59 ypos 0.3
     
     #text "[player.facing]" xpos 0.2 ypos 0.25
     if player.check_active_skill(damage_reduction):
@@ -696,13 +705,16 @@ screen battlebars(tag_p, tag_e):
     if player.check_active_skill(yata_mirror):
         text "Yata" xpos 0.3 ypos 0.15
     
-    text "[enemy.name]" xpos 0.65 ypos 0.15
-    text "[enemy.chakra]" xpos 0.64 ypos 0.45
-    text "[enemy.hp]" xpos 0.70 ypos 0.45
-    vbar value enemy.hp range enemy.maxhp xpos 0.7 ypos 0.2 ymaximum 150
-    vbar value enemy.chakra range enemy.maxchakra xpos 0.66 ypos 0.2 ymaximum 150
-    if player.damage_dealt > 0:
-        text "-[player.damage_dealt]" xpos 0.75 ypos 0.3
+    #text "[enemy.name]" xpos 0.70 ypos 0.05
+    #text "[enemy.chakra]" xpos 0.64 ypos 0.45
+    imagebutton idle enemy.hudpic hover enemy.hudpic xpos 0.66 ypos 0.05
+    #text "[enemy.hp]" xpos 0.70 ypos 0.45
+    text "{color=#000}HP{/color}" xpos 0.60 ypos 0.3
+    text "{color=#000}MP{/color}" xpos 0.60 ypos 0.35
+    bar value enemy.hp range enemy.maxhp xpos 0.65 ypos 0.30 xmaximum 150
+    bar value enemy.chakra range enemy.maxchakra xpos 0.65 ypos 0.35 xmaximum 150
+    #if player.damage_dealt > 0:
+    #    text "-[player.damage_dealt]" xpos 0.75 ypos 0.3
         
     if enemy.check_active_skill(damage_reduction):
         text "DR" xpos 0.75 ypos 0.15
@@ -715,24 +727,24 @@ screen battlebars(tag_p, tag_e):
     # show tag partners health here
     for position, partner in enumerate(tag_p):
         if position == 0:
-            text "[partner.name]" xpos 0.25 ypos 0.75
-            vbar value partner.hp range partner.maxhp xpos 0.28 ypos 0.8 ymaximum 100 xmaximum 20
-            vbar value partner.chakra range partner.maxchakra xpos 0.25 ypos 0.8 ymaximum 100 xmaximum 20
+            text "[partner.name]" xpos 0.2 ypos 0.80
+            bar value partner.hp range partner.maxhp xpos 0.2 ypos 0.85 xmaximum 100
+            #bar value partner.chakra range partner.maxchakra xpos 0.25 ypos 0.8 xmaximum 100 
         else:
-            text "[partner.name]" xpos 0.35 ypos 0.75
-            vbar value partner.hp range partner.maxhp xpos 0.38 ypos 0.8 ymaximum 100 xmaximum 20
-            vbar value partner.chakra range partner.maxchakra xpos 0.35 ypos 0.8 ymaximum 100 xmaximum 20
+            text "[partner.name]" xpos 0.2 ypos 0.90
+            bar value partner.hp range partner.maxhp xpos 0.2 ypos 0.95 xmaximum 100 
+            #bar value partner.chakra range partner.maxchakra xpos 0.35 ypos 0.8 xmaximum 100 
         
     # show tag partners health here
     for position, partner in enumerate(tag_e):
         if position == 0:
-            text "[partner.name]" xpos 0.65 ypos 0.75
-            vbar value partner.hp range partner.maxhp xpos 0.68 ypos 0.8 ymaximum 100 xmaximum 20
-            vbar value partner.chakra range partner.maxchakra xpos 0.65 ypos 0.8 ymaximum 100 xmaximum 20
+            text "[partner.name]" xpos 0.7 ypos 0.90
+            bar value partner.hp range partner.maxhp xpos 0.7 ypos 0.95 xmaximum 100 #xmaximum 20
+            #bar value partner.chakra range partner.maxchakra xpos 0.65 ypos 0.8 ymaximum 100 xmaximum 20
         else:
-            text "[partner.name]" xpos 0.75 ypos 0.75
-            vbar value partner.hp range partner.maxhp xpos 0.78 ypos 0.8 ymaximum 100 xmaximum 20
-            vbar value partner.chakra range partner.maxchakra xpos 0.75 ypos 0.8 ymaximum 100 xmaximum 20
+            text "[partner.name]" xpos 0.7 ypos 0.95
+            bar value partner.hp range partner.maxhp xpos 0.7 ypos 0.95 xmaximum 100 #xmaximum 20
+            #bar value partner.chakra range partner.maxchakra xpos 0.75 ypos 0.8 ymaximum 100 xmaximum 20
 
 label movemenu:
     call hidetiles

@@ -109,6 +109,36 @@ init -7 python:
             else:
                 self.reward(player, half=True)
             show_village_map(from_village, player)
+
+    class BattleMission(Mission):
+        def __init__(self, name, hours=0, days=0, months=0, rank="D", good_team=[], 
+                     battles={'1':[], '2':[], 'last':[]}, follow_on=None, all_battles=[], background=None):
+            super(self.__class__, self).__init__(name, hours, days, months, rank, [], [])
+            self.good_team = good_team
+            self.battles = battles
+            self.follow_on = follow_on
+            self.all_battles = ALL_BATTLES
+            self.background = background
+
+        def do_mission(self, player):
+            renpy.hide_screen('battle_selection_screen')
+            renpy.hide_screen('battle_prep_screen')
+
+            if self.background:
+                renpy.hide(self.background)
+                renpy.show(self.background)
+
+            current_session.team = self.good_team
+
+            battle_data = []
+            for battle in self.all_battles:
+                if self.battles.get(battle.id):
+                    battle.bad_team = self.battles[battle.id]
+                    battle_data.append(battle)
+
+            current_session.battles = battle_data
+            current_session.battle_follow_on = self.follow_on
+            renpy.call('battle_choose')
             
     def get_character(name):
         for player in ALL_PLAYERS:

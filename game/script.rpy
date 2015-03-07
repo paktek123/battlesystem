@@ -33,6 +33,8 @@ init -1:
     image will_tile_l = im.Scale("hero_1_tile.png", 40, 50)
     image will_tile_r = im.Flip(im.Scale("hero_1_tile.png", 40, 50), horizontal=True)
     
+    # 120, 150 for large enemies
+    #image dragon_tile_l = im.Scale("attack_1.png", 120, 150)
     
     image playerpic_r = im.Scale("player.png", 40, 50)
     image enemypic_r = im.Scale("enemy.png", 40, 50)
@@ -90,6 +92,14 @@ init python:
                     renpy.image((tag, t), im.Scale(im.Recolor(fname, 51, 153, 255, 255), 800, 600))
                 else:
                     renpy.image((tag, t), im.Scale(fname, 800, 600))
+
+    # Define tilepics in the teams folder
+    #for fname in os.listdir(config.gamedir + '/teams'):
+    #    if fname.endswith(('.jpg', '.png')) and fname not in IMAGE_EXCEPTIONS:
+    #        tag = fname[:-4]
+    #        fname =  'teams/' + fname
+    #        renpy.image(tag + '_r', im.Scale(fname, 50, 60))
+    #        renpy.image(tag + '_l', im.Flip(im.Scale(fname, 50, 60), horizontal=True))
     
     
     LEADER_POSITION = Position(xpos=0.5, ypos=0.9)
@@ -170,6 +180,8 @@ init python:
         return False
             
     ### VILLAGE AND LOCATIONS ###
+
+    ### Use existing already defined labels not new ones 
     
     l_hospital = Location('Hospital', 'location_hospital', events=[e_hospital_discount])
     l_police_station = Location('Police Station', 'location_police_station', events=[e_weapon_discount])
@@ -299,6 +311,9 @@ init python:
     
     lvl_1_thug_melee = LevelledEnemy(lvl=1, skill_pool=THUG_MELEE_SKILL_SET, character=thug_c, tile=tile12)
     lvl_1_thug_ranged = LevelledEnemy(lvl=1, skill_pool=THUG_RANGED_SKILL_SET, character=thug_c, tile=tile12)
+
+    # Use this for quick character creation
+    #lvl_15_daniel = LevelledEnemy(lvl=15, skill_pool=THUG_MELEE_SKILL_SET, character=daniel_c, tile=tile12, tilepic="fe_1_r")
     
     hero = Player(name='NO NAME', picname="hero_tile_r", character=hero_c, tilepic="hero_tile_r", hudpic='hero_1_hud', 
                   hp=100, maxhp=100, chakra=80, maxchakra=80, 
@@ -463,6 +478,13 @@ init python:
     battle1 = Battle(id="1", good_team=[], bad_team=[thug], xpos=100, ypos=100, battle_label="b_battle_1")
     battle2 = Battle(id="2", good_team=[], bad_team=[itachi], xpos=300, ypos=100, battle_label="b_battle_2")
     battle_last = Battle(id="last", good_team=[], bad_team=[kakashi], xpos=500, ypos=100, battle_label="b_battle_last")
+
+    ### New BattleMission Class
+    battlemission1 = BattleMission(name="Partie Party", hours=6, good_team=team_test, background='yammer_office_2',
+                     battles={'1':[], '2':[], 'last':[lvl_30_dragon]}, follow_on='oncall_continue', all_battles=ALL_BATTLES)
+
+    # called like this
+    #$ battlemission1.do_mission(hero_c)
     
     
             
