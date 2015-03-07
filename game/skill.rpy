@@ -166,12 +166,13 @@ init -2 python:
             return "Skill: {} {}".format(self.skill_type, self.name)
             
     class Weapon(Skill):
-        def __init__(self, name, price, range, chakra_cost,  damage=0, stun=False, duration=None, element=None, tech=0, quantity=0):
+        def __init__(self, name, price, range, chakra_cost,  damage=0, stun=False, duration=None, element=None, tech=0, quantity=0, image=None):
             super(self.__class__, self).__init__(name, 'weapon', name.lower(), range, tech, chakra_cost, damage, stun, duration)
             self.price = price
             self.element = element
             self.tech = tech
             self.quantity = quantity
+            self.image = image
             
             # maybe apply element, electric etc
         def half_price(self):

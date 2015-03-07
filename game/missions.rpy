@@ -60,14 +60,16 @@ init -7 python:
         """
         Jumps to label
         """
-        def __init__(self, name, label, hours=0, days=0, months=0, rank="D", dialogue=[("char", " ")]):
+        def __init__(self, name, label, hours=0, days=0, months=0, rank="D", dialogue=[("char", " ")], location=None):
             super(self.__class__, self).__init__(name, hours, days, months, rank, dialogue)
             self.label = label
+            self.location = location
+            
             
         def do_mission(self, player, village, dest_village=None):
             # show some dialogues between the transaction phases to make it seemless
             main_time.advance_time(hours=self.hours, days=self.days)
-            renpy.call(self.label, player, village)
+            renpy.call(self.label)
             # handle reward and redirect in label ^^^
             
     class SimpleFightMission(Mission):
@@ -82,10 +84,15 @@ init -7 python:
                   'enemy': enemy_character, 
                   'tag': [enemy_tag_1, enemy_tag_2]}
         """
-        def __init__(self, name, hours=0, days=0, months=0, rank="D", dialogue=[("char", " ")], fights={}):
+        def __init__(self, name, hours=0, days=0, months=0, rank="D", dialogue=[("char", " ")], fights={}, background=None, location=None):
             super(self.__class__, self).__init__(name, hours, days, months, rank, dialogue, fights)
+            self.background = None # put this in Mission?
+            self.location = None
             
         def do_mission(self, player, from_village, dest_village):
+            if self.background:
+                renpy.show(self.background)
+            
             # show some dialogues between the transaction phases to make it seemless
             if self.days:
                 main_time.advance_time(hours=self.hours, days=self.days)
@@ -97,7 +104,7 @@ init -7 python:
                 player_team = []
             renpy.show(dest_village.random_mission_location())
             for p, d in self.dialogue:
-                renpy.say(player.character, d)
+                renpy.say(p.character, d)
             renpy.call('fight', player, self.fights['enemy'], player_team, self.fights['tag'], self.fights['stage'], self.fights['win_label'], self.fights['lose_label'])
             
             if current_session.last_match_result == 'win':

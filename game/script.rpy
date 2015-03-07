@@ -183,12 +183,12 @@ init python:
 
     ### Use existing already defined labels not new ones 
     
-    l_hospital = Location('Hospital', 'location_hospital', events=[e_hospital_discount])
-    l_police_station = Location('Police Station', 'location_police_station', events=[e_weapon_discount])
-    l_level_up = Location('Level Up', 'location_levelup')
-    l_training_ground = Location('Training', 'location_training', 'training')
-    l_town_mission = Location('Mission', 'location_missions', events=[])
-    l_apartment = Location('Apartment', 'location_apartment')
+    l_hospital = Location('Hospital', 'village_hospital', 'street_4', events=[e_hospital_discount])
+    l_police_station = Location('Police Station', 'village_police_station', 'building_1', events=[e_weapon_discount])
+    l_level_up = Location('Level Up', 'village_levelup', 'apartment_1')
+    l_training_ground = Location('Training', 'village_training', 'forest_2')
+    l_town_mission = Location('Mission', 'village_missions', events=[],)
+    l_apartment = Location('Apartment', 'village_home', 'apartment_1')
 
     # locations that exist in each village
     l_travel = Location('Travel', 'village_travel')
@@ -409,8 +409,8 @@ init python:
     ### MISSIONS ###
             
     # basic missions
-    m_secure_hospital = LabelMission('Secure Hospital', 'prologue_hospital', hours=11)
-    m_secure_police_station = LabelMission('Secure Police Station', 'prologue_hospital', hours=11)
+    m_secure_hospital = LabelMission('Secure Hospital', 'prologue_hospital', hours=11, location=l_hospital)
+    m_secure_police_station = LabelMission('Secure Police Station', 'prologue_police_station', hours=11, location=l_police_station)
     m_infiltrate_hold = SimpleFightMission('Infiltrate Hold', hours=5, rank='D') # TODO: do dialogue
     #m_defeat_sam = 
     
@@ -448,7 +448,7 @@ init python:
                                                    'tag': [kakashi],
                                                    'number': 2}])
                                                    
-    ALL_MISSIONS = [m_d1, m_d2, m_label_test, m_test_fightmission, m_test_multifight]
+    ALL_MISSIONS = [m_secure_hospital, m_secure_police_station, m_infiltrate_hold]
     
     ### GENERAL ###
     
@@ -475,13 +475,15 @@ init python:
     screen_on = False
     calendar_on = False
     
-    battle1 = Battle(id="1", good_team=[], bad_team=[thug], xpos=100, ypos=100, battle_label="b_battle_1")
-    battle2 = Battle(id="2", good_team=[], bad_team=[itachi], xpos=300, ypos=100, battle_label="b_battle_2")
-    battle_last = Battle(id="last", good_team=[], bad_team=[kakashi], xpos=500, ypos=100, battle_label="b_battle_last")
+    battle1 = Battle(id="1", good_team=[], bad_team=[], xpos=100, ypos=100, battle_label="b_battle_1")
+    battle2 = Battle(id="2", good_team=[], bad_team=[], xpos=300, ypos=100, battle_label="b_battle_2")
+    battle_last = Battle(id="last", good_team=[], bad_team=[], xpos=500, ypos=100, battle_label="b_battle_last")
+    
+    ALL_BATTLES = [battle1, battle2, battle_last]
 
     ### New BattleMission Class
-    battlemission1 = BattleMission(name="Partie Party", hours=6, good_team=team_test, background='yammer_office_2',
-                     battles={'1':[], '2':[], 'last':[lvl_30_dragon]}, follow_on='oncall_continue', all_battles=ALL_BATTLES)
+    battlemission1 = BattleMission(name="Attack Fort", hours=6, good_team=team_first,
+                     battles={'1':[], '2':[kakashi], 'last':[itachi]}, follow_on='game_continue', all_battles=ALL_BATTLES)
 
     # called like this
     #$ battlemission1.do_mission(hero_c)
@@ -494,13 +496,7 @@ init python:
     
 label start:
     
-    scene street_1 night with dissolve
-    $ current_session.team = team_first
-    # this is used to restore the team back to original once battle is over
-    $ current_session.team_store = copy.deepcopy(team_first)
-    $ current_session.battles = [battle1, battle2, battle_last]
-    $ current_session.battle_follow_on = 'story_continue'
-    $ renpy.call('battle_choose')
+    $ at_map = False
         
     jump character_creation
     
@@ -519,6 +515,38 @@ label character_creation:
     $ hero_c.name = player_name
     $ hero.name = player_name
     $ current_session.main_player = hero
+    
+    ## TESTING CODE
+    ################
+    
+    scene town_map_1 with dissolve
+    
+    show screen villagemap(middle_town, hero)
+    adam_c "Here is the map."
+    adam_c "We have some locations we have already secured."
+    
+    if l_hospital.unlocked:
+        adam_c "We managed to secure the hospital earlier."
+        adam_c "The hospital can be used to heal wounds and buy supplies for healing."
+    elif l_police_station.unlocked:
+        adam_c "We managed to secure the police station earlier."
+        adam_c "The Police Station can be used to buy weapons."
+    
+    $ l_apartment.unlocked = True
+    adam_c "Here is the apartment we are currently in."
+    $ l_training_ground.unlocked = True
+    adam_c "We have the training ground near by where we can train our skills in the mean time and unlock new skills."
+    $ l_level_up.unlocked = True
+    adam_c "Level up location can be used to level up and distribute skill points, make sure to spend these regularly to improve your fighting skills."
+    $ l_town_mission.unlocked = True
+    adam_c "Town missions are missions we must undertake to advance the story."
+    adam_c "I will leave you to decide what needs to be done."
+    
+    $ at_map = True
+    
+    $ show_village_map(middle_town, hero)
+    
+    ###############
     
     jump prologue1 # remove the above
     
@@ -795,20 +823,22 @@ label prologue2:
     return
     
 label prologue_hospital:
-    hero_c "We should go to the hospital to retrieve medical supplies and heal the wounded."
-    hero_c "Someone there must also know what is going on here."
-    greyson_c "But my family... I want make sure they are safe..."
-    will_c "I think [hero_c.name] is right here, we can split up."
-    # TODO: Some friction between team mates
-    greyson_c "I am going to go to the Police Station myself, I don't care care!"
-    hide greyson_1 with dissolve
-    "We are powerless to stop him as he heads North towards the police station."
-    show will_1 with dissolve
-    will_c "Leave him, we must get medical supplies."
-    "I reluctantly decide to move on."
-    "If we quickly confirm the Hospital is safe we can come to help Greyson."
-    "...."
-    "..."
+    if not at_map:
+        hero_c "We should go to the hospital to retrieve medical supplies and heal the wounded."
+        hero_c "Someone there must also know what is going on here."
+        greyson_c "But my family... I want make sure they are safe..."
+        will_c "I think [hero_c.name] is right here, we can split up."
+        # TODO: Some friction between team mates
+        greyson_c "I am going to go to the Police Station myself, I don't care care!"
+        hide greyson_1 with dissolve
+        "We are powerless to stop him as he heads North towards the police station."
+        show will_1 with dissolve
+        will_c "Leave him, we must get medical supplies."
+        "I reluctantly decide to move on."
+        "If we quickly confirm the Hospital is safe we can come to help Greyson."
+        "...."
+        "..."
+        
     scene street_4 night with squares
     "There are a few gang members driving around but we manage to avoid most of them."
     "Survellence is certainly low near the hospital."
@@ -840,6 +870,7 @@ label prologue_hospital:
     "Thugs" "Hey! You come here."
     "The mob rushes at us.... we have no choice but to fight..."
     $ renpy.call('fight', hero, copy.deepcopy(lvl_1_thug_melee), [will], [copy.deepcopy(lvl_1_thug_ranged)], clearing, win_label='prologue_hospital2', lose_label='prologue_hospital2', draw_label='prologue_hospital2', fight_limit=15)
+
     
 label prologue_hospital2:
     # hero gains experience or level up then hospital is conquered
@@ -873,6 +904,10 @@ label prologue_hospital2:
     will_c "Thanks, Doc."
     $ l_hospital.unlocked = True
     "{color=#006400}Hospital Secured! New location unlocked!{/color}" 
+    "....................."
+    if at_map:
+        jump town_map
+        
     "..........."
     "I have minor injuries I decided to leave early."
     hero_c "I'll go on ahead, make sure to catch up."
@@ -884,14 +919,17 @@ label prologue_hospital2:
     jump prologue_school
     
 label prologue_police_station:
-    hero_c "Lets go to the police station, we need to make sure we have some enforcement otherwise we can't survive."
-    greyson_c "I knew I could count on you."
-    greyson_c "Lets go!"
-    will_c "I'll head to the hospital by myself then."
-    hide will_1 with dissolve
-    "Will walks away."
-    greyson_c "Please stick with me, we have to secure the station."
-    hero_c "Lets go."
+    if not at_map:
+        hero_c "Lets go to the police station, we need to make sure we have some enforcement otherwise we can't survive."
+        greyson_c "I knew I could count on you."
+        greyson_c "Lets go!"
+        will_c "I'll head to the hospital by myself then."
+        hide will_1 with dissolve
+        "Will walks away."
+        greyson_c "Please stick with me, we have to secure the station."
+        hero_c "Lets go."
+        
+        
     scene building_1 night with squares
     ".........."
     "........"
@@ -927,6 +965,7 @@ label prologue_police_station:
     $ renpy.call('fight', hero, copy.deepcopy(lvl_1_thug_melee), [], [], clearing, win_label='prologue_police_station2', lose_label='prologue_police_station2', draw_label='prologue_police_station2', fight_limit=15)
     
 label prologue_police_station2:
+    call hidetiles
     # hero gains experience or level up then hospital is conquered
     $ hide_battle_screen(all=True)
     $ battle_turn = 0
@@ -951,8 +990,11 @@ label prologue_police_station2:
     "I manage to free them and get Greyson and myself treated."
     "Police Officer" "Thank you for your brave work, we will try to contact neighboring towns to call for backup."
     $ l_police_station.unlocked = True
-    "{color=#00ff00}Police Station Secured! New location unlocked!{color}"
+    "{color=#006400}Police Station Secured! New location unlocked!{/color}"
     "..........."
+    if at_map:
+        jump town_map
+        
     "........"
     scene street_1 night with squares
     "I need to head for the hospital."
@@ -1119,13 +1161,20 @@ label prologue_school:
     adam_c "Town missions are missions we must undertake to advance the story."
     adam_c "I will leave you to decide what needs to be done."
     
+    jump town_map
+    
+label town_map:
+    scene town_map_1 with dissolve
     $ show_village_map(middle_town, hero)
     
-    label story_continue:
-    "THE STORY CONTINUES"
+    #label story_continue:
+    #"THE STORY CONTINUES"
     # TODO: create a battle mission
     # for retreat label gain exp and for story continue too
     # finish off final mission
+    
+    # fort mission
+    #$ battlemission1.do_mission(hero_c)
     
             
 ##############################################################################
@@ -1159,6 +1208,9 @@ label battle_start:
     
 label battle_choose:
     call hidetiles
+    
+    hide screen battle_selection_screen
+    hide screen battle_prep_screen
     
     python:
         battle_result = battle_finished(current_session.battles)
@@ -1258,6 +1310,7 @@ label missionselect_redirect:
     
 label mission_redirect:
     hide screen villagemap
+    $ hide_battle_screen(all=True)
     $ import random
     $ current_session.mission.do_mission(current_session.main_player, current_session.village, random.choice(ALL_VILLAGES))
     
@@ -1456,6 +1509,13 @@ label village_intelligence_division(player, village):
     "SAMPLE" "TRAVEL HERE"
     jump start
     
+label village_police_station(player, village):
+    call time_revert
+    # maybe show different weapon shop here
+    show screen weaponshop(village, player)
+    player.character "I need to choose weapons to buy."
+    $ renpy.call('village_ninja_tool_facility', player, village)
+    
 label village_ninja_tool_facility(player, village):
     call time_revert
     # maybe show different weapon shop here
@@ -1557,6 +1617,7 @@ label sasuke2:
 
 label tag_partner:
     $ info = get_tag_info(player, tag_p)
+    $ renpy.hide(player.tilepic)
     $ renpy.hide(player.picname)
     $ renpy.call('fight', info['main'], enemy, info['tag'], tag_e, stage, win_label, lose_label, draw_label)
     

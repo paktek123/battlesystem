@@ -112,6 +112,9 @@ init -1 python:
         if all:
             renpy.hide_screen("stats")
             renpy.hide_screen("battlebars")
+            renpy.hide_screen("battle_explanation") 
+            renpy.hide_screen("location_explanation") 
+
     
     def find_suitable_tag_partner(tag):
         if len(tag) == 1:
@@ -462,7 +465,7 @@ init -1 python:
             return None
             
     def get_player_by_name(name):
-        for player in ALL_PLAYERS:
+        for player in current_session.team.members:
             if player.name == name:
                 return player
                 
@@ -500,8 +503,9 @@ init -1 python:
         return True
         
     def populate_battles(battles, follow_on):
-        if len(battles) < 2:
-            raise Exception("Must have more than 1 battle or at least 2")
+        # Turn off limit for now, mainly for big battles
+        #if len(battles) < 2:
+        #    raise Exception("Must have more than 1 battle or at least 2")
             
         for index, battle in enumerate(battles):
             if battle.id == "last":

@@ -152,11 +152,12 @@ screen missionselect(village, player, rank):
     $ missions = [mission for mission in ALL_MISSIONS if mission.rank == rank]
     
     for mission in missions:
-        textbutton "[mission.name]" action [SetField(current_session, 'village', village), 
-                                            SetField(current_session, 'main_player', player), 
-                                            SetField(current_session, 'mission', mission),
-                                            Hide("missionselect"),
-                                            Jump("mission_redirect")] xpos grid_place[counter][0] ypos grid_place[counter][1]
+        if mission.location and not mission.location.unlocked:
+            textbutton "[mission.name]" action [SetField(current_session, 'village', village), 
+                                                SetField(current_session, 'main_player', player), 
+                                                SetField(current_session, 'mission', mission),
+                                                Hide("missionselect"),
+                                                Jump("mission_redirect")] xpos grid_place[counter][0] ypos grid_place[counter][1]
         $ counter += 1
     
     textbutton "Back" action [SetField(current_session, 'village', village), 
@@ -246,7 +247,7 @@ screen train_skills(village, player):
                               Jump('location_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
 
 screen levelup(village, player):
-    $ STATS = ['strength', 'speed', 'evasion', 'defence', 'stamina', 'taijutsu', 'ninjutsu', 'genjutsu']
+    $ STATS = ['strength', 'speed', 'evasion', 'defence', 'stamina', 'melee', 'special', 'ranged']
     $ counter = 0
     #text "Allocation Points: [player.allocation_points]" xpos 0.1
     #text "Str: [player.strength] Def: [player.defence] Eva: [player.evasion]" xpos 0.50
@@ -380,16 +381,17 @@ screen villagemap(village, player):
             $ npc_counter += 1
     
     for location in village.locations:
-        if player.home_village:
-            if not player.home_village == village:
-                if location.name == 'Home':
-                    $ location.name = 'Hotel'
-        else:
-            if location.name == 'Home':
-                $ location.name = 'Hotel'
+        # Getting rid of this for now (its depends on game)
+        #if player.home_village:
+        #    if not player.home_village == village:
+        #        if location.name == 'Home':
+        #            $ location.name = 'Hotel'
+        #else:
+        #    if location.name == 'Home':
+        #        $ location.name = 'Hotel'
                 
         if location.unlocked:
-            textbutton [location.name] hovered Show('location_explanation', stat=location.label) unhovered Hide('location_explanation') action [SetField(current_session, 'main_player', player), 
+            textbutton "[location.name]" hovered Show('location_explanation', stat=location.label) unhovered Hide('location_explanation') action [SetField(current_session, 'main_player', player), 
                                                                                                                                     SetField(current_session, 'village', village), 
                                                                                                                                     SetField(current_session, 'location', location), 
                                                                                                                                     Hide("villagemap"), 
@@ -407,12 +409,12 @@ screen villagemap(village, player):
         $ counter += 1 
                 
 screen location_explanation(stat):
-    $ expl_dict = {'location_hospital': 'Heal injuries and buy healing items.', 
-                   'location_police_station': 'Buy weapons for combat.', 
-                   'location_levelup': 'Spend points to increase stats like strength, speed, evasion etc.',
-                   'location_training': 'Train with team members, learn new skills, unlock new skills.', 
-                   'location_missions': 'Perform missions.', 
-                   'location_apartment': 'Rest to heal injuries, skip time or view calendar for upcoming events.'}
+    $ expl_dict = {'village_hospital': 'Heal injuries and buy healing items.', 
+                   'village_police_station': 'Buy weapons for combat.', 
+                   'village_levelup': 'Spend points to increase stats like strength, speed, evasion etc.',
+                   'village_training': 'Train with team members, learn new skills, unlock new skills.', 
+                   'village_missions': 'Perform missions.', 
+                   'village_home': 'Rest to heal injuries, skip time or view calendar for upcoming events.'}
     $ expl = expl_dict[stat]
     
     text "[expl]" ypos 0.8 xpos 0.2
@@ -462,9 +464,9 @@ screen stats_screen(player):
         text "{size=-5}Sta: [player.stamina]{/size}" xpos 0.83 ypos 0.12
         text "{size=-5}Spd: [player.speed]{/size}" xpos 0.83 ypos 0.16
         text "{size=-5}Hit: [player.base_hit_rate]{size=-5}" xpos 0.83 ypos 0.20
-        text "{size=-5}Tai: [player.taijutsu]{/size}" xpos 0.915 ypos 0.12
-        text "{size=-5}Nin: [player.ninjutsu]{/size}" xpos 0.915 ypos 0.16
-        text "{size=-5}Gen: [player.genjutsu]{/size}" xpos 0.915 ypos 0.20
+        text "{size=-5}Mel: [player.melee]{/size}" xpos 0.915 ypos 0.12
+        text "{size=-5}Spe: [player.special]{/size}" xpos 0.915 ypos 0.16
+        text "{size=-5}Ran: [player.ranged]{/size}" xpos 0.915 ypos 0.20
     
         textbutton "Hide Stats" action [Hide("stats_screen"), Jump("toggle_screen_off")] xpos 0.4 ypos 0.0
     
@@ -682,8 +684,8 @@ screen battlebars(tag_p, tag_e):
     #text "[player.chakra]" xpos 0.49 ypos 0.45
     imagebutton idle player.hudpic hover player.hudpic xpos 0.16 ypos 0.05 #action NullAction()
     #text "[player.hp]" xpos 0.55 ypos 0.45
-    text "{color=#000}HP{/color}" xpos 0.10 ypos 0.3
-    text "{color=#000}MP{/color}" xpos 0.10 ypos 0.35
+    text "{color=#FFF}HP{/color}" xpos 0.10 ypos 0.3
+    text "{color=#FFF}MP{/color}" xpos 0.10 ypos 0.35
     bar value player.hp range player.maxhp xpos 0.15 ypos 0.30 xmaximum 150 #ymaximum 30 left_bar "blue_bar"
     bar value player.chakra range player.maxchakra xpos 0.15 ypos 0.35 xmaximum 150
     #if enemy.damage_dealt > 0:
@@ -709,8 +711,8 @@ screen battlebars(tag_p, tag_e):
     #text "[enemy.chakra]" xpos 0.64 ypos 0.45
     imagebutton idle enemy.hudpic hover enemy.hudpic xpos 0.66 ypos 0.05
     #text "[enemy.hp]" xpos 0.70 ypos 0.45
-    text "{color=#000}HP{/color}" xpos 0.60 ypos 0.3
-    text "{color=#000}MP{/color}" xpos 0.60 ypos 0.35
+    text "{color=#FFF}HP{/color}" xpos 0.60 ypos 0.3
+    text "{color=#FFF}MP{/color}" xpos 0.60 ypos 0.35
     bar value enemy.hp range enemy.maxhp xpos 0.65 ypos 0.30 xmaximum 150
     bar value enemy.chakra range enemy.maxchakra xpos 0.65 ypos 0.35 xmaximum 150
     #if player.damage_dealt > 0:
