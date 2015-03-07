@@ -31,8 +31,8 @@ init -10 python:
     TILE11POS = 600
     TILE12POS = 650
     
-    TILEYPOS = 0.7
-    PLAYERYPOS = 0.65
+    TILEYPOS = 0.80
+    PLAYERYPOS = 0.75
     
     TILEIDLEPIC = "tile.png"
     TILEHOVERPIC = "tileh.png"

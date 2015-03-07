@@ -19,10 +19,116 @@ init -1:
     define world_events = Character('World Events', color='#3399FF', window_left_padding=150, show_side_image=Image("leader_pic.png", xpos=0.03, yalign=0.96))
     image map = im.Scale("map.png", 800, 600)
     image stats_idle = Solid((0, 0, 0, 200), area=(0.62, 0.0, 300,150))
+    image frontpage = "frontpage.png"
+    #image yammer_map_1 = im.Scale("yammer_office_1.png", 800, 600)
+
+    image movie_player = Movie(size=(800, 600), xalign=0.5, yalign=0.5)
+
+    $ HUD_WIDTH = 130
+    $ HUD_HEIGHT = 150
     
     ### HUD PICS ###
     image hero_1_hud = im.Scale("hero_1_hud.png", 150, 200)
     image thug_1_hud = im.Scale("thug_1_hud.png", 150, 200)
+
+    # Managers
+    image side ben_hud = im.Scale("ben_hud.jpeg", HUD_WIDTH, HUD_HEIGHT)
+    image side mario_hud = im.Scale("mario_hud.png", HUD_WIDTH, HUD_HEIGHT)
+    image side pedro_hud = im.Scale("pedro_hud.jpeg",  HUD_WIDTH, HUD_HEIGHT)
+    image side danny_hud = im.Scale("danny_hud.png",  HUD_WIDTH, HUD_HEIGHT)
+    image side jonathan_hud = im.Scale("jonathan_hud.png", HUD_WIDTH, HUD_HEIGHT)
+
+    image ben_hud = im.Scale("ben_hud.jpeg", HUD_WIDTH, HUD_HEIGHT)
+    image mario_hud = im.Scale("mario_hud.png", HUD_WIDTH, HUD_HEIGHT)
+    image pedro_hud = im.Scale("pedro_hud.jpeg",  HUD_WIDTH, HUD_HEIGHT)
+    image danny_hud = im.Scale("danny_hud.png",  HUD_WIDTH, HUD_HEIGHT)
+    image jonathan_hud = im.Scale("jonathan_hud.png", HUD_WIDTH, HUD_HEIGHT)
+
+
+    # PE
+    image side neeran_hud = im.Scale("neeran_hud.jpeg",  HUD_WIDTH, HUD_HEIGHT)
+    image side afraz_hud = im.Scale("afraz_hud.png",  HUD_WIDTH, HUD_HEIGHT)
+    image side james_hud = im.Scale("james_hud.jpeg",  HUD_WIDTH, HUD_HEIGHT)
+    image side tom_hud = im.Scale("tom_hud.jpeg",  HUD_WIDTH, HUD_HEIGHT)
+    image side marios_hud = im.Scale("marios_hud.jpeg",  HUD_WIDTH, HUD_HEIGHT)
+
+    image neeran_hud = im.Scale("neeran_hud.jpeg",  HUD_WIDTH, HUD_HEIGHT)
+    image afraz_hud = im.Scale("afraz_hud.png",  HUD_WIDTH, HUD_HEIGHT)
+    image james_hud = im.Scale("james_hud.jpeg",  HUD_WIDTH, HUD_HEIGHT)
+    image tom_hud = im.Scale("tom_hud.jpeg",  HUD_WIDTH, HUD_HEIGHT)
+    image marios_hud = im.Scale("marios_hud.jpeg",  HUD_WIDTH, HUD_HEIGHT)
+
+    # CS
+    image side fred_hud = im.Scale("fred_hud.jpeg",  HUD_WIDTH, HUD_HEIGHT)
+    image side will_hud = im.Scale("will_hud.jpeg",  HUD_WIDTH, HUD_HEIGHT)
+    image side dmitry_nor_hud = im.Scale("dmitry_nor_hud.jpeg", HUD_WIDTH, HUD_HEIGHT)
+    image side dmitry_rus_hud = im.Scale("dmitry_rus_hud.jpeg",  HUD_WIDTH, HUD_HEIGHT)
+    image side enrico_hud = im.Scale("enrico_hud.jpeg",  HUD_WIDTH, HUD_HEIGHT)
+    image side michal_hud = im.Scale("michal_hud.jpeg",  HUD_WIDTH, HUD_HEIGHT)
+    image side ioana_hud = im.Scale("ioana_hud.jpeg",  HUD_WIDTH, HUD_HEIGHT)
+    image side domenico_hud = im.Scale("domenico_hud.jpeg",  HUD_WIDTH, HUD_HEIGHT)
+
+    image fred_hud = im.Scale("fred_hud.jpeg",  HUD_WIDTH, HUD_HEIGHT)
+    image will_hud = im.Scale("will_hud.jpeg",  HUD_WIDTH, HUD_HEIGHT)
+    image dmitry_nor_hud = im.Scale("dmitry_nor_hud.jpeg", HUD_WIDTH, HUD_HEIGHT)
+    image dmitry_rus_hud = im.Scale("dmitry_rus_hud.jpeg",  HUD_WIDTH, HUD_HEIGHT)
+    image enrico_hud = im.Scale("enrico_hud.jpeg",  HUD_WIDTH, HUD_HEIGHT)
+    image michal_hud = im.Scale("michal_hud.jpeg",  HUD_WIDTH, HUD_HEIGHT)
+    image ioana_hud = im.Scale("ioana_hud.jpeg",  HUD_WIDTH, HUD_HEIGHT)
+    image domenico_hud = im.Scale("domenico_hud.jpeg",  HUD_WIDTH, HUD_HEIGHT)
+
+
+    # Rails
+    image side yann_hud = im.Scale("yann_hud.png",  HUD_WIDTH, HUD_HEIGHT)
+    image side nick_hud = im.Scale("nick_hud.jpeg",  HUD_WIDTH, HUD_HEIGHT)
+    image side david_hud = im.Scale("david_hud.jpeg",  HUD_WIDTH, HUD_HEIGHT)
+    image side phillip_hud = im.Scale("phillip_hud.jpeg",  HUD_WIDTH, HUD_HEIGHT)
+    image side ali_hud = im.Scale("will_hud.jpeg",  HUD_WIDTH, HUD_HEIGHT)
+    image side john_hud = im.Scale("john_hud.png",  HUD_WIDTH, HUD_HEIGHT)
+
+    image yann_hud = im.Scale("yann_hud.png",  HUD_WIDTH, HUD_HEIGHT)
+    image nick_hud = im.Scale("nick_hud.jpeg",  HUD_WIDTH, HUD_HEIGHT)
+    image david_hud = im.Scale("david_hud.jpeg",  HUD_WIDTH, HUD_HEIGHT)
+    image phillip_hud = im.Scale("phillip_hud.jpeg",  HUD_WIDTH, HUD_HEIGHT)
+    image ali_hud = im.Scale("will_hud.jpeg",  HUD_WIDTH, HUD_HEIGHT)
+    image john_hud = im.Scale("john_hud.png",  HUD_WIDTH, HUD_HEIGHT)
+
+
+    # Frontend team
+    image side daniel_hud = im.Scale("daniel_hud.png",  HUD_WIDTH, HUD_HEIGHT)
+    image side alex_hud = im.Scale("alex_hud.jpeg",  HUD_WIDTH, HUD_HEIGHT)
+    image side ray_hud = im.Scale("ray_hud.jpeg",  HUD_WIDTH, HUD_HEIGHT)
+    image side maxim_hud = im.Scale("maxim_hud.jpeg",  HUD_WIDTH, HUD_HEIGHT)
+    image side mannie_hud = im.Scale("will_hud.jpeg", HUD_WIDTH, HUD_HEIGHT)
+
+    image daniel_hud = im.Scale("daniel_hud.png",  HUD_WIDTH, HUD_HEIGHT)
+    image alex_hud = im.Scale("alex_hud.jpeg",  HUD_WIDTH, HUD_HEIGHT)
+    image ray_hud = im.Scale("ray_hud.jpeg",  HUD_WIDTH, HUD_HEIGHT)
+    image maxim_hud = im.Scale("maxim_hud.jpeg",  HUD_WIDTH, HUD_HEIGHT)
+    image mannie_hud = im.Scale("will_hud.jpeg", HUD_WIDTH, HUD_HEIGHT)
+
+    # Apps Team
+    image side francesco_hud = im.Scale("francesco_hud.png", HUD_WIDTH, HUD_HEIGHT)
+    image side marco_hud = im.Scale("marco_hud.jpeg", HUD_WIDTH, HUD_HEIGHT)
+    image side romain_hud = im.Scale("romain_hud.jpeg", HUD_WIDTH, HUD_HEIGHT)
+    image side olga_hud = im.Scale("olga_hud.jpeg", HUD_WIDTH, HUD_HEIGHT)
+
+    image francesco_hud = im.Scale("francesco_hud.png", HUD_WIDTH, HUD_HEIGHT)
+    image marco_hud = im.Scale("marco_hud.jpeg", HUD_WIDTH, HUD_HEIGHT)
+    image romain_hud = im.Scale("romain_hud.jpeg", HUD_WIDTH, HUD_HEIGHT)
+    image olga_hud = im.Scale("olga_hud.jpeg", HUD_WIDTH, HUD_HEIGHT)
+
+    # IT
+    image side scott_hud = im.Scale("scott_hud.png",  HUD_WIDTH, HUD_HEIGHT)
+
+    # QA
+    image side troy_hud = im.Scale("troy_hud.png", HUD_WIDTH, HUD_HEIGHT)
+
+    image side dragon_hud = im.Scale("mugshot_dragon.png", HUD_WIDTH, HUD_HEIGHT)
+    image side rabbit_hud = im.Scale("mugshot_rabbit.png", HUD_WIDTH, HUD_HEIGHT)
+    image side bladewolf_hud = im.Scale("mugshot_dog.png", HUD_WIDTH, HUD_HEIGHT)
+    image side cat_hud = im.Scale("mugshot_cat.png", HUD_WIDTH, HUD_HEIGHT)
+
     
     ### TILE PICS ###
     
@@ -32,9 +138,16 @@ init -1:
     image thug_tile_r = im.Flip(im.Scale("thug_1_tile.png", 40, 50), horizontal=True)
     image will_tile_l = im.Scale("hero_1_tile.png", 40, 50)
     image will_tile_r = im.Flip(im.Scale("hero_1_tile.png", 40, 50), horizontal=True)
+
+    image dragon_tile_l = im.Scale("attack_1.png", 120, 150)
+    image dragon_tile_r = im.Flip(im.Scale("attack_1.png", 120, 150), horizontal=True)
+    image bladewolf_tile_l = im.Scale("attack_2.png", 120, 150)
+    image bladeworld_tile_r = im.Flip(im.Scale("attack_2.png", 120, 150), horizontal=True)
+    image rabbit_tile_l = im.Scale("attack_3.png", 120, 150)
+    image rabbit_tile_r = im.Flip(im.Scale("attack_3.png", 120, 150), horizontal=True)
+    image cat_tile_l = im.Scale("attack_4.png", 120, 100)
+    image cat_tile_r = im.Flip(im.Scale("attack_4.png", 120, 150), horizontal=True)
     
-    # 120, 150 for large enemies
-    #image dragon_tile_l = im.Scale("attack_1.png", 120, 150)
     
     image playerpic_r = im.Scale("player.png", 40, 50)
     image enemypic_r = im.Scale("enemy.png", 40, 50)
@@ -69,6 +182,8 @@ init -1:
     $ red_flash = Fade(.25, 0, .75, color="#ff0000")
     $ black_flash = Fade(.5, 0, .5, color="#000")
 
+    $ center_pos = Position(xpos=0.5, ypos=0.5)
+
     
     $ player1currentpos = 1
     $ enemy1currentpos = 12
@@ -93,13 +208,12 @@ init python:
                 else:
                     renpy.image((tag, t), im.Scale(fname, 800, 600))
 
-    # Define tilepics in the teams folder
-    #for fname in os.listdir(config.gamedir + '/teams'):
-    #    if fname.endswith(('.jpg', '.png')) and fname not in IMAGE_EXCEPTIONS:
-    #        tag = fname[:-4]
-    #        fname =  'teams/' + fname
-    #        renpy.image(tag + '_r', im.Scale(fname, 50, 60))
-    #        renpy.image(tag + '_l', im.Flip(im.Scale(fname, 50, 60), horizontal=True))
+    for fname in os.listdir(config.gamedir + '/teams'):
+        if fname.endswith(('.jpg', '.png')) and fname not in IMAGE_EXCEPTIONS:
+            tag = fname[:-4]
+            fname =  'teams/' + fname
+            renpy.image(tag + '_r', im.Scale(fname, 50, 60))
+            renpy.image(tag + '_l', im.Flip(im.Scale(fname, 50, 60), horizontal=True))
     
     
     LEADER_POSITION = Position(xpos=0.5, ypos=0.9)
@@ -180,15 +294,21 @@ init python:
         return False
             
     ### VILLAGE AND LOCATIONS ###
-
-    ### Use existing already defined labels not new ones 
     
-    l_hospital = Location('Hospital', 'location_hospital', events=[e_hospital_discount])
-    l_police_station = Location('Police Station', 'location_police_station', events=[e_weapon_discount])
-    l_level_up = Location('Level Up', 'location_levelup')
-    l_training_ground = Location('Training', 'location_training', 'training')
-    l_town_mission = Location('Mission', 'location_missions', events=[])
-    l_apartment = Location('Apartment', 'location_apartment')
+    #l_hospital = Location('Hospital', 'location_hospital', events=[e_hospital_discount])
+    #l_police_station = Location('Police Station', 'location_police_station', events=[e_weapon_discount])
+    #l_level_up = Location('Level Up', 'location_levelup')
+    #l_training_ground = Location('Training', 'location_training', 'training')
+    #l_town_mission = Location('Mission', 'location_missions', events=[])
+    #l_apartment = Location('Apartment', 'location_apartment')
+
+    l_holiday = Location('Holiday', 'village_hospital', events=[e_hospital_discount])
+    l_it = Location('IT', 'village_ninja_tool_facility', events=[e_weapon_discount])
+    l_one_on_one = Location('One on One', 'village_levelup')
+    l_training_course = Location('Training Course', 'village_training', 'yammer_office_3')
+    l_work = Location('Work', 'village_missions', events=[])
+    l_home = Location('Home', 'village_home')
+    l_deploy = Location('Deploy', 'location_deploy')
 
     # locations that exist in each village
     l_travel = Location('Travel', 'village_travel')
@@ -199,9 +319,11 @@ init python:
     l_intelligence_division = Location('Intelligence Division', 'village_intelligence_division')
     l_ninja_tool_facility = Location('Ninja Tool Facility', 'village_ninja_tool_facility', events=[e_weapon_discount])
     l_villagemission = Location('Mission Assignment Desk', 'village_missions', events=[e_chunin_exams])
-    l_home = Location('Home', 'village_home')
+    #l_home = Location('Home', 'village_home')
+
+    BASE_LOCATIONS = [l_holiday, l_it, l_one_on_one, l_training_course, l_work, l_home, l_deploy]
     
-    BASE_LOCATIONS = [l_level_up, l_training_ground, l_town_mission, l_apartment, l_hospital, l_police_station]
+    #BASE_LOCATIONS = [l_level_up, l_training_ground, l_town_mission, l_apartment, l_hospital, l_police_station]
     
     #BASE_LOCATIONS = [l_travel, l_level_up, l_training_ground, l_arena, l_hospital, l_jounin_station, l_intelligence_division, l_ninja_tool_facility, l_villagemission, l_home]
     
@@ -212,8 +334,24 @@ init python:
     hidden_mist = Village(3, "Hidden Mist", None, marker_xpos=0.85, marker_ypos=0.70, map="mist_map", locations=BASE_LOCATIONS, village_tag="mist", mission_locations=2)
     hidden_leaf = Village(4, "Hidden Leaf", None, marker_xpos=0.40, marker_ypos=0.60, map="konoha_map", locations=BASE_LOCATIONS, village_tag="leaf", mission_locations=2)
     hidden_sand = Village(5, "Hidden Sand", None, marker_xpos=0.25, marker_ypos=0.90, map="sand_map", locations=BASE_LOCATIONS, village_tag="sand", mission_locations=4)
+
+    # managers
+    bsmith_c = Character('Ben',color="#FFFF00", image="ben_hud")
+    mcaropreso_c = Character('Mario',color="#FFFF00", image="mario_hud")
+    pmorias_c = Character('Pedro', color="#FFFF00", image="pedro_hud")
+    dammey_c = Character('Danny', color="#FFFF00", image="danny_hud")
+    janthony_c = Character('Jonathan', color="#FFFF00", image="jonathan_hud")
+
+    cs_team = Village(6, "CS Team", bsmith_c, marker_xpos=0.5, marker_ypos=0.6, map="yammer_office_1", locations=BASE_LOCATIONS, village_tag="cs_team", mission_locations=4)
+    rails_team = Village(7, "Rails Team", mcaropreso_c, marker_xpos=0.6, marker_ypos=0.60, map="yammer_office_1", locations=BASE_LOCATIONS, village_tag="rails_team", mission_locations=4)
+    frontend_team = Village(8, "Frontend Team", dammey_c, marker_xpos=0.7, marker_ypos=0.40, map="yammer_office_1", locations=BASE_LOCATIONS, village_tag="frontend_team", mission_locations=4)
+    apps_team = Village(9, "Apps Team", pmorias_c, marker_xpos=0.7, marker_ypos=0.5, map="yammer_office_1", locations=BASE_LOCATIONS, village_tag="apps_team", mission_locations=4)
+    pe_team = Village(10, "PE Team", janthony_c, marker_xpos=0.75, marker_ypos=0.3, map="yammer_office_1", locations=BASE_LOCATIONS, village_tag="pe_team", mission_locations=4)
+
+    # this is the main village the above are just placeholders for map rotation
+    yammer_office = Village(11, "Yammer Office", None, marker_xpos=0.25, marker_ypos=0.90, map="yammer_office_1", locations=BASE_LOCATIONS, village_tag="yammer", mission_locations=4)
         
-    ALL_VILLAGES = [hidden_stone, hidden_cloud, hidden_mist, hidden_leaf, hidden_sand] 
+    ALL_VILLAGES = [cs_team, rails_team, frontend_team, apps_team, pe_team] 
     
     def other_villages(village):
         return [v for v in ALL_VILLAGES if v.id != village.id]
@@ -225,10 +363,10 @@ init python:
     ### SKILLS ###
     
     # melee skills
-    punching_flurry = Skill(name='Punching Flurry', skill_type='melee', label="punchingflurry", range=2, damage=20)
+    punching_flurry = Skill(name='Take extra food portions', skill_type='melee', label="punchingflurry", range=2, damage=20)
     onetwocombo = Skill(name='One Two Combo', skill_type='melee', label="onetwocombo", range=3, damage=30)
-    jaw_breaker = Skill(name="Jaw Breaker", skill_type='melee', label='jaw_breaker', range=2, damage=40)
-    thug_smash = Skill(name='Thug Smash', skill_type='melee', label="thug_smash", range=2, damage=25)
+    jaw_breaker = Skill(name="Shame Hat", skill_type='melee', label='jaw_breaker', range=2, damage=40)
+    thug_smash = Skill(name='Steal Charger', skill_type='melee', label="thug_smash", range=2, damage=25)
     
     
     lioncombo = Skill('Lion Combo', 'melee', "lioncombo", 3, 2, 5, 20, unlock_exp=300)
@@ -270,9 +408,15 @@ init python:
     shiruken = Weapon('Shiruken', 'weapon', "shiruken", 12, 7, 1, 20)
     kunai = Weapon('Kunai', 'weapon', "kunai", 12, 4, 1, 20)
     trap = Weapon('Trap', 'weapon', "trap", 3, 1, 2, 30)
+
+    w_nerf_gun = Weapon("Nerf Gun", price=50, range=4, chakra_cost=4, damage=20, image="weapons_6.png")
+    w_stress_ball = Weapon("Stress Ball", price=50, range=4, chakra_cost=4, damage=20, image="weapons_4.png")
+    w_chicken = Weapon("Chicken", price=50, range=4, chakra_cost=4, damage=20, image="weapons_3.png")
+    w_cards = Weapon("Charger", price=50, range=4, chakra_cost=4, damage=20, image="weapons_2.png")
+    w_mini_tree = Weapon("Mini Tree", price=50, range=4, chakra_cost=4, damage=20, image="weapons_1.png")
     
-    THUG_MELEE_SKILL_SET = [onetwocombo, jaw_breaker, thug_smash, metal_jacket, intimidate, w_knife, w_bat]
-    THUG_RANGED_SKILL_SET = [rock_throw, distance_hit, metal_jacket, w_bbgun]
+    THUG_MELEE_SKILL_SET = [onetwocombo, jaw_breaker, thug_smash, metal_jacket, intimidate, w_nerf_gun, w_stress_ball, w_chicken, w_cards, w_mini_tree]
+    THUG_RANGED_SKILL_SET = [rock_throw, distance_hit, metal_jacket, w_bbgun, w_nerf_gun, w_stress_ball, w_chicken, w_cards, w_mini_tree]
     
     ### PLAYERS AND TEAMS ###
     
@@ -300,6 +444,56 @@ init python:
     amy_c = Character('Amy',color="#FFFF00")
     greyson_c = Character('Greyson',color="#FFFF00")
     will_c = Character('Will',color="#FFFF00")
+
+
+    # PE Team
+    neeran_c = Character('Neeran', color="#FFFF00", image="neeran_hud")
+    afraz_c = Character('Afraz', color="#FFFF00",image="afraz_hud")
+    james_c = Character('James', color="#FFFF00", image="james_hud")
+    tom_c = Character('Tom', color="#FFFF00", image="tom_hud")
+    marios_c = Character('Marios', color="#FFFF00", image="marios_hud")
+
+    # CS team
+    fred_c = Character('Fred', color="#FFFF00", image="fred_hud")
+    will_c = Character('Will', color="#FFFF00", image="will_hud")
+    dmitry_norway_c = Character('Dmitry Nor', color="#FFFF00", image="dmitry_nor_hud")
+    dmitry_russia_c = Character('Dmitry Rus', color="#FFFF00", image="dmitry_rus_hud")
+    enrico_c = Character('Enrico', color="#FFFF00", image="enrico_hud")
+    domenico_c = Character('Domenico', color="#FFFF00", image="domenico_hud")
+    michal_c = Character('Michal', color="#FFFF00", image="michal_hud")
+    ioana_c = Character('Ioana', color="#FFFF00", image="ioana_hud")
+
+    # Rails Team
+    yann_c = Character('Yann', color="#FFFF00", image="yann_hud")
+    nick_c = Character('Nick', color="#FFFF00", image="nick_hud")
+    david_c = Character('David', color="#FFFF00", image="david_hud")
+    phillip_c = Character('Phillip', color="#FFFF00", image="phillip_hud")
+    ali_c = Character('Ali', color="#FFFF00", image="ali_hud")
+    john_c = Character('John', color="#FFFF00", image="john_hud")
+
+    # Frontend team
+    daniel_c = Character('Daniel', color="#FFFF00", image="daniel_hud")
+    alex_c = Character('Alex', color="#FFFF00", image="alex_hud")
+    ray_c = Character('Ray', color="#FFFF00", image="ray_hud")
+    maxim_c = Character('Maxim', color="#FFFF00", image="maxim_hud")
+    mannie_c = Character('Mannie', color="#FFFF00", image="mannie_hud")
+
+    # Apps Team
+    francesco_c = Character('Francesco', color="#FFFF00", image="francesco_hud")
+    marco_c = Character('Marco', color="#FFFF00", image="marco_hud")
+    romain_c = Character('Romain', color="#FFFF00", image="romain_hud")
+    olga_c = Character('Olga', color="#FFFF00", image="olga_hud")
+
+    # IT
+    scott_c = Character('Scott', color="#FFFF00", image="scott_hud")
+
+    # QA
+    troy_c = Character('Troy', color="#FFFF00", image="troy_hud")
+
+    dragon_c = Character('Partie Party', color="#FFFF00", image="dragon_hud")
+    bladewolf_c = Character('Puppet Party', color="#FFFF00", image="bladewolf_hud")
+    rabbit_c = Character('Rabbit Queues', color="#FFFF00", image="rabbit_hud")
+    cat_c = Character('Royalmail Party', color="#FFFF00", image="dragon_hud")
     
     
     naruto_c = Character('Naruto',color="#FFFF00") 
@@ -312,10 +506,64 @@ init python:
     lvl_1_thug_melee = LevelledEnemy(lvl=1, skill_pool=THUG_MELEE_SKILL_SET, character=thug_c, tile=tile12)
     lvl_1_thug_ranged = LevelledEnemy(lvl=1, skill_pool=THUG_RANGED_SKILL_SET, character=thug_c, tile=tile12)
 
-    # Use this for quick character creation
-    #lvl_15_daniel = LevelledEnemy(lvl=15, skill_pool=THUG_MELEE_SKILL_SET, character=daniel_c, tile=tile12, tilepic="fe_1_r")
+    # managers
+    lvl_20_ben_smith = LevelledEnemy(lvl=20, skill_pool=THUG_MELEE_SKILL_SET, character=bsmith_c, tile=tile12)
+    lvl_20_mario = LevelledEnemy(lvl=20, skill_pool=THUG_MELEE_SKILL_SET, character=mcaropreso_c, tile=tile12)
+    lvl_20_pedro = LevelledEnemy(lvl=20, skill_pool=THUG_MELEE_SKILL_SET, character=pmorias_c, tile=tile12)
+    lvl_20_danny = LevelledEnemy(lvl=20, skill_pool=THUG_MELEE_SKILL_SET, character=dammey_c, tile=tile12)
+    lvl_20_jon = LevelledEnemy(lvl=20, skill_pool=THUG_MELEE_SKILL_SET, character=janthony_c, tile=tile12)
+
+    # PE team
+    lvl_15_neeran = LevelledEnemy(lvl=15, skill_pool=THUG_MELEE_SKILL_SET, character=neeran_c, tile=tile12, tilepic="pe_1_r")
+    lvl_15_afraz = LevelledEnemy(lvl=15, skill_pool=THUG_MELEE_SKILL_SET, character=afraz_c, tile=tile12, tilepic="pe_2_r")
+    lvl_15_james = LevelledEnemy(lvl=15, skill_pool=THUG_MELEE_SKILL_SET, character=james_c, tile=tile12, tilepic="pe_3_r")
+    lvl_15_tom = LevelledEnemy(lvl=15, skill_pool=THUG_MELEE_SKILL_SET, character=tom_c, tile=tile12, tilepic="pe_4_r")
+    lvl_15_marios = LevelledEnemy(lvl=15, skill_pool=THUG_MELEE_SKILL_SET, character=marios_c, tile=tile12, tilepic="pe_5_r")
+
+    # CS team
+    lvl_15_fred = LevelledEnemy(lvl=15, skill_pool=THUG_MELEE_SKILL_SET, character=fred_c, tile=tile12, tilepic="cs_1_r")
+    lvl_15_will = LevelledEnemy(lvl=15, skill_pool=THUG_MELEE_SKILL_SET, character=will_c, tile=tile12, tilepic="cs_2_r")
+    lvl_15_dmitry_r = LevelledEnemy(lvl=15, skill_pool=THUG_MELEE_SKILL_SET, character=dmitry_russia_c, tile=tile12, tilepic="cs_3_r")
+    lvl_15_dmitry_n = LevelledEnemy(lvl=15, skill_pool=THUG_MELEE_SKILL_SET, character=dmitry_norway_c, tile=tile12, tilepic="cs_4_r")
+    lvl_15_enrico = LevelledEnemy(lvl=15, skill_pool=THUG_MELEE_SKILL_SET, character=enrico_c, tile=tile12, tilepic="cs_5_r")
+    lvl_15_domenico = LevelledEnemy(lvl=15, skill_pool=THUG_MELEE_SKILL_SET, character=domenico_c, tile=tile12, tilepic="cs_1_r")
+    lvl_15_michal = LevelledEnemy(lvl=15, skill_pool=THUG_MELEE_SKILL_SET, character=michal_c, tile=tile12, tilepic="cs_2_r")
+    lvl_15_ioana = LevelledEnemy(lvl=15, skill_pool=THUG_MELEE_SKILL_SET, character=ioana_c, tile=tile12, tilepic="cs_4_r")
+
+    # Rails Team
+    lvl_15_yann = LevelledEnemy(lvl=15, skill_pool=THUG_MELEE_SKILL_SET, character=yann_c, tile=tile12, tilepic="api_1_r")
+    lvl_15_nick = LevelledEnemy(lvl=15, skill_pool=THUG_MELEE_SKILL_SET, character=nick_c, tile=tile12, tilepic="api_2_r")
+    lvl_15_david = LevelledEnemy(lvl=15, skill_pool=THUG_MELEE_SKILL_SET, character=david_c, tile=tile12, tilepic="api_3_r")
+    lvl_15_phillip = LevelledEnemy(lvl=15, skill_pool=THUG_MELEE_SKILL_SET, character=phillip_c, tile=tile12, tilepic="api_4_r")
+    lvl_15_ali = LevelledEnemy(lvl=15, skill_pool=THUG_MELEE_SKILL_SET, character=ali_c, tile=tile12, tilepic="api_5_r")
+    lvl_15_john = LevelledEnemy(lvl=15, skill_pool=THUG_MELEE_SKILL_SET, character=john_c, tile=tile12, tilepic="api_1_r")
+
+    # frontend Team
+    lvl_15_daniel = LevelledEnemy(lvl=15, skill_pool=THUG_MELEE_SKILL_SET, character=daniel_c, tile=tile12, tilepic="fe_1_r")
+    lvl_15_alex = LevelledEnemy(lvl=15, skill_pool=THUG_MELEE_SKILL_SET, character=alex_c, tile=tile12, tilepic="fe_2_r")
+    lvl_15_ray = LevelledEnemy(lvl=15, skill_pool=THUG_MELEE_SKILL_SET, character=ray_c, tile=tile12, tilepic="fe_3_r")
+    lvl_15_maxim = LevelledEnemy(lvl=15, skill_pool=THUG_MELEE_SKILL_SET, character=maxim_c, tile=tile12, tilepic="fe_4_r")
+    lvl_15_mannie = LevelledEnemy(lvl=15, skill_pool=THUG_MELEE_SKILL_SET, character=mannie_c, tile=tile12, tilepic="fe_5_r")
+
+    # apps team
+    lvl_15_francesco = LevelledEnemy(lvl=15, skill_pool=THUG_MELEE_SKILL_SET, character=francesco_c, tile=tile12, tilepic="app_1_r")
+    lvl_15_marco = LevelledEnemy(lvl=15, skill_pool=THUG_MELEE_SKILL_SET, character=marco_c, tile=tile12, tilepic="app_2_r")
+    lvl_15_romain = LevelledEnemy(lvl=15, skill_pool=THUG_MELEE_SKILL_SET, character=romain_c, tile=tile12, tilepic="app_3_r")
+    lvl_15_olga = LevelledEnemy(lvl=15, skill_pool=THUG_MELEE_SKILL_SET, character=olga_c, tile=tile12, tilepic="app_4_r")
+
+    team_pe = Team("PE Team", lvl_20_jon, [lvl_15_neeran, lvl_15_afraz, lvl_15_james, lvl_15_tom, lvl_15_marios])
+
+    team_cs = Team("CS Team", lvl_20_ben_smith, [lvl_15_fred, lvl_15_will, lvl_15_enrico, 
+                                     lvl_15_domenico, lvl_15_michal, lvl_15_ioana])
+    team_rails = Team("Rails Team", lvl_20_mario, [lvl_15_yann, lvl_15_nick, lvl_15_david, lvl_15_phillip, lvl_15_ali, 
+                                           lvl_15_john])
+    team_frontend = Team("Frontend Team", lvl_20_danny, [lvl_15_daniel, lvl_15_alex, lvl_15_ray, lvl_15_maxim, lvl_15_mannie])
+    team_apps = Team("Apps Team", lvl_20_pedro, [lvl_15_francesco, lvl_15_marco, lvl_15_romain, lvl_15_olga])
+
+    # partieparty
+    lvl_30_dragon = LevelledEnemy(lvl=30, skill_pool=THUG_MELEE_SKILL_SET, character=mannie_c, tile=tile12)
     
-    hero = Player(name='NO NAME', picname="hero_tile_r", character=hero_c, tilepic="hero_tile_r", hudpic='hero_1_hud', 
+    hero = Player(name='Neeran', picname="hero_tile_r", character=hero_c, tilepic="hero_tile_r", hudpic='neeran_hud', 
                   hp=100, maxhp=100, chakra=80, maxchakra=80, 
                   strength=5, speed=5, evasion=1, defence=1, stamina=1, base_hit_rate=80, 
                   tile=tile1, facing='right', 
@@ -379,6 +627,8 @@ init python:
     team_first = Team("First Team", None, [will, hero])
     
     ALL_PLAYERS = [hero, thug, will, lvl_1_thug_melee, lvl_1_thug_ranged]
+
+    #ALL_PLAYERS = [lvl_15_neeran, lvl_15_james]
     
     #ALL_PLAYERS = [naruto, sasuke, sakura, kakashi, itachi, ori, gai]
     ALL_CHARACTERS = [c.character for c in ALL_PLAYERS]
@@ -399,12 +649,13 @@ init python:
     clearing = Stage('Clearing', 1, 1)        
             
     ### SHOP ITEMS ###
-    i_heal_paste = ShopItem("Heal Paste", 300, 30, health=30)
-    i_chakra_paste = ShopItem("Chakra Paste", 300, 40, chakra=30)
+    i_charger = ShopItem("Charger", 300, 30, health=30)
+    i_reset_password = ShopItem("Password Reset", 300, 40, chakra=30)
+
     
     ### SHOPS ###
-    hospital_shop = Shop("Hospital", 'leaf_hospital_1', items=[i_heal_paste, i_chakra_paste])
-    weapon_shop = Shop("Weapons", 'leaf_shrine', items=[w_kunai, w_paper_bomb])
+    hospital_shop = Shop("Hospital", 'leaf_hospital_1', items=[i_charger, i_reset_password])
+    weapon_shop = Shop("Weapons", 'leaf_shrine', items=[w_nerf_gun, w_stress_ball, w_chicken, w_cards, w_mini_tree])
     
     ### MISSIONS ###
             
@@ -421,6 +672,31 @@ init python:
     m_d5 = BasicMission('Paper Work', hours=14)
     m_d6 = BasicMission('Clean Academy', hours=5)
     m_label_test = LabelMission('Label Test', 'labelmissiontest', hours=10)
+
+    lvl_1_afraz = LevelledEnemy(lvl=1, skill_pool=THUG_MELEE_SKILL_SET, character=afraz_c, tile=tile12)
+    lvl_2_giata = LevelledEnemy(lvl=2, skill_pool=THUG_MELEE_SKILL_SET, character=yann_c, tile=tile12)
+
+    m_secure_kinder = SimpleFightMission('Secure Kinder Eggs', hours=10, rank='C', background='yammer_office_5',
+                                         dialogue=[(hero, "I found you Afraz!"),
+                                                   (hero, "Now hand over the kinder eggs and no one gets hurt."),
+                                                   (lvl_1_afraz, "I eat kinder, I hide it."),
+                                                   (hero, "Sorry buddy you going down!")], 
+                                             fights={'stage': clearing, 
+                                                     'win_label': 'generic_win',
+                                                     'lose_label': 'generic_lose',
+                                                     'enemy': lvl_1_afraz,
+                                                     'tag': []})
+
+    m_find_giata = SimpleFightMission('Find Giata', hours=10, rank='C', 
+                                         dialogue=[(hero, "I found you Giata!"),
+                                                   (hero, "Now come over here like a good doggy."),
+                                                   (lvl_2_giata, "Woof woof."),
+                                                   (hero, "Sorry buddy you going down!")], 
+                                             fights={'stage': clearing, 
+                                                     'win_label': 'generic_win',
+                                                     'lose_label': 'generic_lose',
+                                                     'enemy': lvl_2_giata,
+                                                     'tag': []})
     
     m_test_fightmission = SimpleFightMission('Fight Itachi', days=10, rank='C', dialogue=[("", "I found you Itachi!")], 
                                              fights={'stage': clearing, 
@@ -448,7 +724,7 @@ init python:
                                                    'tag': [kakashi],
                                                    'number': 2}])
                                                    
-    ALL_MISSIONS = [m_d1, m_d2, m_label_test, m_test_fightmission, m_test_multifight]
+    ALL_MISSIONS = [m_secure_kinder, m_find_giata]
     
     ### GENERAL ###
     
@@ -477,23 +753,183 @@ init python:
     
     battle1 = Battle(id="1", good_team=[], bad_team=[thug], xpos=100, ypos=100, battle_label="b_battle_1")
     battle2 = Battle(id="2", good_team=[], bad_team=[itachi], xpos=300, ypos=100, battle_label="b_battle_2")
-    battle_last = Battle(id="last", good_team=[], bad_team=[kakashi], xpos=500, ypos=100, battle_label="b_battle_last")
+    battle_last = Battle(id="last", good_team=[], bad_team=[kakashi], xpos=400, ypos=100, battle_label="b_battle_last")
 
-    ### New BattleMission Class
+    ALL_BATTLES = [battle1, battle2, battle_last]
+
+    team_test = Team("First Team", None, team_pe.members + team_cs.members + team_rails.members + team_apps.members + team_frontend.members)
+
+    # partieparty
+    lvl_30_dragon = LevelledEnemy(lvl=30, skill_pool=THUG_MELEE_SKILL_SET, character=dragon_c, tile=tile12, tilepic="dragon_tile_l", hudpic='mugshot_dragon.png')
+    lvl_30_rabbit = LevelledEnemy(lvl=30, skill_pool=THUG_MELEE_SKILL_SET, character=rabbit_c, tile=tile12, tilepic="rabbit_tile_l", hudpic='mugshot_rabbit.png')
+    lvl_30_bladewolf = LevelledEnemy(lvl=30, skill_pool=THUG_MELEE_SKILL_SET, character=bladewolf_c, tile=tile12, tilepic="bladewolf_tile_l", hudpic='mugshot_dog.png')
+    lvl_30_cat = LevelledEnemy(lvl=30, skill_pool=THUG_MELEE_SKILL_SET, character=cat_c, tile=tile12, tilepic='cat_tile_l', hudpic='mugshot_cat.png')
+
     battlemission1 = BattleMission(name="Partie Party", hours=6, good_team=team_test, background='yammer_office_2',
                      battles={'1':[], '2':[], 'last':[lvl_30_dragon]}, follow_on='oncall_continue', all_battles=ALL_BATTLES)
 
-    # called like this
-    #$ battlemission1.do_mission(hero_c)
+    battlemission2 = BattleMission(name="Rabbit Queues", hours=6, good_team=team_test, background='yammer_office_2',
+                     battles={'1':[], '2':[], 'last':[lvl_30_rabbit]}, follow_on='oncall_continue', all_battles=ALL_BATTLES)
+
+    battlemission3 = BattleMission(name="Puppet Corrupt", hours=6, good_team=team_test, background='yammer_office_2',
+                     battles={'1':[], '2':[], 'last':[lvl_30_bladewolf]}, follow_on='oncall_continue', all_battles=ALL_BATTLES)
+
+
     
     
             
 ##############################################################################
 # STORY / GAME START
 #
+#[l_holiday, l_it, l_one_on_one, l_training_course, l_work, l_home]
+label splashscreen:
+    scene frontpage with dissolve
+    with Pause(2)
+
+    show text "Please do not try this at work, it is a work of fiction or so they say...." with dissolve
+    with Pause(5)
     
+    return 
+
 label start:
+    #$ battlemission1.do_mission(hero_c)
+
+    #jump real_start
+    $ current_session.main_player = hero
     
+    scene frontpage with dissolve
+    jump character_creation
+
+    #### TODO: Add character selection at the start
+
+label real_start:
+
+    #$ battlemission1.do_mission(hero_c)
+    #jump partieparty
+    #jump location_deploy
+    #janthony_c "HI I AM JON"
+
+    scene yammer_office_1 with dissolve
+    show screen villagemap(yammer_office, hero)
+    $ current_session.village = yammer_office
+    $ current_session.main_player = hero
+    #$ current_session.main_player.team = 
+    $ hero.team = team_pe
+    show screen stats_screen(hero)
+
+    scott_c "Here is the office."
+    scott_c "We have some locations here in the office."
+    
+    $ l_holiday.unlocked = True
+    scott_c "You can use MS Vacation for taking holidays."
+    scott_c "Holidays can be used to heal wounds and buy supplies for healing."
+
+    $ l_it.unlocked = True
+    scott_c "Here at the IT desk you can ask us for all kinds of stuff."
+    scott_c "The IT desk can help to get new chargers ."
+    
+    $ l_home.unlocked = True
+    scott_c "You can go home, to heal injuries, see upcoming events or rest."
+    $ l_training_course.unlocked = True
+    scott_c "We have the training courses where you can train our skills in the mean time and unlock new skills."
+    $ l_one_on_one.unlocked = True
+    scott_c "One on one can be used to level up and distribute skill points, make sure to spend these regularly to improve your coding skills."
+    $ l_work.unlocked = True
+    scott_c "Work missions are missions we must undertake to advance the story, unlock new team members etc."
+    scott_c "I will leave you to decide what needs to be done."
+
+    $ l_deploy.unlocked = True
+    scott_c "The deploy location is to deploy production releases, this will happen usually during the afternoon. You can do this manually if you want."
+
+    $ show_village_map(yammer_office, hero)
+    
+label location_deploy(player, village):
+    hide screen location_explanation
+    $ start_world_events()
+
+    #show tory_hud at center_pos with dissolve
+
+    troy_c "BOOM! Lets deploy!"
+
+    "............"
+    "........."
+    "......." with sshake
+
+    "Voice" "Everybody run!!!"
+
+    $ parties = ['partieparty', 'rabbitparty', 'puppetparty']
+
+    #$ renpy.jump('rabbitparty')
+    $ renpy.jump(random.choice(parties))
+
+    #jump partieparty
+
+
+label partieparty:
+    show movie_player
+
+    play movie "partypartie.ogv"
+
+    $ renpy.pause(9.0)
+
+    show screen announce("ITS A PARTIE PARTY")
+
+    $ renpy.pause(3.0)
+
+    hide screen announce
+
+    troy_c "Abandon ship! I mean stop the deploy ! We need to fix this."
+    $ hide_battle_screen(all=True)
+    $ battlemission1.do_mission(hero_c)
+
+    return
+
+label rabbitparty:
+    show movie_player
+
+    play movie "rabbit.ogv"
+
+    $ renpy.pause(9.0)
+
+    show screen announce("RABBIT QUEUES ARE OVERFLOWING")
+
+    $ renpy.pause(3.0)
+
+    hide screen announce
+    
+    troy_c "Here... take this carrot.... its cute...."
+    troy_c "Yeah... stop the deploy!"
+    $ hide_battle_screen(all=True)
+    $ battlemission2.do_mission(hero_c)
+
+    return
+
+label puppetparty:
+    show movie_player
+
+    play movie "bladewolf.ogv"
+
+    $ renpy.pause(9.0)
+
+    show screen announce("PUPPET HAS GONE CORRUPT")
+
+    $ renpy.pause(3.0)
+
+    hide screen announce
+
+    troy_c "Looks a bit like shark lasers."
+    troy_c "Ahoy! Stop the deploy!"
+    $ hide_battle_screen(all=True)
+    $ battlemission3.do_mission(hero_c)
+
+    return
+
+
+label oncall_continue:
+    "HELL YEAH"
+
+    return
+
     scene street_1 night with dissolve
     $ current_session.team = team_first
     # this is used to restore the team back to original once battle is over
@@ -513,7 +949,37 @@ label start:
     call fight(naruto, sasuke, [sakura], [kakashi], clearing)
     
 label character_creation:
+
+    "Choose your team"
+    menu:
+        "Core services":
+            $ hero.team = team_cs
+            call team_choose(team_cs)
+        "APIs":
+            $ hero.team = team_rails
+            call team_choose(team_rails)
+        "PE":
+            $ hero.team = team_pe
+            call team_choose(team_pe)
+        "Apps":
+            $ hero.team = team_apps
+            call team_choose(team_apps)
+        "Frontend":
+            $ hero.team = team_frontend
+            call team_choose(team_frontend)
+
     
+label team_choose(team):
+    "Choose your character"
+
+    call screen team_choose(team)
+
+label next_label:
+    $ hero_c = current_session.main_player.character
+    $ hero = current_session.main_player
+
+    jump real_start 
+
     
     $ player_name="Maxwell"
     $ hero_c.name = player_name
@@ -1150,14 +1616,27 @@ label b_battle_last:
     $ last_battle.fight(stage=clearing, win_label='battle_choose', lose_label='battle_choose', draw_label='battle_choose', fight_limit=10)
     
 label battle_start:
+
+    hide screen battle_selection_screen 
+    hide screen battle_prep_screen
+
+    scene yammer_office_5
+    $ renpy.hide_screen('battle_selection_screen')
+    $ renpy.hide_screen('battle_prep_screen')
     
     $ first_battle = current_session.battles[0]
     $ current_session.battle = first_battle
+
+    play music "battleost.ogg"
     
     $ first_battle.fight(stage=clearing, win_label=first_battle.next_battle_label, lose_label=first_battle.next_battle_label, draw_label=first_battle.next_battle_label, fight_limit=10)
             
     
 label battle_choose:
+    hide screen battle_selection_screen 
+    hide screen battle_prep_screen
+    hide announce
+
     call hidetiles
     
     python:
@@ -1259,6 +1738,7 @@ label missionselect_redirect:
 label mission_redirect:
     hide screen villagemap
     $ import random
+    $ hide_battle_screen(all=True)
     $ current_session.mission.do_mission(current_session.main_player, current_session.village, random.choice(ALL_VILLAGES))
     
 label purchase_item_redirect:
@@ -1317,7 +1797,7 @@ label village_levelup(player, village):
     $ renpy.call('village_levelup', player, village)
 
 label village_training(player, village):
-    #scene training
+    scene yammer_office_3
     if player.hp < 50 or player.chakra < 50:
         player.character "I don't have enough hp or chakra to continue, I need to rest before I can train."
         jump village_redirect
@@ -1557,12 +2037,15 @@ label sasuke2:
 
 label tag_partner:
     $ info = get_tag_info(player, tag_p)
+    $ renpy.hide(player.tilepic)
     $ renpy.hide(player.picname)
     $ renpy.call('fight', info['main'], enemy, info['tag'], tag_e, stage, win_label, lose_label, draw_label)
     
 label fight(player, enemy, tag_p, tag_e, stage=clearing, win_label='generic_win', lose_label='generic_lose', draw_label='generic_draw', fight_limit=20):
     #scene bg
     $ hide_battle_screen(all=True)
+    $ renpy.hide_screen('battle_selection_screen')
+    $ renpy.hide_screen('battle_prep_screen')
     
     # set current_session
     $ current_session.enemy_tag = tag_e

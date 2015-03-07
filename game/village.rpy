@@ -16,6 +16,7 @@ init -6 python:
             self.leader = leader
             self.army = army
             self.wealth = wealth
+            self. wealth_original = wealth
             self.marker_xpos = marker_xpos
             self.marker_ypos = marker_ypos
             self.marker_position = Position(xpos=marker_xpos, ypos=marker_ypos)
@@ -52,19 +53,31 @@ init -6 python:
 
         def random_mission_location(self):
             return random.choice(self.mission_locations)
+
+        def update_wealth(self):
+            self.wealth += self.wealth_change
             
         def random_wealth_event(self):
             change = renpy.random.randint(-1000, 1000)
-            add_say = ["Many missions completed", "Taxes are raised", "Feudal Lord is feeling generous", "It rains money!", "Not many expenses",
-                       "Economy is improving", "Wealth is compounding", "Negotiations are increasing", "Merchants are trading more"]
-            minus_say = ["Economy is doing bad", "Not many missions are coming through", "Tax are decreased", "Feudal lord is unhappy", 
-                         "Expenses have gone up", "Bad negotiations are failing", "Recession is underway", "Corrupt leader stole wealth and left"]
-            if change < 0:
-                renpy.say(world_events, minus_say[renpy.random.randint(0, len(minus_say) - 1)])
-            else:
-                renpy.say(world_events, add_say[renpy.random.randint(0, len(add_say) - 1)])
+            add_say = ["Many pull requests merged", "New functionality added", "QA are feeling generous", "Upgrade to latest software", "Not much bad code",
+                       "Code health is improving", "Everybody is coding better", "Other teams are helping us better", "Faster team efforts"]
+            minus_say = ["Pull requests rejected", "No functionality added", "QA are angry today", "The QA guy went to play football", 
+                         "Team members are getting lazy", "Everybody was playing pool all day", "The team is slacking", "Code retreat"]
+            self.wealth_original = self.wealth
             self.wealth += change
             self.wealth_change = change
+
+            if self.wealth_change < 0:
+                sign = "-"
+            else:
+                sign = "+"
+
+            change_say = " {color=#000}Code Q: %s %s %s = %s{/color}" %(self.wealth_original, sign, abs(self.wealth_change), self.wealth) 
+            if change < 0:
+                renpy.say(self.leader, minus_say[renpy.random.randint(0, len(minus_say) - 1)] + " " + change_say)
+            else:
+                renpy.say(self.leader, add_say[renpy.random.randint(0, len(add_say) - 1)] + " " + change_say)
+            
             
         def random_control_event(self):
             change = renpy.random.randint(-10, 10)
@@ -96,8 +109,8 @@ init -6 python:
             renpy.show("world_marker", [ self.marker_position ])
             #renpy.show(self.leader.leader_pic, [ LEADER_POSITION ])
             self.random_wealth_event()
-            self.random_control_event()
-            self.random_influence_event()
+            #self.random_control_event()
+            #self.random_influence_event()
             
         def __repr__(self):
             return "<Village>: {}".format(self.name)

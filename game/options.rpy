@@ -27,11 +27,11 @@ init -1 python hide:
     ## This controls the title of the window, when Ren'Py is
     ## running in a window.
 
-    config.window_title = u"A Ren'Py Game"
+    config.window_title = u"Yammer RPG"
 
     # These control the name and version of the game, that are reported
     # with tracebacks and other debugging logs.
-    config.name = "A Ren'Py Game"
+    config.name = "Yammer RPG"
     config.version = "0.0"
 
     #########################################
@@ -67,12 +67,12 @@ init -1 python hide:
         ## The background of the main menu. This can be a color
         ## beginning with '#', or an image filename. The latter
         ## should take up the full height and width of the screen.
-        mm_root = "#ffffff",
+        mm_root = "frontpage.png",
 
         ## The background of the game menu. This can be a color
         ## beginning with '#', or an image filename. The latter
         ## should take up the full height and width of the screen.
-        gm_root = "#ffffff",
+        gm_root = "frontpage.png",
 
         ## And we're done with the theme. The theme will customize
         ## various styles, so if we want to change them, we should
@@ -101,7 +101,7 @@ init -1 python hide:
     ## Padding is space inside the window, where the background is
     ## drawn.
 
-    # style.window.left_padding = 6
+    style.window.left_padding = 160
     # style.window.right_padding = 6
     # style.window.top_padding = 6
     # style.window.bottom_padding = 6
@@ -250,7 +250,7 @@ init -1 python hide:
 
     ## The default text speed in characters per second. 0 is infinite.
 
-    config.default_text_cps = 0
+    config.default_text_cps = 10
 
     #########################################
     ## More customizations can go here.

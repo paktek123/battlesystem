@@ -27,15 +27,16 @@ init -1 python:
         return show_village_map(village, player)
     
     def start_world_events():
-        renpy.show("map") #, [ Position(xpos=0, ypos=0) ])
+        renpy.show("yammer_office_1") #, [ Position(xpos=0, ypos=0) ])
         for village in ALL_VILLAGES:
-            renpy.show_screen('worldevents', village)
             village.random_event()
+            renpy.show_screen('worldevents', village)
+            #village.update_wealth()
             renpy.hide_screen('worldevents')
             #renpy.call('world_update', village)
             
         #renpy.say(world_events, "I am here now")
-        renpy.jump('start')
+        #renpy.jump('start')
     
     
     def highlight_position(player, enemy, stage):
@@ -112,6 +113,14 @@ init -1 python:
         if all:
             renpy.hide_screen("stats")
             renpy.hide_screen("battlebars")
+            renpy.hide_screen("battle_explanation")
+            renpy.hide_screen("location_explanation")
+
+    def show_player_name(player):
+        renpy.show_screen('show_player_name', player=player)
+
+    def hide_player_name():
+        renpy.hide_screen('show_player_name') #, player=player)
     
     def find_suitable_tag_partner(tag):
         if len(tag) == 1:
@@ -462,7 +471,7 @@ init -1 python:
             return None
             
     def get_player_by_name(name):
-        for player in ALL_PLAYERS:
+        for player in current_session.team.members:
             if player.name == name:
                 return player
                 
@@ -500,8 +509,8 @@ init -1 python:
         return True
         
     def populate_battles(battles, follow_on):
-        if len(battles) < 2:
-            raise Exception("Must have more than 1 battle or at least 2")
+        #if len(battles) < 2:
+        #    raise Exception("Must have more than 1 battle or at least 2")
             
         for index, battle in enumerate(battles):
             if battle.id == "last":

@@ -1,6 +1,5 @@
 ﻿# This file is in the public domain. Feel free to modify it as a basis
 # for your own screens.
-
 ##############################################################################
 # CHARACTER CREATION
 #
@@ -67,9 +66,9 @@ screen hospitalshop(village, player):
     $ counter = 1
     #$ player.left_leg.injure()
     $ injury_bill = player.get_injury_bill()
-    text "Ryo: [player.ryo]" xpos 0.1
-    text "Items: [player.items]" xpos 0.1 ypos 0.2
-    text "[player.head.injury_severity] [player.torso.injury_severity] [player.left_arm.injury_severity] [player.right_arm.injury_severity] [player.left_leg.injury_severity] [player.right_leg.injury_severity]"
+    text "Money: [player.ryo]" xpos 0.1
+    text "{color=#000}Items: [player.items]{/color}" xpos 0.1 ypos 0.2
+    #text "[player.head.injury_severity] [player.torso.injury_severity] [player.left_arm.injury_severity] [player.right_arm.injury_severity] [player.left_leg.injury_severity] [player.right_leg.injury_severity]"
     
     python:
         if is_event_active_today(e_hospital_discount) and not hospital_shop.price_halved:
@@ -83,7 +82,7 @@ screen hospitalshop(village, player):
                                                                                  SetField(current_session, 'time_to_advance', {'days': injury_bill[1]}),
                                                                                  SetField(current_session, 'rest', True),
                                                                                  Hide("hospitalshop"),
-                                                                                 SetField(current_session, 'location', l_hospital), 
+                                                                                 SetField(current_session, 'location', l_holiday), 
                                                                                  Jump('hospital_injury')] xpos grid_place[0][0] ypos grid_place[0][1]
     else:
         $ counter = 0
@@ -91,7 +90,7 @@ screen hospitalshop(village, player):
     for item in hospital_shop.items:
         textbutton "[item.name] ([item.price])" action [SetField(current_session, 'village', village), 
                                                         SetField(current_session, 'main_player', player),
-                                                        SetField(current_session, 'location', l_hospital),
+                                                        SetField(current_session, 'location', l_holiday),
                                                         SetField(current_session, 'item', item),
                                                         SetField(current_session, 'time_to_advance', {'hours': 2}),
                                                         Jump("purchase_item_redirect")] xpos grid_place[counter][0] ypos grid_place[counter][1]
@@ -104,8 +103,8 @@ screen hospitalshop(village, player):
     
 screen weaponshop(village, player):
     $ counter = 0
-    text "Ryo: [player.ryo]" xpos 0.1
-    text "Weapons: [player.weapons]" xpos 0.1 ypos 0.2
+    text "Money: [player.ryo]" xpos 0.1
+    text "{color=#000}Weapons: [player.weapons]{/color}" xpos 0.1 ypos 0.2
     
     python:
         if is_event_active_today(e_weapon_discount) and not weapon_shop.price_halved:
@@ -114,10 +113,11 @@ screen weaponshop(village, player):
             weapon_shop.double_prices()
     
     for weapon in weapon_shop.items:
-        textbutton "[weapon.name] ([weapon.price])" action [SetField(current_session, 'village', village), 
+        textbutton "[weapon.name] ([weapon.price])" hovered Show('show_weapon', weapon=weapon) unhovered Hide('show_weapon') action [SetField(current_session, 'village', village), 
                                                             SetField(current_session, 'main_player', player),
-                                                            SetField(current_session, 'location', l_ninja_tool_facility),
+                                                            SetField(current_session, 'location', l_it),
                                                             SetField(current_session, 'item', weapon),
+                                                            Hide("show_weapon"),
                                                             SetField(current_session, 'time_to_advance', {'hours': 2}),
                                                             Jump("purchase_weapon_redirect")] xpos grid_place[counter][0] ypos grid_place[counter][1]
         $ counter += 1
@@ -125,12 +125,17 @@ screen weaponshop(village, player):
     textbutton "Back to Location select" action [SetField(current_session, 'village', village), 
                                                  SetField(current_session, 'main_player', player), 
                                                  Hide("weaponshop"),
+                                                 Hide("show_weapon"),
                                                  Jump('village_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
+
+screen show_weapon(weapon):
+    $ pic = weapon.image
+    imagebutton idle pic hover pic xpos 0.6 ypos 0.4
             
 screen villagemissions(village, player):
     $ counter = 0
     $ village_time = 0
-    $ mission_levels = [('D', 1), ('C', 20), ('B', 30), ('A', 40), ('S', 50)]
+    $ mission_levels = [('D', 1), ('C', 1), ('B', 1), ('A', 1), ('S', 1)]
     #$ player.level = 40
     $ avaliable_missions = [mission[0] for mission in mission_levels if player.level >= mission[1]]
     
@@ -162,7 +167,7 @@ screen missionselect(village, player, rank):
     textbutton "Back" action [SetField(current_session, 'village', village), 
                               SetField(current_session, 'main_player', player),
                               Hide("missionselect"),
-                              SetField(current_session, 'location', l_villagemission), 
+                              SetField(current_session, 'location', l_work), 
                               Jump('location_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
     
 
@@ -178,14 +183,14 @@ screen training(village, player):
     if player.sensei:
         textbutton "Learn skills" action [SetField(current_session, 'village', village), 
                                           SetField(current_session, 'main_player', player), 
-                                          SetField(current_session, 'location', l_training_ground),
+                                          SetField(current_session, 'location', l_training_course),
                                           Hide("training"), 
                                           Jump("training_sensei")] xpos grid_place[3][0] ypos grid_place[3][1]
                                       
     textbutton "Train (+ exp)" action [SetField(current_session, 'time_to_advance', {'hours': 4}),
                                        SetField(current_session, 'village', village), 
                                        SetField(current_session, 'main_player', player), 
-                                       SetField(current_session, 'location', l_training_ground),
+                                       SetField(current_session, 'location', l_training_course),
                                        Hide("training"), 
                                        Jump('train_gain_exp')] xpos grid_place[1][0] ypos grid_place[1][1]
     
@@ -198,14 +203,14 @@ screen train_with_team(village, player):
     $ team_length = len(player.team.members)
     # TODO: maybe add player + team member vs others (drag and drop?)
     if team_length > 0:
-        textbutton "Spar with [player.team.members[0].name]" action [SetField(current_session, 'time_to_advance', {'hours': 4}),
+        textbutton "Spar with [player.team.members[1].name]" action [SetField(current_session, 'time_to_advance', {'hours': 4}),
                                                                      SetField(current_session, 'village', village), 
                                                                      SetField(current_session, 'main_player', player), 
                                                                      SetField(current_session, 'spar', [player.team.members[0]]),
                                                                      Hide("train_with_team"), 
                                                                      Jump("training_spar")] xpos grid_place[0][0] ypos grid_place[0][1]
     if team_length > 1:
-        textbutton "Spar with [player.team.members[0].name] and [player.team.members[1].name] (1 on 2)" action [SetField(current_session, 'time_to_advance', {'hours': 4}),
+        textbutton "Spar with [player.team.members[1].name] and [player.team.members[2].name] (1 on 2)" action [SetField(current_session, 'time_to_advance', {'hours': 4}),
                                                                      SetField(current_session, 'village', village), 
                                                                      SetField(current_session, 'main_player', player), 
                                                                      SetField(current_session, 'spar', player.team.members),
@@ -222,7 +227,7 @@ screen train_with_team(village, player):
     textbutton "Back" action [SetField(current_session, 'village', village), 
                               SetField(current_session, 'main_player', player),
                               Hide("train_with_team"),
-                              SetField(current_session, 'location', l_training_ground), 
+                              SetField(current_session, 'location', l_training_course), 
                               Jump('location_redirect')] xpos grid_place[3][0] ypos grid_place[3][1]
     
     
@@ -242,11 +247,11 @@ screen train_skills(village, player):
     textbutton "Back" action [SetField(current_session, 'village', village), 
                               SetField(current_session, 'main_player', player),
                               Hide("train_skills"),
-                              SetField(current_session, 'location', l_training_ground), 
+                              SetField(current_session, 'location', l_training_course), 
                               Jump('location_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
 
 screen levelup(village, player):
-    $ STATS = ['strength', 'speed', 'evasion', 'defence', 'stamina', 'taijutsu', 'ninjutsu', 'genjutsu']
+    $ STATS = ['strength', 'speed', 'evasion', 'defence', 'stamina', 'melee', 'special', 'ranged']
     $ counter = 0
     #text "Allocation Points: [player.allocation_points]" xpos 0.1
     #text "Str: [player.strength] Def: [player.defence] Eva: [player.evasion]" xpos 0.50
@@ -259,7 +264,7 @@ screen levelup(village, player):
                                            SetField(player, 'allocation_points', getattr(player, 'allocation_points') - 1), 
                                            SetField(current_session, 'village', village), 
                                            SetField(current_session, 'main_player', player), 
-                                           SetField(current_session, 'location', l_level_up), 
+                                           SetField(current_session, 'location', l_one_on_one), 
                                            Jump('location_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
             $ counter +=1 
     else:
@@ -380,16 +385,16 @@ screen villagemap(village, player):
             $ npc_counter += 1
     
     for location in village.locations:
-        if player.home_village:
-            if not player.home_village == village:
-                if location.name == 'Home':
-                    $ location.name = 'Hotel'
-        else:
-            if location.name == 'Home':
-                $ location.name = 'Hotel'
+        #if player.home_village:
+        #    if not player.home_village == village:
+        #        if location.name == 'Home':
+        #            $ location.name = 'Hotel'
+        #else:
+        #    if location.name == 'Home':
+        #        $ location.name = 'Hotel'
                 
         if location.unlocked:
-            textbutton [location.name] hovered Show('location_explanation', stat=location.label) unhovered Hide('location_explanation') action [SetField(current_session, 'main_player', player), 
+            textbutton "[location.name]" hovered Show('location_explanation', stat=location.label) unhovered Hide('location_explanation') action [SetField(current_session, 'main_player', player), 
                                                                                                                                     SetField(current_session, 'village', village), 
                                                                                                                                     SetField(current_session, 'location', location), 
                                                                                                                                     Hide("villagemap"), 
@@ -407,19 +412,20 @@ screen villagemap(village, player):
         $ counter += 1 
                 
 screen location_explanation(stat):
-    $ expl_dict = {'location_hospital': 'Heal injuries and buy healing items.', 
-                   'location_police_station': 'Buy weapons for combat.', 
-                   'location_levelup': 'Spend points to increase stats like strength, speed, evasion etc.',
-                   'location_training': 'Train with team members, learn new skills, unlock new skills.', 
-                   'location_missions': 'Perform missions.', 
-                   'location_apartment': 'Rest to heal injuries, skip time or view calendar for upcoming events.'}
+    $ expl_dict = {'village_hospital': 'Heal injuries and buy healing items.', 
+                   'village_ninja_tool_facility': 'Buy weapons for combat.', 
+                   'village_levelup': 'Spend points to increase stats like strength, speed, evasion etc.',
+                   'village_training': 'Train with team members, learn new skills, unlock new skills.', 
+                   'village_missions': 'Perform missions.', 
+                   'village_home': 'Rest to heal injuries, skip time or view calendar for upcoming events.',
+                   'location_deploy': 'QA deploys a production release'}
     $ expl = expl_dict[stat]
     
-    text "[expl]" ypos 0.8 xpos 0.2
+    text "{color=#000}[expl]{/color}" ypos 0.7 xpos 0.2
         
 screen time_screen:
     #text "[current_session.initial_pos]" xpos 0.1
-    text "{color=#000}[main_time.current_time]{/color}" xpos 0.1 ypos 0.1
+    text "{color=#000}[main_time.current_time]{/color}" xpos 0.0 ypos 0.0
         
 screen stats_screen(player):
     
@@ -448,10 +454,10 @@ screen stats_screen(player):
         if player.right_leg.injury:
             imagebutton idle "right_leg_injured" hover "right_leg_injured" xpos 0.685 ypos 0.145
     
-        text "{size=-5}Ryo: [player.ryo]{/size}" xpos 0.73 ypos 0.023
+        text "{size=-5}YCR: [player.ryo]{/size}" xpos 0.73 ypos 0.023
         text "{size=-5}HP: [player.hp]/[player.maxhp]{/size}" xpos 0.85 ypos 0.024
         text "{size=-5}[player.name]{/size}" xpos 0.73 ypos 0.05
-        text "{size=-5}Lv.[player.level]{/size}" xpos 0.83 ypos 0.05
+        text "{size=-5}Lv.[player.level]{/size}" xpos 0.87 ypos 0.05
         # TODO: this needs to be bar
         $ next_level_exp = LEVELS[player.level + 1]
         text "{size=-5}Exp [player.exp]/[next_level_exp]{/size}" xpos 0.73 ypos 0.08
@@ -462,9 +468,9 @@ screen stats_screen(player):
         text "{size=-5}Sta: [player.stamina]{/size}" xpos 0.83 ypos 0.12
         text "{size=-5}Spd: [player.speed]{/size}" xpos 0.83 ypos 0.16
         text "{size=-5}Hit: [player.base_hit_rate]{size=-5}" xpos 0.83 ypos 0.20
-        text "{size=-5}Tai: [player.taijutsu]{/size}" xpos 0.915 ypos 0.12
-        text "{size=-5}Nin: [player.ninjutsu]{/size}" xpos 0.915 ypos 0.16
-        text "{size=-5}Gen: [player.genjutsu]{/size}" xpos 0.915 ypos 0.20
+        text "{size=-5}Mel: [player.melee]{/size}" xpos 0.915 ypos 0.12
+        text "{size=-5}Spe: [player.special]{/size}" xpos 0.915 ypos 0.16
+        text "{size=-5}Ran: [player.ranged]{/size}" xpos 0.915 ypos 0.20
     
         textbutton "Hide Stats" action [Hide("stats_screen"), Jump("toggle_screen_off")] xpos 0.4 ypos 0.0
     
@@ -532,18 +538,29 @@ label toggle_calendar_off:
     python:
         renpy.jump("village_redirect")
 
+screen announce(message):
+    text "{color=#000}{size=30}[message]{/size}{/color}" xpos 0.2 ypos 0.4
+
 
 ##############################################################################
 # WORLD EVENTS
 #
 screen worldevents(village):
-    text "Wealth: [village.wealth]" xpos 0.3 ypos 0.03
-    text "Control:" xpos 0.3 ypos 0.08
-    text "Influence:" xpos 0.3 ypos 0.13
-    text "Uprising:" xpos 0.3 ypos 0.18
-    bar value village.control range 100 xpos 0.45 ypos 0.08 xmaximum 100 ymaximum 30
-    bar value village.influence range 100 xpos 0.45 ypos 0.13 xmaximum 100 ymaximum 30
-    bar value village.uprising range 100 xpos 0.45 ypos 0.18 xmaximum 100 ymaximum 30
+    if village.wealth_change < 0:
+        $ sign = "-"
+    else:
+        $ sign = "+"
+
+    #$ total = village.wealth + village.wealth_change
+
+    text "{color=#000}Code: [village.wealth_original] [sign] [village.wealth_change] = [village.wealth]{/color}" xpos 0.3 ypos 0.03
+    #bar value village.weath range 100 xpos 0.45 ypos 0.08 xmaximum 100 ymaximum 30
+    #text "Control:" xpos 0.3 ypos 0.08
+    #text "Influence:" xpos 0.3 ypos 0.13
+    #text "Uprising:" xpos 0.3 ypos 0.18
+    #bar value village.control range 100 xpos 0.45 ypos 0.08 xmaximum 100 ymaximum 30
+    #bar value village.influence range 100 xpos 0.45 ypos 0.13 xmaximum 100 ymaximum 30
+    #bar value village.uprising range 100 xpos 0.45 ypos 0.18 xmaximum 100 ymaximum 30
         
 
 ##############################################################################
@@ -553,7 +570,7 @@ screen battle_selection_screen(battles):
     #text "[battle1.good_team]" xpos battle1.xpos ypos battle1.ypos
     #text "[battle2.good_team]" xpos battle2.xpos ypos battle2.ypos
     for battle in battles:
-        text "[battle.good_team]" xpos battle.xpos ypos battle.ypos
+        text "[battle.good_team]" xpos -200 ypos -80
     
 
 screen battle_prep_screen:
@@ -565,11 +582,15 @@ screen battle_prep_screen:
     $ battle_c = 1
     $ team = current_session.team.members
     $ battles = current_session.battles
+    $ y_pos = 100
+    $ x_counter = 1
+
+    #text "[team[0]]" 
     
     for battle in battles:
-        text "[battle.good_team]" xpos battle.xpos ypos battle.ypos
-        text "[battle.bad_team]" xpos battle.xpos ypos (battle.ypos + 50)
-        text "[battle.next_battle_label]" xpos battle.xpos ypos (battle.ypos - 50)
+        text "{color=#000}[battle.good_team]{/color}" xpos 20 ypos 20
+        #text "[battle.bad_team]" xpos battle.xpos ypos (battle.ypos + 50)
+        #text "[battle.next_battle_label]" xpos battle.xpos ypos (battle.ypos - 50)
     
     textbutton "Reset" action [Hide('battle_prep_screen'), 
                                Jump('reset_battle')] xpos 0.8
@@ -577,25 +598,35 @@ screen battle_prep_screen:
 
     draggroup:
         for p in current_session.team.members:
+            if not counter%5:
+                $ y_pos += 50
+                $ x_counter = 1
+            #else:
+
+
             drag:
                 drag_name p.name
                 child p.tilepic
                 droppable False
+                #hovered show_player_name(p) 
+                #unhovered hide_player_name()
                 dragged player_dragged
-                xpos (50*counter) ypos 300
+                xpos (50*x_counter) ypos y_pos
                 
             $ counter += 1
+            $ x_counter += 1
                 
         for battle in current_session.battles:
             drag:
                 drag_name battle.id
-                child "marker.png"
+                child "storm.png"
                 draggable False
-                xpos (100*battle_c) ypos 200
+                xpos battle.xpos ypos battle.ypos
                 
             $ battle_c += 1
 
-
+screen show_player_name(player):
+    text "[player.name]" xpos 0.4 ypos 0.6
 
 screen skill_actions(action_type):
     $ initial_pos = 0.8
@@ -608,7 +639,7 @@ screen skill_actions(action_type):
             if skill.is_usable(player, enemy):
                 textbutton "[skill.name]" action [SetField(current_session, 'skill', skill), 
                                                   SetField(current_session, 'skill_type', 'attack'),
-                                                  Jump('skill_redirect')]  xpos 0.6
+                                                  Jump('skill_redirect')]  xpos 0.6 ypos 200
             else:
                 $ reason = skill.unusable_reason(player, enemy)
                 # show another type of imagebutton here
@@ -660,7 +691,7 @@ screen battle_explanation(stat):
                    'standby': 'Regain magic, slightly heal health.'}
     $ expl = expl_dict[stat]
     
-    text "[expl]" ypos 0.8 xpos 0.2
+    text "{color=#000}[expl]{/color}" ypos 0.8 xpos 0.2
         
 screen stats:
     text "Str: [player.strength] Def: [player.defence] Eva: [player.evasion]" xpos 0.30
@@ -745,6 +776,14 @@ screen battlebars(tag_p, tag_e):
             text "[partner.name]" xpos 0.7 ypos 0.95
             bar value partner.hp range partner.maxhp xpos 0.7 ypos 0.95 xmaximum 100 #xmaximum 20
             #bar value partner.chakra range partner.maxchakra xpos 0.75 ypos 0.8 ymaximum 100 xmaximum 20
+
+screen team_choose(team):
+    $ members = team.members
+    $ counter = 0
+
+    for member in members:
+        textbutton member.name action [SetField(current_session, 'main_player', member), Jump('next_label')]  xpos grid_place[counter][0] ypos grid_place[counter][1]
+        $ counter += 1
 
 label movemenu:
     call hidetiles
