@@ -26,8 +26,8 @@ init -1 python:
         renpy.say(player.character, "I need to choose a location.")
         return show_village_map(village, player)
     
-    def start_world_events():
-        renpy.show("map") #, [ Position(xpos=0, ypos=0) ])
+    def start_world_events(follow_on="town_map"):
+        renpy.show("town_map_1") #, [ Position(xpos=0, ypos=0) ])
         for village in ALL_VILLAGES:
             renpy.show_screen('worldevents', village)
             village.random_event()
@@ -35,7 +35,7 @@ init -1 python:
             #renpy.call('world_update', village)
             
         #renpy.say(world_events, "I am here now")
-        renpy.jump('start')
+        renpy.jump(follow_on)
     
     
     def highlight_position(player, enemy, stage):

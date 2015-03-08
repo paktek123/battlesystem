@@ -23,6 +23,9 @@ init -1:
     ### HUD PICS ###
     image hero_1_hud = im.Scale("hero_1_hud.png", 150, 200)
     image thug_1_hud = im.Scale("thug_1_hud.png", 150, 200)
+    image bison_hud = im.Scale("bison_hud.png", 150, 200)
+    image ai_hud = im.Scale("ai_hud.png", 150, 200)
+    image monk_hud = im.Scale("monk_hud.png", 150, 200)
     
     ### TILE PICS ###
     
@@ -55,14 +58,17 @@ init -1:
     ### SPRITES ###
     image thug_1 = im.Scale("thug_1.png", 270, 500)
     image sam_2 = im.Scale("sam_2.png", 270, 500)
-    image adam_1 = im.Scale("adam_1.png", 270, 500)
-    image adam_2 = im.Scale("adam_2.png", 270, 500)
-    image adam_3 = im.Scale("adam_3.png", 270, 500)
+    image adam_1 = im.Scale("adam_1.png", 320, 600)
+    image adam_2 = im.Scale("adam_2.png", 320, 600)
+    image adam_3 = im.Scale("adam_3.png", 320, 600)
     image amy_1 = im.Scale("amy_1.png", 270, 400)
     image amy_2 = im.Scale("amy_2.png", 270, 400)
     image amy_3 = im.Scale("amy_3.png", 270, 400)
     image greyson_1 = im.Scale("greyson_1.png", 270, 500)
     image will_1 = im.Scale("will_1.png", 270, 500)
+    image bison_1 = im.Scale("bison_1.png", 270, 500)
+    image ai_1 = im.Scale("ai_1.png", 300, 600)
+    image monk_1 = im.Scale("monk_1.png", 300, 600)
     
     ### SPECIAL EFFECTS ###
     $ sshake = Shake((0, 0, 0, 0), 1.0, dist=15)
@@ -178,45 +184,6 @@ init python:
         if event.name in [e.name for e in get_today().events]:
             return True
         return False
-            
-    ### VILLAGE AND LOCATIONS ###
-
-    ### Use existing already defined labels not new ones 
-    
-    l_hospital = Location('Hospital', 'village_hospital', 'street_4', events=[e_hospital_discount])
-    l_police_station = Location('Police Station', 'village_police_station', 'building_1', events=[e_weapon_discount])
-    l_level_up = Location('Level Up', 'village_levelup', 'apartment_1')
-    l_training_ground = Location('Training', 'village_training', 'forest_2')
-    l_town_mission = Location('Mission', 'village_missions', events=[],)
-    l_apartment = Location('Apartment', 'village_home', 'apartment_1')
-
-    # locations that exist in each village
-    l_travel = Location('Travel', 'village_travel')
-    #l_level_up = Location('Level Up', 'village_levelup')
-    #l_training_ground = Location('Training', 'village_training', 'training')
-    l_arena = Location('Arena', 'village_arena')
-    l_jounin_station = Location('Jounin Standby Station', 'village_jounin_station', events=[e_jounin_training])
-    l_intelligence_division = Location('Intelligence Division', 'village_intelligence_division')
-    l_ninja_tool_facility = Location('Ninja Tool Facility', 'village_ninja_tool_facility', events=[e_weapon_discount])
-    l_villagemission = Location('Mission Assignment Desk', 'village_missions', events=[e_chunin_exams])
-    l_home = Location('Home', 'village_home')
-    
-    BASE_LOCATIONS = [l_level_up, l_training_ground, l_town_mission, l_apartment, l_hospital, l_police_station]
-    
-    #BASE_LOCATIONS = [l_travel, l_level_up, l_training_ground, l_arena, l_hospital, l_jounin_station, l_intelligence_division, l_ninja_tool_facility, l_villagemission, l_home]
-    
-    middle_town = Village(1, "Middle Town", None, marker_xpos=0.25, marker_ypos=0.25, map="town_map_1", locations=BASE_LOCATIONS, village_tag="middle_town", mission_locations=2)
-        
-    hidden_stone = Village(1, "Hidden Stone", None, marker_xpos=0.25, marker_ypos=0.25, map="stones_map", locations=BASE_LOCATIONS, village_tag="stones", mission_locations=2)
-    hidden_cloud = Village(2, "Hidden Cloud", None, marker_xpos=0.75, marker_ypos=0.20, map="clouds_map", locations=BASE_LOCATIONS, village_tag="cloud", mission_locations=2)
-    hidden_mist = Village(3, "Hidden Mist", None, marker_xpos=0.85, marker_ypos=0.70, map="mist_map", locations=BASE_LOCATIONS, village_tag="mist", mission_locations=2)
-    hidden_leaf = Village(4, "Hidden Leaf", None, marker_xpos=0.40, marker_ypos=0.60, map="konoha_map", locations=BASE_LOCATIONS, village_tag="leaf", mission_locations=2)
-    hidden_sand = Village(5, "Hidden Sand", None, marker_xpos=0.25, marker_ypos=0.90, map="sand_map", locations=BASE_LOCATIONS, village_tag="sand", mission_locations=4)
-        
-    ALL_VILLAGES = [hidden_stone, hidden_cloud, hidden_mist, hidden_leaf, hidden_sand] 
-    
-    def other_villages(village):
-        return [v for v in ALL_VILLAGES if v.id != village.id]
     
     ### CURRENT SESSION ###
         
@@ -300,7 +267,9 @@ init python:
     amy_c = Character('Amy',color="#FFFF00")
     greyson_c = Character('Greyson',color="#FFFF00")
     will_c = Character('Will',color="#FFFF00")
-    
+    bison_c = Character('Bison',color="#FFFF00")
+    ai_c = Character('Ai',color="#FFFF00")
+    monk_c = Character('Monk',color="#FFFF00")
     
     naruto_c = Character('Naruto',color="#FFFF00") 
     sasuke_c = Character('Sasuke', color="#3399FF")
@@ -311,6 +280,16 @@ init python:
     
     lvl_1_thug_melee = LevelledEnemy(lvl=1, skill_pool=THUG_MELEE_SKILL_SET, character=thug_c, tile=tile12)
     lvl_1_thug_ranged = LevelledEnemy(lvl=1, skill_pool=THUG_RANGED_SKILL_SET, character=thug_c, tile=tile12)
+    
+    lvl_4_thug_melee = LevelledEnemy(lvl=4, skill_pool=THUG_MELEE_SKILL_SET, character=thug_c, tile=tile12)
+    lvl_4_thug_ranged = LevelledEnemy(lvl=4, skill_pool=THUG_RANGED_SKILL_SET, character=thug_c, tile=tile12)
+    
+    # give him unique skill set
+    lvl_8_bison_melee = LevelledEnemy(lvl=8, skill_pool=THUG_MELEE_SKILL_SET, character=bison_c, tile=tile12, hudpic="bison_hud")
+    
+    lvl_15_adam = LevelledEnemy(lvl=15, skill_pool=THUG_RANGED_SKILL_SET, character=adam_c, tile=tile12, picname="adam_1")
+    lvl_15_ai = LevelledEnemy(lvl=15, skill_pool=THUG_RANGED_SKILL_SET, character=ai_c, tile=tile12, picname="ai_1")
+    lvl_15_monk = LevelledEnemy(lvl=15, skill_pool=THUG_RANGED_SKILL_SET, character=monk_c, tile=tile12, picname="monk_1")
 
     # Use this for quick character creation
     #lvl_15_daniel = LevelledEnemy(lvl=15, skill_pool=THUG_MELEE_SKILL_SET, character=daniel_c, tile=tile12, tilepic="fe_1_r")
@@ -335,6 +314,17 @@ init python:
                   weapons=[w_knife], 
                   home_village=None)
     
+    # unique moves
+    sam = Player(name='Sam', picname="thug_tile_r", character=thug_c, tilepic="thug_tile_r", hudpic='thug_1_hud', 
+                  hp=150, maxhp=150, chakra=120, maxchakra=120, 
+                  strength=9, speed=6, evasion=6, defence=8, stamina=6, base_hit_rate=80, 
+                  tile=tile1, facing='left', 
+                  meleeskills=[onetwocombo], specialskills=[blasting_kick], rangedskills=[], 
+                  items=[], defensiveskills=[], bloodlineskills=[], 
+                  leader_pic="leader_pic", 
+                  weapons=[w_knife, w_brass_knuckles], 
+                  home_village=None)
+    
     will = Player(name='Will', picname="will_tile_r", character=thug_c, tilepic="will_tile_r", hudpic='will_1_hud', 
                   hp=200, maxhp=200, chakra=150, maxchakra=150, 
                   strength=10, speed=6, evasion=6, defence=10, stamina=10, base_hit_rate=90, 
@@ -345,22 +335,32 @@ init python:
                   weapons=[w_brass_knuckles], 
                   home_village=None)
     
+    greyson = Player(name='Greyson', picname="will_tile_r", character=thug_c, tilepic="will_tile_r", hudpic='will_1_hud', 
+                  hp=120, maxhp=120, chakra=60, maxchakra=60, 
+                  strength=7, speed=3, evasion=3, defence=4, stamina=3, base_hit_rate=70, 
+                  tile=tile1, facing='left', 
+                  meleeskills=[onetwocombo, jaw_breaker], specialskills=[blasting_kick], rangedskills=[], 
+                  items=[], defensiveskills=[], bloodlineskills=[], 
+                  leader_pic="leader_pic", 
+                  weapons=[w_brass_knuckles], 
+                  home_village=None)
+    
     naruto = Player('Naruto',"thug_tile_r", naruto_c, "thug_tile_r", "thug_tile_r", 100, 100, 80, 80, 10, 4, 3, 4, 5, 80, tile1, 'right', 
                     [onetwocombo], [rasengan], [substitution], [],
                     [damage_reduction, chakra_defence, reflect, dampen, yata_mirror], [], "leader_pic", 
-                    weapons=[shiruken, kunai], home_village=hidden_leaf)
+                    weapons=[shiruken, kunai], home_village=None)
     sasuke = Player('Sasuke', "thug_tile_r", sasuke_c, "thug_tile_r", "thug_tile_r", 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
                     [onetwocombo, lioncombo], [chidori], [], [], [damage_reduction, chakra_defence], 
-                    battle_ai=special_enemy_pattern, weapons=[shiruken, kunai], home_village=hidden_leaf) #, interaction={'frequency': (1,)})
+                    battle_ai=special_enemy_pattern, weapons=[shiruken, kunai], home_village=None) #, interaction={'frequency': (1,)})
     
     sakura = Player('Sakura', "thug_tile_r", sakura_c, "thug_tile_r", "thug_tile_r", 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
-                    [onetwocombo, lioncombo], [chidori], [], [], [damage_reduction, chakra_defence], weapons=[shiruken, kunai], home_village=hidden_leaf)
+                    [onetwocombo, lioncombo], [chidori], [], [], [damage_reduction, chakra_defence], weapons=[shiruken, kunai])
     kakashi = Player('Kakashi', "thug_tile_r", kakashi_c, "thug_tile_r", "thug_tile_r", 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
                     [onetwocombo, lioncombo], [raikiri], [], [], [damage_reduction, chakra_defence], level=32,
-                    battle_ai=special_enemy_pattern, weapons=[shiruken, kunai], home_village=hidden_leaf)
+                    battle_ai=special_enemy_pattern, weapons=[shiruken, kunai])
     anko = Player('Anko', "thug_tile_r", kakashi_c, "thug_tile_r","thug_tile_r", 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
                     [onetwocombo, lioncombo], [raikiri], [], [], [damage_reduction, chakra_defence], level=32,
-                    battle_ai=special_enemy_pattern, weapons=[shiruken, kunai], home_village=hidden_leaf)
+                    battle_ai=special_enemy_pattern, weapons=[shiruken, kunai])
     
     itachi = copy.deepcopy(sasuke)
     itachi.name, itachi.picname, itachi.character, itachi.level = "Itachi", "thug_tile_r", itachi_c, 46
@@ -376,7 +376,7 @@ init python:
     naruto.team = team7
     naruto.sensei = kakashi
     
-    team_first = Team("First Team", None, [will, hero])
+    team_first = Team("First Team", None, [will, hero, greyson])
     
     ALL_PLAYERS = [hero, thug, will, lvl_1_thug_melee, lvl_1_thug_ranged]
     
@@ -393,6 +393,49 @@ init python:
         
         remove_sensei_jounin = [j for j in village.jounins if j not in sensei]
         return random.choice(remove_sensei_jounin)
+        
+    ### VILLAGE AND LOCATIONS ###
+
+    ### Use existing already defined labels not new ones 
+    
+    l_hospital = Location('Hospital', 'village_hospital', 'street_4', events=[e_hospital_discount])
+    l_police_station = Location('Police Station', 'village_police_station', 'building_1', events=[e_weapon_discount])
+    l_level_up = Location('Level Up', 'village_levelup', 'apartment_1')
+    l_training_ground = Location('Training', 'village_training', 'forest_2')
+    l_town_mission = Location('Mission', 'village_missions', events=[],)
+    l_apartment = Location('Apartment', 'village_home', 'apartment_1')
+
+    # locations that exist in each village
+    l_travel = Location('Travel', 'village_travel')
+    #l_level_up = Location('Level Up', 'village_levelup')
+    #l_training_ground = Location('Training', 'village_training', 'training')
+    l_arena = Location('Arena', 'village_arena')
+    l_jounin_station = Location('Jounin Standby Station', 'village_jounin_station', events=[e_jounin_training])
+    l_intelligence_division = Location('Intelligence Division', 'village_intelligence_division')
+    l_ninja_tool_facility = Location('Ninja Tool Facility', 'village_ninja_tool_facility', events=[e_weapon_discount])
+    l_villagemission = Location('Mission Assignment Desk', 'village_missions', events=[e_chunin_exams])
+    l_home = Location('Home', 'village_home')
+    
+    BASE_LOCATIONS = [l_level_up, l_training_ground, l_town_mission, l_apartment, l_hospital, l_police_station]
+    
+    #BASE_LOCATIONS = [l_travel, l_level_up, l_training_ground, l_arena, l_hospital, l_jounin_station, l_intelligence_division, l_ninja_tool_facility, l_villagemission, l_home]
+    
+    middle_town = Village(1, "Middle Town", lvl_15_adam, marker_xpos=0.40, marker_ypos=0.25, map="town_map_1", locations=BASE_LOCATIONS, village_tag="middle_town", mission_locations=2, wealth=50)
+    east_town = Village(2, "East Town", lvl_15_monk, marker_xpos=0.60, marker_ypos=0.25, map="town_map_1", locations=BASE_LOCATIONS, village_tag="east_town", mission_locations=2)    
+    south_town = Village(3, "South Town", lvl_15_ai, marker_xpos=0.45, marker_ypos=0.65, map="town_map_1", locations=BASE_LOCATIONS, village_tag="south_town", mission_locations=2)
+    west_town = Village(4, "West Town", None, marker_xpos=0.25, marker_ypos=0.25, map="town_map_1", locations=BASE_LOCATIONS, village_tag="west_town", mission_locations=2)    
+    north_town = Village(5, "North Town", None, marker_xpos=0.25, marker_ypos=0.25, map="town_map_1", locations=BASE_LOCATIONS, village_tag="north_town", mission_locations=2)    
+        
+    hidden_stone = Village(1, "Hidden Stone", None, marker_xpos=0.25, marker_ypos=0.25, map="stones_map", locations=BASE_LOCATIONS, village_tag="stones", mission_locations=2)
+    hidden_cloud = Village(2, "Hidden Cloud", None, marker_xpos=0.75, marker_ypos=0.20, map="clouds_map", locations=BASE_LOCATIONS, village_tag="cloud", mission_locations=2)
+    hidden_mist = Village(3, "Hidden Mist", None, marker_xpos=0.85, marker_ypos=0.70, map="mist_map", locations=BASE_LOCATIONS, village_tag="mist", mission_locations=2)
+    hidden_leaf = Village(4, "Hidden Leaf", None, marker_xpos=0.40, marker_ypos=0.60, map="konoha_map", locations=BASE_LOCATIONS, village_tag="leaf", mission_locations=2)
+    hidden_sand = Village(5, "Hidden Sand", None, marker_xpos=0.25, marker_ypos=0.90, map="sand_map", locations=BASE_LOCATIONS, village_tag="sand", mission_locations=4)
+        
+    ALL_VILLAGES = [east_town, south_town, middle_town] # west_town, north_town] 
+    
+    def other_villages(village):
+        return [v for v in ALL_VILLAGES if v.id != village.id]
         
     ### STAGES ###
             
@@ -411,8 +454,8 @@ init python:
     # basic missions
     m_secure_hospital = LabelMission('Secure Hospital', 'prologue_hospital', hours=11, location=l_hospital)
     m_secure_police_station = LabelMission('Secure Police Station', 'prologue_police_station', hours=11, location=l_police_station)
-    m_infiltrate_hold = SimpleFightMission('Infiltrate Hold', hours=5, rank='D') # TODO: do dialogue
-    #m_defeat_sam = 
+    m_infiltrate_hold = LabelMission('Infiltrate Hold', 'mission_infiltrate_hold', hours=5, rank='D')
+    m_defeat_sam = LabelMission('Defeat Sam', 'mission_defeat_sam', hours=6, rank='C')
     
     m_d1 = BasicMission('Farming', hours=12)
     m_d2 = BasicMission('Retrieve Cat', hours=8)
@@ -448,7 +491,7 @@ init python:
                                                    'tag': [kakashi],
                                                    'number': 2}])
                                                    
-    ALL_MISSIONS = [m_secure_hospital, m_secure_police_station, m_infiltrate_hold]
+    ALL_MISSIONS = [m_secure_hospital, m_secure_police_station, m_infiltrate_hold, m_defeat_sam]
     
     ### GENERAL ###
     
@@ -481,9 +524,15 @@ init python:
     
     ALL_BATTLES = [battle1, battle2, battle_last]
 
-    ### New BattleMission Class
-    battlemission1 = BattleMission(name="Attack Fort", hours=6, good_team=team_first,
-                     battles={'1':[], '2':[kakashi], 'last':[itachi]}, follow_on='game_continue', all_battles=ALL_BATTLES)
+    ### BattleMission Class
+    m_infiltrate_hold_battle = BattleMission(name="Infiltrate Hold", 
+                                      hours=6, 
+                                      good_team=team_first,
+                                      battles={'1':[lvl_4_thug_ranged], '2':[lvl_4_thug_melee], 'last':[lvl_8_bison_melee]}, 
+                                      follow_on='prologue_continue', 
+                                      all_battles=ALL_BATTLES)
+    
+    #ALL_MISSIONS += m_infiltrate_hold
 
     # called like this
     #$ battlemission1.do_mission(hero_c)
@@ -495,6 +544,8 @@ init python:
 #
     
 label start:
+    
+    jump intro_world_events
     
     $ at_map = False
         
@@ -1161,20 +1212,198 @@ label prologue_school:
     adam_c "Town missions are missions we must undertake to advance the story."
     adam_c "I will leave you to decide what needs to be done."
     
+    $ at_map = True
+    
     jump town_map
     
 label town_map:
     scene town_map_1 with dissolve
+    show screen villagemap(middle_town, hero)
     $ show_village_map(middle_town, hero)
     
-    #label story_continue:
-    #"THE STORY CONTINUES"
-    # TODO: create a battle mission
-    # for retreat label gain exp and for story continue too
-    # finish off final mission
+label mission_infiltrate_hold:
+    scene apartment_1 with squares
+    show adam_1 with dissolve
+    adam_c "The enemy stronghold is in the school."
+    adam_c "We need to do a full assault there."
+    adam_c "Since you three seem to make a good team, lets move out and take over this part of town."
+    adam_c "Go Greyson, Will and [hero.name]!"
+    "............"
+    "The three of us make our way towards the school."
+    "........."
     
-    # fort mission
-    #$ battlemission1.do_mission(hero_c)
+    scene school_1 night with squares
+    ".............."
+    "It is the same as we saw the other day."
+    show bison_1 with dissolve
+    bison_c "Heh... heh... heh....."
+    bison_c "So guys have arrived."
+    hero_c "Bison!?"
+    bison_c "[hero.name] what are you doing here?"
+    hero_c "Are you with Sam?"
+    bison_c "So what if I am!?"
+    will_c "You guys clearly know each other."
+    bison_c "There is larger wave coming soon, I don't have time ot waste here."
+    "Behind Bison, many other thugs with bats show up."
+    bison_c "Fight me!"
+    
+    $ m_infiltrate_mission_battle.do_mission(hero_c)
+    
+label prologue_continue:
+    call hidetiles
+    # hero gains experience
+    $ hide_battle_screen(all=True)
+    $ battle_turn = 0
+    $ exp = renpy.random.randint(100,200) + 200
+    $ hero.gain_exp(exp)
+    hero_c "I gain [exp] exp."
+    
+    scene school_1 night with dissolve
+    "Bison and his gang are all knocked out."
+    ".... ring... ring...."
+    "My phone rings, I pick it up."
+    adam_c "Please return to the base, we will do a final attack later."
+    hero_c "Ok, heading back."
+    jump town_map
+    
+label mission_defeat_sam:
+    if hero.lvl < 3:
+        adam_c "You must be level 3 or above to do this mission, use level up to increase level."
+        jump town_map
+        
+    
+    scene apartment_1 with squares
+    "............"
+    show adam_1 with dissolve
+    adam_c "The seurity around the school has cleared."
+    adam_c "We can go in a defeat Sam, the leader of the gang here."
+    adam_c "............"
+    adam_c "Go."
+    scene school_1 with squares
+    "............"
+    "........"
+    "There is no security, I make my way towards the roof."
+    scene rooftop with squares
+    sam_c "Long time, no see."
+    sam_c "Fight me 1 on 1."
+    hero_c "I'll defeat you!"
+    
+    $ renpy.call('fight', hero, sam, [], [], clearing, win_label='prologue_end', lose_label='prologue_end', draw_label='prologue_end', fight_limit=15)
+    
+label prologue_end:
+    
+    scene rooftop_1 with squares
+    
+    "Sam overpowers me." with sshake
+    
+    show sam_1 with dissolve
+    
+    sam_c "You still cannot defeat me!"
+    
+    show sam_1 at left with dissolve
+    show will_1 at right with dissolve
+    
+    will_c "Thats enough Sam!"
+    will_c "Lets end this before we all get hurt."
+    "Sam is bleeding too, he is in pain from our fight just now."
+    sam_c "If I don't takeover this city, that guy will walk all over us."
+    will_c "What do you mean!?"
+    sam_c "You don't understand, the leader that came back was our father!"
+    will_c "....."
+    "Will stares at Sam in shock."
+    will_c "I... had no idea...."
+    sam_c "Work with me Will, we do this."
+    will_c "I don't approve of your methods and I am going to take you down here."
+    # will vs sam fight
+    ".............."
+    will_c "Blast kick!" with sshake
+    "The kick connects and send Sam flying into the wall."
+    sam_c "......ughhh...."
+    "Sam is knocked out."
+    
+    hide sam_c with dissolve
+    show will_1 with dissolve
+    
+    will_c "Its over."
+    
+    ".............."
+    "Greyson helps me up and we head back to the apartment."
+    
+    scene apartment_1 with squares
+    "..........."
+    ".........."
+    "Will brings Sam and Bison to the apartment too."
+    show adam_1 with dissolve
+    adam_c "We have secured Middle Town."
+    adam_c "The leader was Sam, who is currently receieving treatment."
+    adam_c "We will watch over him, as he may have intel on who is causing all this fuss in the city."
+    "..........."
+    "........"
+    "....."
+    "I wonder what the other parts of town are doing...."
+    "............"
+    ".........."
+    scene forest_1 with squares
+    show ai_1 with dissolve
+    ai_c "Seems like middle town are starting gather some force."
+    ai_c "We should start to prepare for his return too."
+    ai_c "I won't let what happened 10 years ago repeat again."
+    "..........."
+    "......."
+    scene home_1 with squares
+    show monk_1 with dissolve
+    ".............."
+    monk_c "Looks like the vision were true."
+    monk_c "I can't wait to spill blood again!"
+    "..........."
+    jump intro_world_events
+    
+label intro_world_events:
+    
+    $ start_world_events('prologue_end2')
+    
+label prologue_end2:
+    scene apartment_1 with squares
+    "............"
+    "........"
+    "A week has gone by since we defeated Sam."
+    "He and Bison have been recovering."
+    show sam_1 with dissolve
+    sam_c "Ok ok... I will join to help."
+    show sam_1 at left with dissolve
+    show bison_1 at right with dissolve
+    bison_c "If Sam joins that leaves me no choice, I will join too."
+    show adam_1 with dissolve
+    adam_c "That is good to know."
+    adam_c "We need to stop your Father from making his comeback."
+    adam_c "Sam and Bison you will join Will, Greyson and [hero.name] in their battles."
+    hide sam_1 with dissolve
+    hide bison_1 with dissolve
+    hide adam_1 with dissolve
+    ".........."
+    "Bison and Sam join Party!"
+    team_first.members += sam
+    team_first.members += bison
+    show amy_1 with dissolve
+    amy_c "I want to fight too."
+    "Amy joins party"
+    # Add Amy to the team
+    hide amy_1 with dissolve
+    show adam_1 with dissolve
+    adam_c "To the east is East Town, their current leader is known as Monk."
+    adam_c "To our south is South Town, their leader is known as Ai, the Flash."
+    adam_c "As Sam and Will informed us, these two were part of this gang 10 years ago."
+    adam_c "We have missions for both of these parties, our aim is to find Will and Sam's Father."
+    "............"
+    ".........."
+    
+    scene town_map_1 with dissolve
+    show screen villagemap(middle_town, hero)
+    
+    $ renpy.pause(2.0, hard=True)
+    
+    # show the title page and end of episode 1 YEAH!!
+    
     
             
 ##############################################################################

@@ -130,7 +130,7 @@ screen weaponshop(village, player):
 screen villagemissions(village, player):
     $ counter = 0
     $ village_time = 0
-    $ mission_levels = [('D', 1), ('C', 20), ('B', 30), ('A', 40), ('S', 50)]
+    $ mission_levels = [('D', 1), ('C', 1), ('B', 30), ('A', 40), ('S', 50)]
     #$ player.level = 40
     $ avaliable_missions = [mission[0] for mission in mission_levels if player.level >= mission[1]]
     
@@ -539,13 +539,14 @@ label toggle_calendar_off:
 # WORLD EVENTS
 #
 screen worldevents(village):
-    text "Wealth: [village.wealth]" xpos 0.3 ypos 0.03
-    text "Control:" xpos 0.3 ypos 0.08
-    text "Influence:" xpos 0.3 ypos 0.13
-    text "Uprising:" xpos 0.3 ypos 0.18
-    bar value village.control range 100 xpos 0.45 ypos 0.08 xmaximum 100 ymaximum 30
-    bar value village.influence range 100 xpos 0.45 ypos 0.13 xmaximum 100 ymaximum 30
-    bar value village.uprising range 100 xpos 0.45 ypos 0.18 xmaximum 100 ymaximum 30
+    add village.leader.picname xpos 0.05 ypos 0.05 
+    #text "Wealth: [village.wealth]" xpos 0.3 ypos 0.03
+    #text "Control:" xpos 0.3 ypos 0.08
+    #text "Influence:" xpos 0.3 ypos 0.13
+    #text "Uprising:" xpos 0.3 ypos 0.18
+    #bar value village.control range 100 xpos 0.45 ypos 0.08 xmaximum 100 ymaximum 30
+    #bar value village.influence range 100 xpos 0.45 ypos 0.13 xmaximum 100 ymaximum 30
+    #bar value village.uprising range 100 xpos 0.45 ypos 0.18 xmaximum 100 ymaximum 30
         
 
 ##############################################################################

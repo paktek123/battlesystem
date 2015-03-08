@@ -9,7 +9,7 @@ init -6 python:
     
     import random
     class Village:
-        def __init__(self, id, name, leader, marker_xpos, marker_ypos, map, wealth=10000, army=1000, control=100, influence=100, uprising=0, 
+        def __init__(self, id, name, leader, marker_xpos, marker_ypos, map, wealth=100, army=1000, control=100, influence=100, uprising=0, 
                      locations=None, village_tag='', mission_locations=1):
             self.id = id
             self.name = name
@@ -26,6 +26,7 @@ init -6 python:
             self.control_change = 0
             self.influence_change = 0
             self.wealth_change = 0
+            self.original_value = 0
             self.locations = locations
             self.genins = []
             self.chunins = []
@@ -54,17 +55,23 @@ init -6 python:
             return random.choice(self.mission_locations)
             
         def random_wealth_event(self):
-            change = renpy.random.randint(-1000, 1000)
+            change = renpy.random.randint(-10, 10)
             add_say = ["Many missions completed", "Taxes are raised", "Feudal Lord is feeling generous", "It rains money!", "Not many expenses",
                        "Economy is improving", "Wealth is compounding", "Negotiations are increasing", "Merchants are trading more"]
             minus_say = ["Economy is doing bad", "Not many missions are coming through", "Tax are decreased", "Feudal lord is unhappy", 
                          "Expenses have gone up", "Bad negotiations are failing", "Recession is underway", "Corrupt leader stole wealth and left"]
-            if change < 0:
-                renpy.say(world_events, minus_say[renpy.random.randint(0, len(minus_say) - 1)])
-            else:
-                renpy.say(world_events, add_say[renpy.random.randint(0, len(add_say) - 1)])
+            
+            self.original_wealth = self.wealth
             self.wealth += change
             self.wealth_change = change
+            
+            if change < 0:
+                renpy.say(self.leader.character, "Gang members decreased by {}, total is {}.".format(change, self.wealth))
+                #renpy.say(self.leader, minus_say[renpy.random.randint(0, len(minus_say) - 1)])
+            else:
+                renpy.say(self.leader.character, "Gang members increased by {}, total is {}.".format(change, self.wealth))
+                #renpy.say(self.leader, add_say[renpy.random.randint(0, len(add_say) - 1)])
+            
             
         def random_control_event(self):
             change = renpy.random.randint(-10, 10)
@@ -96,8 +103,8 @@ init -6 python:
             renpy.show("world_marker", [ self.marker_position ])
             #renpy.show(self.leader.leader_pic, [ LEADER_POSITION ])
             self.random_wealth_event()
-            self.random_control_event()
-            self.random_influence_event()
+            #self.random_control_event()
+            #self.random_influence_event()
             
         def __repr__(self):
             return "<Village>: {}".format(self.name)
