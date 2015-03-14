@@ -114,6 +114,9 @@ init -1 python:
             renpy.hide_screen("battlebars")
             renpy.hide_screen("battle_explanation") 
             renpy.hide_screen("location_explanation") 
+            renpy.hide_screen("move_explanation") 
+            renpy.hide_screen("player_limbs") 
+            renpy.hide_screen("enemy_limbs") 
 
     
     def find_suitable_tag_partner(tag):

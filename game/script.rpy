@@ -12,7 +12,7 @@ init -1:
     $ battle_turn = 0
     
     image bg = im.Scale("bg.jpg", 800, 600)
-    image black_fade = Solid((0, 0, 0, 150))
+    image black_fade = "gfx/black.png" #Solid((0, 0, 0, 150))
     image black_fade_small = Solid((0, 0, 0, 150), area=(0.4, 0.7, 0.6,0.4)) # im.Tile(im.Scale("black.png", 400, 300)
     image world_marker = im.Scale("marker.png", 33, 35)
     image leader_pic = im.Scale("leader_pic.png", 100, 150)
@@ -20,12 +20,15 @@ init -1:
     image map = im.Scale("map.png", 800, 600)
     image stats_idle = Solid((0, 0, 0, 200), area=(0.62, 0.0, 300,150))
     
+    $ HUD_WIDTH = 140
+    $ HUD_HEIGHT = 150
+    
     ### HUD PICS ###
-    image hero_1_hud = im.Scale("hero_1_hud.png", 150, 200)
-    image thug_1_hud = im.Scale("thug_1_hud.png", 150, 200)
-    image bison_hud = im.Scale("bison_hud.png", 150, 200)
-    image ai_hud = im.Scale("ai_hud.png", 150, 200)
-    image monk_hud = im.Scale("monk_hud.png", 150, 200)
+    image hero_hud = im.Scale("hero_hud.png", HUD_WIDTH, HUD_HEIGHT)
+    image thug_hud = im.Scale("thug_hud.png", HUD_WIDTH, HUD_HEIGHT)
+    image bison_hud = im.Scale("bison_hud.png", HUD_WIDTH, HUD_HEIGHT)
+    image ai_hud = im.Scale("ai_hud.png", HUD_WIDTH, HUD_HEIGHT)
+    image monk_hud = im.Scale("monk_hud.png", HUD_WIDTH, HUD_HEIGHT)
     
     ### TILE PICS ###
     
@@ -58,12 +61,12 @@ init -1:
     ### SPRITES ###
     image thug_1 = im.Scale("thug_1.png", 270, 500)
     image sam_2 = im.Scale("sam_2.png", 270, 500)
-    image adam_1 = im.Scale("adam_1.png", 320, 600)
-    image adam_2 = im.Scale("adam_2.png", 320, 600)
-    image adam_3 = im.Scale("adam_3.png", 320, 600)
-    image amy_1 = im.Scale("amy_1.png", 270, 400)
-    image amy_2 = im.Scale("amy_2.png", 270, 400)
-    image amy_3 = im.Scale("amy_3.png", 270, 400)
+    image adam_1 = im.Scale("adam_1.png", 400, 600)
+    image adam_2 = im.Scale("adam_2.png", 400, 600)
+    image adam_3 = im.Scale("adam_3.png", 400, 600)
+    image amy_1 = im.Scale("amy_1.png", 270, 500)
+    image amy_2 = im.Scale("amy_2.png", 270, 500)
+    image amy_3 = im.Scale("amy_3.png", 270, 500)
     image greyson_1 = im.Scale("greyson_1.png", 270, 500)
     image will_1 = im.Scale("will_1.png", 270, 500)
     image bison_1 = im.Scale("bison_1.png", 270, 500)
@@ -260,6 +263,7 @@ init python:
     ranged_enemy_pattern = 3*['ranged'] + 2*['d'] + ['f']
     
     ### CHARACTERS ###
+    nar_c = Character('    ',color="#FFFF00", who_color="#FFFF00")
     hero_c = Character('NO NAME',color="#FFFF00")
     thug_c = Character('Thug',color="#FFFFFF")
     sam_c = Character('Sam', color="#FFFFFF")
@@ -294,9 +298,9 @@ init python:
     # Use this for quick character creation
     #lvl_15_daniel = LevelledEnemy(lvl=15, skill_pool=THUG_MELEE_SKILL_SET, character=daniel_c, tile=tile12, tilepic="fe_1_r")
     
-    hero = Player(name='NO NAME', picname="hero_tile_r", character=hero_c, tilepic="hero_tile_r", hudpic='hero_1_hud', 
+    hero = Player(name='NO NAME', picname="hero_tile_r", character=hero_c, tilepic="hero_tile_r", hudpic='hero_hud', 
                   hp=100, maxhp=100, chakra=80, maxchakra=80, 
-                  strength=5, speed=5, evasion=1, defence=1, stamina=1, base_hit_rate=80, 
+                  strength=1, speed=1, evasion=1, defence=1, stamina=1, base_hit_rate=80, 
                   tile=tile1, facing='right', 
                   meleeskills=[punching_flurry], specialskills=[], rangedskills=[], 
                   items=[], defensiveskills=[], bloodlineskills=[], 
@@ -304,7 +308,7 @@ init python:
                   weapons=[], 
                   home_village=None)
     
-    thug = Player(name='Thug', picname="thug_tile_r", character=thug_c, tilepic="thug_tile_r", hudpic='thug_1_hud', 
+    thug = Player(name='Thug', picname="thug_tile_r", character=thug_c, tilepic="thug_tile_r", hudpic='thug_hud', 
                   hp=100, maxhp=100, chakra=80, maxchakra=80, 
                   strength=5, speed=5, evasion=1, defence=1, stamina=1, base_hit_rate=80, 
                   tile=tile1, facing='left', 
@@ -537,15 +541,24 @@ init python:
     # called like this
     #$ battlemission1.do_mission(hero_c)
     
-    
             
 ##############################################################################
 # STORY / GAME START
 #
+image creation_background:
+    "street_1 night" with irisin
+    pause 10.0
+    "street_2 night" with irisin
+    pause 10.0
+    "street_3 night" with irisin
+    pause 10.0
+    "street_4 night" with irisin
+    pause 10.0
+    repeat
     
 label start:
     
-    jump intro_world_events
+    #jump intro_world_events
     
     $ at_map = False
         
@@ -560,142 +573,117 @@ label start:
     call fight(naruto, sasuke, [sakura], [kakashi], clearing)
     
 label character_creation:
+    show creation_background
     
+    nar_c "This is an example of a very long test that I am writing here right this instant and it will reach to the end of the this window where I cannot see anything and I dont like this very much."
     
+    # Assign a default value
     $ player_name="Maxwell"
-    $ hero_c.name = player_name
-    $ hero.name = player_name
-    $ current_session.main_player = hero
     
-    ## TESTING CODE
-    ################
-    
-    scene town_map_1 with dissolve
-    
-    show screen villagemap(middle_town, hero)
-    adam_c "Here is the map."
-    adam_c "We have some locations we have already secured."
-    
-    if l_hospital.unlocked:
-        adam_c "We managed to secure the hospital earlier."
-        adam_c "The hospital can be used to heal wounds and buy supplies for healing."
-    elif l_police_station.unlocked:
-        adam_c "We managed to secure the police station earlier."
-        adam_c "The Police Station can be used to buy weapons."
-    
-    $ l_apartment.unlocked = True
-    adam_c "Here is the apartment we are currently in."
-    $ l_training_ground.unlocked = True
-    adam_c "We have the training ground near by where we can train our skills in the mean time and unlock new skills."
-    $ l_level_up.unlocked = True
-    adam_c "Level up location can be used to level up and distribute skill points, make sure to spend these regularly to improve your fighting skills."
-    $ l_town_mission.unlocked = True
-    adam_c "Town missions are missions we must undertake to advance the story."
-    adam_c "I will leave you to decide what needs to be done."
-    
-    $ at_map = True
-    
-    $ show_village_map(middle_town, hero)
-    
-    ###############
-    
-    jump prologue1 # remove the above
-    
-    scene black
     $ player_name = renpy.input("Set player name: ")
     $ player_name = player_name.strip()
     if player_name == "":
         $ player_name="Maxwell"
         
-    $ hero_c.name = player_name
+    $ hero_c.name = player_name.lower().capitalize()
     $ hero.name = player_name
     
-    "Please choose stats for [hero.name]."
+    nar_c "Please choose stats for [hero.name]."
     
     $ current_session.main_player = hero
     $ current_session.main_player.allocation_points = 10
     
+    
 label allocate_points:
+    
     if current_session.main_player.allocation_points > 0:
         call screen allocatepoints(current_session.main_player)
     else:
         hide screen explanation
-        "Stats have been set, game is starting now."
+        nar_c "Stats have been set, game is starting now."
         jump prologue1
+        
+label reset_allocation_points:
+    python:
+        stats = ['strength', 'speed', 'evasion', 'defence', 'stamina', 'melee', 'special', 'ranged']
+        for stat in stats:
+            setattr(current_session.main_player, stat, 1)
+        current_session.main_player.allocation_points = 10
+    jump allocate_points
     
 label prologue1:
     #"THE STORY NOW CONTINUES"
     #hero_c "Hello my name is [current_session.main_player.name]."
     scene street_3 night with dissolve
     
-    "The sunsets and I finally end my shift."
-    "It is a little late, I usually leave before its dark."
-    "...."
-    "I make my way towards the underpass."
+    nar_c "The sunsets and I finally end my shift."
+    nar_c "It is a little late, I usually leave before its dark."
+    nar_c "...."
+    nar_c "I make my way towards the underpass."
     scene underpass_1 night with dissolve
-    "My house is about a fifteen minute walk from my work place."
-    "..."
-    "In the distance I see two people wrestling on the road in front of me."
-    "They clearly don't care about getting run over by cars."
+    nar_c "My house is about a fifteen minute walk from my work place."
+    nar_c "..."
+    nar_c "In the distance I see two people wrestling on the road in front of me."
+    nar_c "They clearly don't care about getting run over by cars."
     show thug_1 with dissolve
     "Thug 1" "You bastard! I'll make sure you never stand up again!"
     "Thug 2" "I'll.... oooff."
     hide thug_1 with dissolve
-    "Both of them are throwing punches at each other and rolling on the ground."
-    "Just seeing those two go at it, puts me at unease."
-    "My heart starts pounding faster and body fills up with adrenaline."
-    "..."
-    "They are fighting in front of me, I need to somehow get round them and call the police."
+    nar_c "Both of them are throwing punches at each other and rolling on the ground."
+    nar_c "Just seeing those two go at it, puts me at unease."
+    nar_c "My heart starts pounding faster and body fills up with adrenaline."
+    nar_c "..."
+    nar_c "They are fighting in front of me, I need to somehow get round them and call the police."
     "Thug 2" "Oooooffff." with sshake
-    "One of the thugs flies off to the side and bangs his head against the wall."
-    "There are blood stains everywhere, he soon looses conciousness."
+    nar_c "One of the thugs flies off to the side and bangs his head against the wall."
+    nar_c "There are blood stains everywhere, he soon looses conciousness."
     show thug_1 with dissolve
     "Thug 1" "You!"
-    "He looks at me, I freeze."
-    "My heart is pounding, I really don't want to be involved in this..."
-    "...."
+    nar_c "He looks at me, I freeze."
+    nar_c "My heart is pounding, I really don't want to be involved in this..."
+    nar_c "...."
     hide thug_1 with dissolve
-    "I turn around and make a run for it."
+    nar_c "I turn around and make a run for it."
     scene street_2 night with dissolve 
-    "I quickly take a turn into a side street." with sshake
-    "Hufff.... hufff...."
-    "I hear police sirens in the background... what is going on!?"
-    "My head is going crazy with random thoughts, I need to get it together."
-    "Hufff...  hufff...."
-    ".... I get pushed to the ground." with sshake
+    nar_c "I quickly take a turn into a side street." with sshake
+    hero_c "Hufff.... hufff...."
+    nar_c "I hear police sirens in the background... what is going on!?"
+    hero_c "My head is going crazy with random thoughts, I need to get it together."
+    hero_c "Hufff...  hufff...."
+    nar_c ".... I get pushed to the ground." with sshake
     hero_c "Owww...."
-    "There is a sharp pain in my upper arm."
-    "I look around to try to work out what just happenned."
+    nar_c "There is a sharp pain in my upper arm."
+    nar_c "I look around to try to work out what just happenned."
     show thug_1 with dissolve
     "Thug" "You thought you could get away from me!?"
     hero_c "How... did..."
-    "I am lost for words, how did he get behind me?"
-    "He must have pushed me to the ground from behind."
+    nar_c "I am lost for words, how did he get behind me?"
+    nar_c "He must have pushed me to the ground from behind."
     "Thug" "You saw me do that, I can't let you just leave without making sure you don't squeak."
-    "He grabs me by the collar of my shirt."
+    nar_c "He grabs me by the collar of my shirt."
     hero_c "Ughhh...."
-    "My heart is pounding very hard... I don't want to get hurt..."
+    nar_c "My heart is pounding very hard... I don't want to get hurt..."
     hero_c "Why are you doing this? I won't tell the cops, please let me go."
     "Thug" "Here is a present." with sshake
     hero_c "Ooooffff...." 
-    "He punches me in my stomach and throws me to the ground."
-    "A sharp pain starts building up around my abdomen."
+    nar_c "He punches me in my stomach and throws me to the ground."
+    nar_c "A sharp pain starts building up around my abdomen."
     "Thug" "If I ever see your face again, I will pound your face in."
     "Thug" "Don't even think of talking to the police."
     hide thug_1 with dissolve
-    "He turns around and starts to walk away."
+    nar_c "He turns around and starts to walk away."
     ### TODO: Add some motivation for our hero to get back on this feet and challenge Mr Thug to a fight
     ### Maybe some sort of past flashback or something
-    "I fix my collar and stand up."
+    nar_c "I fix my collar and stand up."
     hero_c "Ohey... Bastard..."
     hero_c "You think you can do whatever you want, let me kick your ass."
-    "As soon as he hears this, he turns around with an angry expression."
+    nar_c "As soon as he hears this, he turns around with an angry expression."
     show thug_1 with dissolve
     "Thug" "Say that again!"
-    "He throws a punch..."
-    "... I grab his fist and push him away."
+    nar_c "He throws a punch..."
+    nar_c "... I grab his fist and push him away."
     "Thug" "Heh.... I'll pound you to death!"
-    "I know I can't go back now but maybe that is what I want."
+    nar_c "I know I can't go back now but maybe that is what I want."
     hide thug_1 with dissolve
     $ renpy.call('fight', hero, thug, [], [], clearing, lose_label='prologue2', draw_label='prologue2', fight_limit=5)
     # fight redirects to prologue2 label
@@ -706,51 +694,51 @@ label prologue2:
     hero_c "...." with sshake
     hero_c "Huff...."
     hero_c "Ughhh...." with red_flash
-    "Blood splatters everywhere."
-    "My body is covered in bruises and cuts from his knife."
+    nar_c "Blood splatters everywhere."
+    nar_c "My body is covered in bruises and cuts from his knife."
     show thug_1 with dissolve
-    "He is also in a similar condition, I am surprised he is standing."
+    nar_c "He is also in a similar condition, I am surprised he is standing."
     "Thug" "Hehh.... hehhh.... "
-    "He gives off a strange laugh."
+    nar_c "He gives off a strange laugh."
     "Thug" "You haven't seen anything yet!"
-    "He tries to attack me..."
+    nar_c "He tries to attack me..."
     "Thug" "Gahhh... cough..." with red_flash
-    "He coughs blood, the damage must have gotten to him."
-    ".... there is a sudden pause, both of us know if we continue this won't end well for us."
+    nar_c "He coughs blood, the damage must have gotten to him."
+    nar_c ".... there is a sudden pause, both of us know if we continue this won't end well for us."
     "Thug" "You are lucky this time, I will find you and finish you off."
     hero_c "Just try it."
-    "My whole body is in pain, his reply helps me to relax."
+    nar_c "My whole body is in pain, his reply helps me to relax."
     "Thug" "Let me leave you with a present... heh..." with red_flash
-    "He slashes my body with his knife and throws me to the ground." with sshake
+    nar_c "He slashes my body with his knife and throws me to the ground." with sshake
     hero_c "Gahhh..."
     "Thug" "Next time I will kill you."
     hide thug_1 with dissolve
-    "He runs away limping."
-    "...."
-    "My shirt has become red with my blood."
-    "I don't have the strength to get up... as I lay on the ground."
-    "My eyes are closing by themselves."
-    "..."
-    "......"
-    scene black_fade with black_flash
+    nar_c "He runs away limping."
+    nar_c "...."
+    nar_c "My shirt has become red with my blood."
+    nar_c "I don't have the strength to get up... as I lay on the ground."
+    nar_c "My eyes are closing by themselves."
+    nar_c "..."
+    nar_c "......"
+    scene black with fade
     "Voice" "Hey! Hey! Stay with me here!"
     "Voice" "Don't die please!"
-    "...."
-    "........."
-    "..............."
+    nar_c "...."
+    nar_c "........."
+    nar_c "..............."
     scene apartment_1 afternoon with dissolve
-    "......"
-    "The sun shines onto my eyes."
-    "I can hear birds chirping in the background."
-    "I lay on the ground... my body has been bandaged up."
-    "...."
-    "I hear a voice from my right."
+    nar_c "......"
+    nar_c "The sun shines onto my eyes."
+    nar_c "I can hear birds chirping in the background."
+    nar_c "I lay on the ground... my body has been bandaged up."
+    nar_c"...."
+    nar_c "I hear a voice from my right."
     show amy_2 with dissolve
     "???" "Adam, he is awake!"
-    "...."
-    "The girl runs away."
+    nar_c "...."
+    nar_c "The girl runs away."
     hide amy_2 with dissolve
-    "......"
+    nar_c "......"
     show adam_1 with dissolve
     adam_c "Morning, how are you doing?"
     hero_c "..."
@@ -761,49 +749,49 @@ label prologue2:
     "???" "This one is awake too, Adam!"
     adam_c "Sorry I have to tend to other people, please try to rest up."
     hide adam_1 with dissolve
-    "He heads inside the house."
-    "I notice my surroundings..."
-    "There is blood on the ground near me... bandages and surgical tools lying around everywhere."
-    "The whole place is filled with many other people covered in bandages."
-    "It looks like a war zone."
-    "What the heck happened last night!?"
-    "......"
-    "I lay on my bed... hopefully this is a bad dream...."
-    "...."
-    scene black_fade with dissolve
-    "......."
-    "....."
-    "..."
+    nar_c "He heads inside the house."
+    nar_c "I notice my surroundings..."
+    nar_c "There is blood on the ground near me... bandages and surgical tools lying around everywhere."
+    nar_c "The whole place is filled with many other people covered in bandages."
+    nar_c "It looks like a war zone."
+    nar_c "What the heck happened last night!?"
+    nar_c "......"
+    nar_c "I lay on my bed... hopefully this is a bad dream...."
+    nar_c "...."
+    scene black with fade
+    nar_c "......."
+    nar_c "....."
+    nar_c"..."
     scene apartment_1 evening with dissolve
-    "..."
-    "I open my eyes and sit up."
-    "I feel no pain from my wounds."
-    "....."
-    "In the distance I see a gathering of the wounded."
-    "I force myself up and head towards the gathering."
+    nar_c "..."
+    nar_c "I open my eyes and sit up."
+    nar_c "I feel no pain from my wounds."
+    nar_c "....."
+    nar_c "In the distance I see a gathering of the wounded."
+    nar_c "I force myself up and head towards the gathering."
     show adam_1 with dissolve
     adam_c "We don't know the situation as of now."
     adam_c "Hey, please join us."
-    "I take a seat, many others are wrapped up in bandages like me."
+    nar_c "I take a seat, many others are wrapped up in bandages like me."
     ### TODO: more descriptions of the wounded and confusion, people speaking
     adam_c "I found all of you last night either wounded or near death."
     adam_c "I know that many of you have many questions, I will try my best to explain what happened."
-    "....."
-    "The crowd listens carefully, they are as confused as I am."
+    nar_c "....."
+    nar_c "The crowd listens carefully, they are as confused as I am."
     adam_c "Last night there were many attacks carried out by various gangs... another words..."
     adam_c "There was a gang war in this town where four or five gangs all decided to go at each other at once."
     "Person 1" "Are you telling me that some stupid kids just went crazy!?"
-    "The whole crowd starts to talk."
+    nar_c "The whole crowd starts to talk."
     "Person 2" "Where is the police!?"
     adam_c "Everyone please listen."
-    "Everybody lowers their voices."
+    nar_c "Everybody lowers their voices."
     adam_c "I do not know where the police is, I have called them many times but no one picks up the phone!"
     "Person 1" "What is that is crazy! Does anyone have a phone here, let me try!"
-    "....."
+    nar_c "....."
     "Person 2" "Here, my phone still has some battery."
     "Person 1" "Give me please."
-    "He dials the three digit number."
-    "...."
+    nar_c "He dials the three digit number."
+    nar_c "...."
     "Person 1" "He is right... no one is picking up!"
     "Person 1" "This is crazy, there won't be any law or order."
     adam_c "Please stay calm."
@@ -816,13 +804,14 @@ label prologue2:
     "Person 2" "But why are these people killing other people, have these teenagers gone insane!?"
     adam_c "I don't know why such violence has taken place, all I know is that many people are injured and we are taking refuge here."
     adam_c "We need to somehow escape this place, there are limited food supplies here and we cannot stay here forever."
-    "There injured discuss between themselves."
+    nar_c "There injured discuss between themselves."
     # TODO: panic?
     hero_c "What are our options?"
     adam_c "We need to organise a party amongst us to venture outside and find out more information."
     adam_c "We need to move when it is dark to avoid detection."
     adam_c "Which one of you want to volunteer?"
-    "We cannot stay like this, there are roughly 5 of us here and some wounded inside."
+    nar_c "We cannot stay like this, there are roughly 5 of us here and some wounded inside."
+    #### I AM HERE #### RESIZE GREYSON
     hide adam_1 with dissolve
     show greyson_1 with dissolve
     "???" "I will go."
@@ -833,9 +822,9 @@ label prologue2:
     "???" "I will go too."
     show will_1 with dissolve
     will_c "I want to help out too."
-    "That guy looks familiar, like I have seen him before..."
-    "He has a resemblence to that thug I fought last night."
-    "I need to help out too."
+    nar_c "That guy looks familiar, like I have seen him before..."
+    nar_c "He has a resemblence to that thug I fought last night."
+    nar_c "I need to help out too."
     hero_c "I will help too."
     hide will_1 with dissolve
     show adam_1 with dissolve
@@ -845,11 +834,11 @@ label prologue2:
     adam_c "How do you expect to survive out there!?"
     will_c "We will."
     hide adam_1 with dissolve
-    "..........."
-    "........"
+    nar_c "..........."
+    nar_c "........"
     scene apartment_1 night with squares
-    "We finally decide that only 3 of us will go without Adam."
-    "......"
+    nar_c "We finally decide that only 3 of us will go without Adam."
+    nar_c "......"
     show will_1 with dissolve 
     will_c "Lets move."
     greyson_c "Yes."
@@ -882,44 +871,44 @@ label prologue_hospital:
         # TODO: Some friction between team mates
         greyson_c "I am going to go to the Police Station myself, I don't care care!"
         hide greyson_1 with dissolve
-        "We are powerless to stop him as he heads North towards the police station."
+        nar_c "We are powerless to stop him as he heads North towards the police station."
         show will_1 with dissolve
         will_c "Leave him, we must get medical supplies."
-        "I reluctantly decide to move on."
-        "If we quickly confirm the Hospital is safe we can come to help Greyson."
-        "...."
-        "..."
+        nar_c "I reluctantly decide to move on."
+        nar_c "If we quickly confirm the Hospital is safe we can come to help Greyson."
+        nar_c "...."
+        nar_c "..."
         
     scene street_4 night with squares
-    "There are a few gang members driving around but we manage to avoid most of them."
-    "Survellence is certainly low near the hospital."
-    "....."
-    "We see the hospital nearby, its lights are on."
-    "Looks like it is under lockdown by the gang members."
-    "We hear some voices near the entrance."
+    nar_c "There are a few gang members driving around but we manage to avoid most of them."
+    nar_c "Survellence is certainly low near the hospital."
+    nar_c "....."
+    nar_c "We see the hospital nearby, its lights are on."
+    nar_c "Looks like it is under lockdown by the gang members."
+    nar_c "We hear some voices near the entrance."
     "Doctor" "Stop this at once!"
     "Thug" "Shut it Doc, your staying here for now."
-    "He punches the Doctor, which causes him to fall down."
+    nar_c "He punches the Doctor, which causes him to fall down."
     "Doctor" "Arghhh...."
-    "....."
-    "A nurse comes out and helps the Doctor up to his feet."
-    "She takes him inside."
+    nar_c "....."
+    nar_c "A nurse comes out and helps the Doctor up to his feet."
+    nar_c "She takes him inside."
     "Thug" "Hehh... stupid..."
-    "...."
+    nar_c "...."
     show will_1 with dissolve
     will_c "Looks like they are just guarding the entrance, we should be able to get inside."
     hero_c "You mean we take out that thug?"
-    "...."
-    "Two other thugs walk out with baseball bats."
-    "We are tucked away behind a wall so they cannot see us."
+    nar_c "...."
+    nar_c "Two other thugs walk out with baseball bats."
+    nar_c "We are tucked away behind a wall so they cannot see us."
     hero_c "These guys are very close, we will have to take them head on."
     will_c "Heh... we think a like..."
-    "Will rolls up his sleeve and walks out unarmed."
+    nar_c "Will rolls up his sleeve and walks out unarmed."
     hide will_1 with dissolve
     hero_c "Hey... I didn't mean you walk out like that!?"
-    "I follow him."
+    nar_c "I follow him."
     "Thugs" "Hey! You come here."
-    "The mob rushes at us.... we have no choice but to fight..."
+    nar_c "The mob rushes at us.... we have no choice but to fight..."
     $ renpy.call('fight', hero, copy.deepcopy(lvl_1_thug_melee), [will], [copy.deepcopy(lvl_1_thug_ranged)], clearing, win_label='prologue_hospital2', lose_label='prologue_hospital2', draw_label='prologue_hospital2', fight_limit=15)
 
     
@@ -930,15 +919,15 @@ label prologue_hospital2:
     $ exp = renpy.random.randint(100,200) + 200
     $ hero.gain_exp(exp)
     hero_c "I gain [exp] exp."
-    "The battle ends..."
-    "Will completely dominates the fight, his fighting style is very similar..."
+    nar_c "The battle ends..."
+    nar_c "Will completely dominates the fight, his fighting style is very similar..."
     scene street_4 night with dissolve
     show will_1 with dissolve
-    "Will holds the thug by his collar."
+    nar_c "Will holds the thug by his collar."
     will_c "Who sent you here!?"
     thug_c "It.. it was... Sam..."
-    "....."
-    "The thug faints."
+    nar_c "....."
+    nar_c "The thug faints."
     hero_c "Who is Sam?"
     will_c "I knew it, just had to be him."
     hero_c "You know him?"
@@ -951,22 +940,22 @@ label prologue_hospital2:
     "Doctor" "Just what is going on in this town?"
     hero_c "We are heading towards the police station now."
     "Doctor" "Let me patch you guys up before you go."
-    "He notices the cuts and bruises we got in the fight."
+    nar_c "He notices the cuts and bruises we got in the fight."
     will_c "Thanks, Doc."
     $ l_hospital.unlocked = True
-    "{color=#006400}Hospital Secured! New location unlocked!{/color}" 
-    "....................."
+    nar_c "{color=#006400}Hospital Secured! New location unlocked!{/color}" 
+    nar_c "....................."
     if at_map:
         jump town_map
         
-    "..........."
-    "I have minor injuries I decided to leave early."
+    nar_c "..........."
+    nar_c "I have minor injuries I decided to leave early."
     hero_c "I'll go on ahead, make sure to catch up."
     will_c "On my way."
     scene street_1 night with squares
-    "As soon as I am patched up, I head straight for the police station."
-    "...."
-    "I hope Greyson is doing okay but I can't help but worry."
+    nar_c "As soon as I am patched up, I head straight for the police station."
+    nar_c "...."
+    nar_c "I hope Greyson is doing okay but I can't help but worry."
     jump prologue_school
     
 label prologue_police_station:
@@ -976,43 +965,43 @@ label prologue_police_station:
         greyson_c "Lets go!"
         will_c "I'll head to the hospital by myself then."
         hide will_1 with dissolve
-        "Will walks away."
+        nar_c "Will walks away."
         greyson_c "Please stick with me, we have to secure the station."
         hero_c "Lets go."
         
         
     scene building_1 night with squares
-    ".........."
-    "........"
-    "....."
-    "We arrive at the Police station."
-    "The whole area is trashed with windows smashed and junk everywhere."
-    "We hide behind the corner."
-    "The place looks deserted, this place is usually very busy with all the shopping centres."
+    nar_c ".........."
+    nar_c "........"
+    nar_c "....."
+    nar_c "We arrive at the Police station."
+    nar_c "The whole area is trashed with windows smashed and junk everywhere."
+    nar_c "We hide behind the corner."
+    nar_c "The place looks deserted, this place is usually very busy with all the shopping centres."
     show greyson_1 with dissolve
     greyson_c "The police station is intact, maybe we can enter it?"
     hero_c "Something looks funny, the lights are off and no police are nearby."
     hide greyson_c with dissolve
     hero_c "Lets wait a bit."
-    "........."
-    "......."
-    "....."
-    "We hear voices coming from the building."
-    "Two thugs emerge holding baseball bats."
+    nar_c "........."
+    nar_c "......."
+    nar_c "....."
+    nar_c "We hear voices coming from the building."
+    nar_c "Two thugs emerge holding baseball bats."
     show greyson_1 with dissolve
-    "Greyson erraticly stands up."
+    nar_c "Greyson erraticly stands up."
     greyson_c "I... can't take this anymore!"
     greyson_c "I'm going to rush in!"
     hero_c "Wait Greyson, we don't know how many are inside!"
     hide greyson_1 with dissolve
-    "He rushes at them."
+    nar_c "He rushes at them."
     "Thug" "Wow.... watch out..."
-    "Greyson rugby tackles one on them to the ground and smashes him into the curb."
-    "I stand up and rush at the other one."
+    nar_c "Greyson rugby tackles one on them to the ground and smashes him into the curb."
+    nar_c "I stand up and rush at the other one."
     hero_c "Look here." with sshake
-    "I punch the other thug in the back."
+    nar_c "I punch the other thug in the back."
     "Thug" "You're going to regret that!"
-    "I steady my stance bracing for the fight."
+    nar_c "I steady my stance bracing for the fight."
     $ renpy.call('fight', hero, copy.deepcopy(lvl_1_thug_melee), [], [], clearing, win_label='prologue_police_station2', lose_label='prologue_police_station2', draw_label='prologue_police_station2', fight_limit=15)
     
 label prologue_police_station2:
@@ -1023,78 +1012,78 @@ label prologue_police_station2:
     $ exp = renpy.random.randint(100,200) + 200
     $ hero.gain_exp(exp)
     hero_c "I gain [exp] exp."
-    "The battle ends..."
+    nar_c "The battle ends..."
     show greyson_1 with dissolve 
     greyson_c "Take this!"
-    "He smashes the Thug with a baseball bat."
-    "........."
-    "The thug is knocked out on the floor but he did deal me some damage too."
+    nar_c "He smashes the Thug with a baseball bat."
+    nar_c "........."
+    nar_c "The thug is knocked out on the floor but he did deal me some damage too."
     greyson_c "I got stabbed on my side."
-    "He is holding his left abdomen and its covered in blood."
+    nar_c "He is holding his left abdomen and its covered in blood."
     greyson_c "Please go and check out the station, I'll follow you."
     hero_c "Just wait here, I'm sure they have a medical kit inside."
     hide greyson_1 with dissolve
-    "....."
-    "I rush inside."
+    nar_c "....."
+    nar_c "I rush inside."
     scene night_sky with squares
-    "The officers were locked up in the cells below the station."
-    "I manage to free them and get Greyson and myself treated."
+    nar_c "The officers were locked up in the cells below the station."
+    nar_c "I manage to free them and get Greyson and myself treated."
     "Police Officer" "Thank you for your brave work, we will try to contact neighboring towns to call for backup."
     $ l_police_station.unlocked = True
-    "{color=#006400}Police Station Secured! New location unlocked!{/color}"
-    "..........."
+    nar_c "{color=#006400}Police Station Secured! New location unlocked!{/color}"
+    nar_c "..........."
     if at_map:
         jump town_map
         
-    "........"
+    nar_c "........"
     scene street_1 night with squares
-    "I need to head for the hospital."
-    "......"
+    nar_c "I need to head for the hospital."
+    nar_c "......"
     jump prologue_school
 
 label prologue_school:
     scene street_1 night with sshake
-    "There is a large explosion in the distance."
-    "........."
+    nar_c "There is a large explosion in the distance."
+    nar_c "........."
     hero_c "What was that!?"
-    "It is coming from the direction of the school."
+    nar_c "It is coming from the direction of the school."
     hero_c "Lets check it out."
-    "........."
-    "......"
+    nar_c "........."
+    nar_c "......"
     scene school_1 night with squares
-    "......."
-    "I arrive at the scene first."
+    nar_c "......."
+    nar_c "I arrive at the scene first."
     show will_1 at left with dissolve
     show greyson_1 at right with dissolve
     will_c "Hey, you heard the explosion right?"
     greyson_c "Me too, I headed over here, this is my sister's school!"
-    "The windows are smashed and there is fire and smoke coming from all over the building."
+    nar_c "The windows are smashed and there is fire and smoke coming from all over the building."
     "Voice" "Ahhhh...."
-    "......"
-    "A body falls from one of the top floors and lands in the distance."
+    nar_c "......"
+    nar_c "A body falls from one of the top floors and lands in the distance."
     will_c "Looks like this place is more dangerous than the rest."
     will_c "There is something going on."
     hide will_1 with dissolve
-    "Will rushes inside."
+    nar_c "Will rushes inside."
     greyson_c "Guess he didn't leave us with much choice."
     greyson_c "Lets head inside."
     scene night_sky with squares
-    "......"
-    "We head inside following Will, who is knows exactly where he is going."
-    ".........."
-    "......."
-    "Will leaves us behind and Me and Greyson follow."
-    "We seem to be heading towards the rooftop."
+    nar_c "......"
+    nar_c "We head inside following Will, who is knows exactly where he is going."
+    nar_c ".........."
+    nar_c "......."
+    nar_c "Will leaves us behind and Me and Greyson follow."
+    nar_c "We seem to be heading towards the rooftop."
     scene rooftop_1 night with squares
-    "........"
-    "The place is littered with bodies of gang members knocked out."
-    "There is blood everywhere."
-    "From a distance I see a familiar face."
+    nar_c "........"
+    nar_c "The place is littered with bodies of gang members knocked out."
+    nar_c "There is blood everywhere."
+    nar_c "From a distance I see a familiar face."
     show will_1 with sshake
     will_c "Ahhh"
     hide will_1 with dissolve
-    "Will goes flying in the distance and crashes into a wall."
-    "........"
+    nar_c "Will goes flying in the distance and crashes into a wall."
+    nar_c "........"
     "I see a familiar face."
     show sam_2 with dissolve
     "???" "Hey who do we have here."
@@ -1110,16 +1099,16 @@ label prologue_school:
     will_c "No.... you can't stand up to him, he is too strong."
     sam_c "Lets finish it."
     hide sam_1 with dissolve
-    "......" with red_flash
-    "......" with sshake
-    "I ... somehow end up on the ground."
-    "There is a sharp pain in my nose and jaw area."
-    "I can't move my body...."
-    "......."
-    "He takes out Greyson with ease."
+    nar_c "......" with red_flash
+    nar_c "......" with sshake
+    nar_c "I ... somehow end up on the ground."
+    nar_c "There is a sharp pain in my nose and jaw area."
+    nar_c "I can't move my body...."
+    nar_c "......."
+    nar_c "He takes out Greyson with ease."
     show sam_2 with dissolve
     sam_c "Is this the best you guys could do?"
-    "What is this guy? Was he holding back, back then?"
+    nar_c "What is this guy? Was he holding back, back then?"
     sam_c "Hahhaaha...."
     sam_c "Now this town belongs to me."
     will_c "I won't let that happen!"
@@ -1127,32 +1116,32 @@ label prologue_school:
     show will_1 with dissolve
     will_c "Lets retreat for now."
     scene night_sky with dissolve
-    "Will picks both me and Greyson up and runs downstairs."
-    "I am amazed at his strength."
-    "..............."
-    "I fade in and out of conciousness, my nose is bleeding heavily."
-    "......"
-    "Greyson is totally out cold."
+    nar_c "Will picks both me and Greyson up and runs downstairs."
+    nar_c "I am amazed at his strength."
+    nar_c "..............."
+    nar_c "I fade in and out of conciousness, my nose is bleeding heavily."
+    nar_c "......"
+    nar_c "Greyson is totally out cold."
     will_c "Hufff.... huff....."
-    ".........."
+    nar_c ".........."
     scene apartment_1 night with squares
-    "............"
+    nar_c "............"
     "Will puts both of us down."
     will_c "Adam! Help!"
     show adam_1 with dissolve
     adam_c "Amy bring the equipment!"
-    "......."
-    "....."
+    nar_c "......."
+    nar_c "....."
     scene black_fade with black_flash
-    ".............."
-    ".........."
-    "........."
+    nar_c ".............."
+    nar_c ".........."
+    nar_c "........."
     scene apartment_1 afternoon with squares
-    "......"
-    "Sunlight hits my eyes..."
-    "I wake up to find a familiar site."
+    nar_c "......"
+    nar_c "Sunlight hits my eyes..."
+    nar_c "I wake up to find a familiar site."
     # TODO: review of what happened yesterday
-    "I wake up and head towards the group of people seated."
+    nar_c "I wake up and head towards the group of people seated."
     show adam_1 at left with dissolve
     show will_1 at right with dissolve
     adam_c "Will can you please explain to all of us, what is going on?"
@@ -1164,13 +1153,13 @@ label prologue_school:
     will_c "These came to an end when both senior leaders of both of the local gangs were killed."
     will_c "Many gangs drifted or simply broke apart afer that event."
     will_c "Now there have been rumours that one of the senior leaders is alive."
-    "I interrupt him."
+    nar_c "I interrupt him."
     hero_c "But who is Sam?"
     will_c "He... is the leader of the current gang who are trying to claim this town as theirs and my brother..."
-    "......."
-    "The whole crowd are in shock."
+    nar_c "......."
+    nar_c "The whole crowd are in shock."
     will_c "One of the leaders that died 10 years ago was my father and now my brother is trying to revive the gang."
-    "The crowd starts to talk amongst themselves."
+    nar_c "The crowd starts to talk amongst themselves."
     will_c "His actions I think are misleading..."
     hero_c "What do you mean?"
     will_c "When the news came that one of the old leaders came back, there was a reaction from the other towns gangs."
@@ -1228,12 +1217,12 @@ label mission_infiltrate_hold:
     adam_c "We need to do a full assault there."
     adam_c "Since you three seem to make a good team, lets move out and take over this part of town."
     adam_c "Go Greyson, Will and [hero.name]!"
-    "............"
-    "The three of us make our way towards the school."
-    "........."
+    nar_c "............"
+    nar_c "The three of us make our way towards the school."
+    nar_c "........."
     
     scene school_1 night with squares
-    ".............."
+    nar_c ".............."
     "It is the same as we saw the other day."
     show bison_1 with dissolve
     bison_c "Heh... heh... heh....."
@@ -1244,7 +1233,7 @@ label mission_infiltrate_hold:
     bison_c "So what if I am!?"
     will_c "You guys clearly know each other."
     bison_c "There is larger wave coming soon, I don't have time ot waste here."
-    "Behind Bison, many other thugs with bats show up."
+    nar_c "Behind Bison, many other thugs with bats show up."
     bison_c "Fight me!"
     
     $ m_infiltrate_mission_battle.do_mission(hero_c)
@@ -1259,9 +1248,9 @@ label prologue_continue:
     hero_c "I gain [exp] exp."
     
     scene school_1 night with dissolve
-    "Bison and his gang are all knocked out."
-    ".... ring... ring...."
-    "My phone rings, I pick it up."
+    nar_c "Bison and his gang are all knocked out."
+    nar_c ".... ring... ring...."
+    nar_c "My phone rings, I pick it up."
     adam_c "Please return to the base, we will do a final attack later."
     hero_c "Ok, heading back."
     jump town_map
@@ -1273,16 +1262,16 @@ label mission_defeat_sam:
         
     
     scene apartment_1 with squares
-    "............"
+    nar_c "............"
     show adam_1 with dissolve
     adam_c "The seurity around the school has cleared."
     adam_c "We can go in a defeat Sam, the leader of the gang here."
     adam_c "............"
     adam_c "Go."
     scene school_1 with squares
-    "............"
-    "........"
-    "There is no security, I make my way towards the roof."
+    nar_c "............"
+    nar_c "........"
+    nar_c "There is no security, I make my way towards the roof."
     scene rooftop with squares
     sam_c "Long time, no see."
     sam_c "Fight me 1 on 1."
@@ -1294,7 +1283,7 @@ label prologue_end:
     
     scene rooftop_1 with squares
     
-    "Sam overpowers me." with sshake
+    nar_c "Sam overpowers me." with sshake
     
     show sam_1 with dissolve
     
@@ -1315,9 +1304,9 @@ label prologue_end:
     sam_c "Work with me Will, we do this."
     will_c "I don't approve of your methods and I am going to take you down here."
     # will vs sam fight
-    ".............."
+    nar_c ".............."
     will_c "Blast kick!" with sshake
-    "The kick connects and send Sam flying into the wall."
+    nar_c "The kick connects and send Sam flying into the wall."
     sam_c "......ughhh...."
     "Sam is knocked out."
     
@@ -1326,36 +1315,36 @@ label prologue_end:
     
     will_c "Its over."
     
-    ".............."
-    "Greyson helps me up and we head back to the apartment."
+    nar_c ".............."
+    nar_c "Greyson helps me up and we head back to the apartment."
     
     scene apartment_1 with squares
-    "..........."
-    ".........."
+    nar_c "..........."
+    nar_c ".........."
     "Will brings Sam and Bison to the apartment too."
     show adam_1 with dissolve
     adam_c "We have secured Middle Town."
     adam_c "The leader was Sam, who is currently receieving treatment."
     adam_c "We will watch over him, as he may have intel on who is causing all this fuss in the city."
-    "..........."
-    "........"
-    "....."
-    "I wonder what the other parts of town are doing...."
-    "............"
-    ".........."
+    nar_c "..........."
+    nar_c "........"
+    nar_c "....."
+    nar_c "I wonder what the other parts of town are doing...."
+    nar_c "............"
+    nar_c ".........."
     scene forest_1 with squares
     show ai_1 with dissolve
     ai_c "Seems like middle town are starting gather some force."
     ai_c "We should start to prepare for his return too."
     ai_c "I won't let what happened 10 years ago repeat again."
-    "..........."
-    "......."
+    nar_c "..........."
+    nar_c "......."
     scene home_1 with squares
     show monk_1 with dissolve
-    ".............."
+    nar_c ".............."
     monk_c "Looks like the vision were true."
     monk_c "I can't wait to spill blood again!"
-    "..........."
+    nar_c "..........."
     jump intro_world_events
     
 label intro_world_events:
@@ -1364,10 +1353,10 @@ label intro_world_events:
     
 label prologue_end2:
     scene apartment_1 with squares
-    "............"
-    "........"
-    "A week has gone by since we defeated Sam."
-    "He and Bison have been recovering."
+    nar_c "............"
+    nar_c "........"
+    nar_c "A week has gone by since we defeated Sam."
+    nar_c "He and Bison have been recovering."
     show sam_1 with dissolve
     sam_c "Ok ok... I will join to help."
     show sam_1 at left with dissolve
@@ -1380,10 +1369,10 @@ label prologue_end2:
     hide sam_1 with dissolve
     hide bison_1 with dissolve
     hide adam_1 with dissolve
-    ".........."
-    "Bison and Sam join Party!"
-    team_first.members += sam
-    team_first.members += bison
+    nar_c ".........."
+    nar_c "Bison and Sam join Party!"
+    $ team_first.members += sam
+    $ team_first.members += bison
     show amy_1 with dissolve
     amy_c "I want to fight too."
     "Amy joins party"
@@ -1394,15 +1383,22 @@ label prologue_end2:
     adam_c "To our south is South Town, their leader is known as Ai, the Flash."
     adam_c "As Sam and Will informed us, these two were part of this gang 10 years ago."
     adam_c "We have missions for both of these parties, our aim is to find Will and Sam's Father."
-    "............"
-    ".........."
+    nar_c "............"
+    nar_c ".........."
     
     scene town_map_1 with dissolve
     show screen villagemap(middle_town, hero)
     
     $ renpy.pause(2.0, hard=True)
     
-    # show the title page and end of episode 1 YEAH!!
+    show screen announce("GANG RISER EPISODE 1")
+    
+    $ renpy.pause(2.0, hard=True)
+    
+    # end game
+    return
+    
+    
     
     
             
@@ -1876,7 +1872,7 @@ label fight(player, enemy, tag_p, tag_e, stage=clearing, win_label='generic_win'
     $ remove_all_skill_affects(player, enemy)
     
     show screen battlebars(tag_p, tag_e)
-    #show screen stats
+    #show screen player_limbs(player=player)
     call screen battlemenu(player, tag_p)
     
 label initial_pos(player, enemy):

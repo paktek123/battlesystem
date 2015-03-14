@@ -6,38 +6,42 @@
 #
 
 screen allocatepoints(player):
+    add "hero_hud" xpos 0.15 ypos 0.30
+    
     $ STATS = ['strength', 'speed', 'evasion', 'defence', 'stamina', 'melee', 'special', 'ranged']
     $ counter = 0
-    text "Allocation Points: [player.allocation_points]" xpos 0.1
-    text "Str: [player.strength] Def: [player.defence] Eva: [player.evasion]" xpos 0.50
-    text "Sta: [player.stamina] Speed: [player.speed] Hit: [player.base_hit_rate]" xpos 0.50 ypos 0.05
-    text "Melee: [player.melee] Special: [player.special] Ranged: [player.ranged]" xpos 0.50 ypos 0.1
+    text "Allocation Points: [player.allocation_points]" xpos 0.35 ypos 0.20
+    #text "Strength: [player.strength] Defence: [player.defence] Evasion: [player.evasion]" xpos 0.50
+    #text "Stamina: [player.stamina] Speed: [player.speed] Hit: [player.base_hit_rate]" xpos 0.50 ypos 0.05
+    #text "Melee: [player.melee] Special: [player.special] Ranged: [player.ranged]" xpos 0.50 ypos 0.1
     
     if player.allocation_points:
         for stat in STATS:
-            textbutton "[stat] +1" hovered Show('explanation', stat=stat) unhovered Hide('explanation') action [SetField(player, stat, getattr(player, stat) + 1), 
+            $ player_stat = getattr(player, stat)
+            $ cap_stat = stat.capitalize()
+            textbutton "[cap_stat] [player_stat] (+1)" hovered Show('explanation', stat=stat) unhovered Hide('explanation') action [SetField(player, stat, getattr(player, stat) + 1), 
                                                                                                                 SetField(player, 'allocation_points', getattr(player, 'allocation_points') - 1), 
                                                                                                                 SetField(current_session, 'main_player', player), 
-                                                                                                                Jump('allocate_points')] xpos grid_place[counter][0] ypos grid_place[counter][1]
-            $ counter +=1 
+                                                                                                                Jump('allocate_points')] xpos (grid_place[counter][0] + 0.1) ypos grid_place[counter][1]
+            $ counter +=1
+            
+        textbutton "Reset stats" action Jump('reset_allocation_points') xpos (grid_place[counter][0] + 0.1) ypos grid_place[counter][1]
             
 screen explanation(stat):
-    if stat == 'strength':
-        text "This is how much damage melee attacks do." ypos 0.25
-    elif stat == 'speed':
-        text "This is how much distance the player can cover per move." ypos 0.25
-    elif stat == 'evasion':
-        text "Chance of dodging the opponents attack." ypos 0.25
-    elif stat == 'defence':
-        text "Resistance against all types of attacks." ypos 0.25
-    elif stat == 'stamina':
-        text "Rate of recovering and endurance." ypos 0.25
-    elif stat == 'melee':
-        text "Proficiency in close combat." ypos 0.25
-    elif stat == 'special':
-        text "Proficiency in mana skills." ypos 0.25
-    elif stat == 'ranged':
-        text "Proficiency in ranged combat." ypos 0.25
+    
+    $ stat_dict = {'strength': "Damage dealt with attacks do.",
+                   'speed': "Distance the player can cover per move.",
+                   'evasion': "Chance of dodging the opponents attack.",
+                   'defence': "Resistance against all types of attacks.",
+                   'stamina': "Rate of recovering and endurance.",
+                   'melee': "Proficiency in close combat.",
+                   'special': "Proficiency in mana skills.",
+                   'ranged': "Proficiency in ranged combat."}
+    
+    $ message = stat_dict[stat]
+    
+    text "[message]" xpos 0.15 ypos 0.75
+    
 
 ##############################################################################
 # VILLAGE SCREENS
@@ -534,6 +538,12 @@ label toggle_calendar_off:
     python:
         renpy.jump("village_redirect")
 
+#############################################################################
+# MISC
+#
+screen announce(message):
+    text "{font=domai.ttf}{size=60}[message]{/size}{/font}" xpos 0.13 ypos 0.4
+
 
 ##############################################################################
 # WORLD EVENTS
@@ -603,7 +613,9 @@ screen battle_prep_screen:
 screen skill_actions(action_type):
     $ initial_pos = 0.8
     $ interval = 0.1
-    $ counter = 0
+    $ counter = 1
+    $ start = 300
+    $ x_pos = 118
     
     vbox:
         for skill in getattr(player, action_type):
@@ -611,11 +623,15 @@ screen skill_actions(action_type):
             if skill.is_usable(player, enemy):
                 textbutton "[skill.name]" action [SetField(current_session, 'skill', skill), 
                                                   SetField(current_session, 'skill_type', 'attack'),
-                                                  Jump('skill_redirect')]  xpos 0.6
+                                                  Jump('skill_redirect')] xpos (x_pos*counter) ypos (start - (counter*41))
             else:
                 $ reason = skill.unusable_reason(player, enemy)
                 # show another type of imagebutton here
-                textbutton "[skill.name]" hovered Show('move_explanation', reason=reason) unhovered Hide('move_explanation') xpos 0.6 action [[]]
+                textbutton "[skill.name]" hovered Show('move_explanation', reason=reason) unhovered Hide('move_explanation') action [[]] xpos (x_pos*counter) ypos (start - (counter*41))
+            
+            textbutton "Back" action [Hide('skill_actions'), Show('battlemenu', player=player, tag_p=tag_p)] xpos (x_pos*counter) ypos (start - (counter*41))
+
+            $ counter += 1
 
 screen battlemenu(player, tag_p):
     $ move_types = ["melee", "special", "ranged", "weapons", "defensive"]
@@ -635,15 +651,23 @@ screen battlemenu(player, tag_p):
             #text "[player_atr]" xpos 0.5
                 
             if getattr(player, player_atr):
-                textbutton "[capital]" hovered Show('battle_explanation', stat=move_type) unhovered Hide('battle_explanation') action [Hide("skill_actions"), Show("skill_actions", action_type=player_atr)] xpos (counter*x_pos) ypos  (start - (counter*41))
+                textbutton "[capital]" hovered Show('battle_explanation', stat=move_type) unhovered Hide('battle_explanation') action [Hide('battlemenu'), Hide("battle_explanation"), Show("skill_actions", action_type=player_atr)] xpos (counter*x_pos) ypos  (start - (counter*41))
             else:
                 textbutton "[capital]" xpos (x_pos*counter) ypos (start - (counter*41))
 
             $ counter += 1
        
         if not moved:
-            textbutton "Move" hovered Show('battle_explanation', stat='move') unhovered Hide('battle_explanation') action [Hide("skill_actions"), Show("movemenu")] xpos 355 ypos -50
-        textbutton "Standby" hovered Show('battle_explanation', stat='standby') unhovered Hide('battle_explanation') action Jump("standby") xpos 355 ypos -40
+            textbutton "Move" hovered Show('battle_explanation', stat='move') unhovered Hide('battle_explanation') action [Hide("skill_actions"), Show("movemenu")] xpos 355 ypos 100
+        else:
+            textbutton "Move" xpos 355 ypos 100
+            
+        textbutton "Standby" hovered Show('battle_explanation', stat='standby') unhovered Hide('battle_explanation') action Jump("standby") xpos 236 ypos 59
+        
+        if player.items:
+            textbutton "Items" hovered Show('battle_explanation', stat='items') unhovered Hide('battle_explanation') action Jump("items") xpos 471 ypos 18
+        else:
+            textbutton "Items" xpos 471 ypos 18
         
         # TODO: move trap to weapons
         #textbutton "Trap" action [Hide("specialactions"), Hide("rangedactions"), Hide("meleeactions"), Hide("weaponselection"), Hide("defenceactions"), Show("settrap")]
@@ -651,19 +675,20 @@ screen battlemenu(player, tag_p):
             textbutton "Tag [partner.name]" action [SetField(partner, 'main', True), SetField(partner, 'tile', player.tile), SetField(player, 'main', False), Jump('tag_partner')] ypos 5.0
         
 screen move_explanation(reason):
-    text "[reason]" ypos 0.8 xpos 0.2
+    text "[reason]" ypos 0.85 xpos 0.2
         
 screen battle_explanation(stat):
     $ expl_dict = {'melee': 'Close ranged attacks.', 
                    'special': 'Attacks that use magic.', 
                    'ranged': 'Attacks from distance.',
                    'move': 'Move across the battle area.', 
+                   'move_once': 'Can only move once per turn',
                    'weapons': 'Fixed damage attacks limited by quantity.', 
                    'defensive': 'Reduce enemy damage for a limited amount of time.',
                    'standby': 'Regain magic, slightly heal health.'}
     $ expl = expl_dict[stat]
     
-    text "[expl]" ypos 0.8 xpos 0.2
+    text "[expl]" ypos 0.85 xpos 0.2
         
 screen stats:
     text "Str: [player.strength] Def: [player.defence] Eva: [player.evasion]" xpos 0.30
@@ -676,18 +701,21 @@ screen battlebars(tag_p, tag_e):
         #has vbox 
     $ rel_pos = abs(player.tile.position - enemy.tile.position)
     
-    text "{color=#000}Round [battle_turn]{/color}" xpos 0.43 ypos 0.1
+    text "{color=#FFF}Round [battle_turn]{/color}" xpos 0.45 ypos 0.1
+    text "{size=-5}{color=#FFF}[player.name] vs [enemy.name]{/color}{/size}" xpos 0.40 ypos 0.18
     #text "[player.facing]" xpos 0.7 ypos 0.1
     #if current_session.battle:
     #    text "[current_session.battle.id]" xpos 0.80 ypos 0.1
 
     #text "[player.name]" xpos 0.20 ypos 0.05
     #text "[player.chakra]" xpos 0.49 ypos 0.45
-    imagebutton idle player.hudpic hover player.hudpic xpos 0.16 ypos 0.05 #action NullAction()
+    imagebutton idle player.hudpic hover player.hudpic xpos 0.16 ypos 0.06 #action NullAction()
     #text "[player.hp]" xpos 0.55 ypos 0.45
-    text "{color=#FFF}HP{/color}" xpos 0.10 ypos 0.3
-    text "{color=#FFF}MP{/color}" xpos 0.10 ypos 0.35
+    text "{size=-5}{color=#FFF}HP{/color}{/size}" xpos 0.10 ypos 0.3
+    text "{size=-5}{color=#FFF}MP{/color}{/size}" xpos 0.10 ypos 0.35
     bar value player.hp range player.maxhp xpos 0.15 ypos 0.30 xmaximum 150 #ymaximum 30 left_bar "blue_bar"
+    text "{size=-5}{color=#FFF}[player.hp]/[player.maxhp]{/color}{/size}" xpos 0.35 ypos 0.3
+    text "{size=-5}{color=#FFF}[player.chakra]/[player.maxchakra]{/color}{/size}" xpos 0.35 ypos 0.35
     bar value player.chakra range player.maxchakra xpos 0.15 ypos 0.35 xmaximum 150
     #if enemy.damage_dealt > 0:
     #    text "-[enemy.damage_dealt]" xpos 0.59 ypos 0.3
@@ -710,10 +738,12 @@ screen battlebars(tag_p, tag_e):
     
     #text "[enemy.name]" xpos 0.70 ypos 0.05
     #text "[enemy.chakra]" xpos 0.64 ypos 0.45
-    imagebutton idle enemy.hudpic hover enemy.hudpic xpos 0.66 ypos 0.05
+    imagebutton idle enemy.hudpic hover enemy.hudpic xpos 0.66 ypos 0.06
     #text "[enemy.hp]" xpos 0.70 ypos 0.45
-    text "{color=#FFF}HP{/color}" xpos 0.60 ypos 0.3
-    text "{color=#FFF}MP{/color}" xpos 0.60 ypos 0.35
+    text "{size=-5}{color=#FFF}HP{/color}{/size}" xpos 0.60 ypos 0.3
+    text "{size=-5}{color=#FFF}MP{/color}{/size}" xpos 0.60 ypos 0.35
+    text "{size=-5}{color=#FFF}[enemy.hp]/[enemy.maxhp]{/color}{/size}" xpos 0.85 ypos 0.3
+    text "{size=-5}{color=#FFF}[enemy.chakra]/[enemy.maxchakra]{/color}{/size}" xpos 0.85 ypos 0.35
     bar value enemy.hp range enemy.maxhp xpos 0.65 ypos 0.30 xmaximum 150
     bar value enemy.chakra range enemy.maxchakra xpos 0.65 ypos 0.35 xmaximum 150
     #if player.damage_dealt > 0:
@@ -899,42 +929,6 @@ label trap12:
     jump enemymove
     #call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
 
-screen send_detective_screen:
-
-    # A map as background.
-    add "bg.jpg"
-
-    # A drag group ensures that the detectives and the cities can be
-    # dragged to each other.
-    draggroup:
-
-        # Our detectives.
-        drag:
-            drag_name "Ivy"
-            child "enemy.png"
-            droppable False
-            dragged detective_dragged
-            xpos 100 ypos 100
-        drag:
-            drag_name "Zack"
-            child "itachi.png"
-            droppable False
-            dragged detective_dragged
-            xpos 150 ypos 100
-
-        # The cities they can go to.
-        drag:
-            drag_name "London"
-            child "button_hover.png"
-            draggable False
-            xpos 450 ypos 140
-        drag:
-            drag_name "Paris"
-            draggable False
-            child "button_idle.png"
-            xpos 500 ypos 280
-
-
 
 ##############################################################################
 # Say
@@ -960,7 +954,8 @@ screen say:
             if who:
                 text who id "who"
 
-            text what id "what"
+            # force the color here :(
+            text what id "what" color "#fff"
 
     else:
 
