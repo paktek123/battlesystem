@@ -11,6 +11,7 @@ init -6 python:
     class Village:
         def __init__(self, id, name, leader, marker_xpos, marker_ypos, map, wealth=100, army=1000, control=100, influence=100, uprising=0, 
                      locations=None, village_tag='', mission_locations=1):
+            
             self.id = id
             self.name = name
             self.leader = leader
@@ -33,6 +34,14 @@ init -6 python:
             self.jounins = []
             self.sannins = []
             self.mission_locations = ["{}_{}".format(village_tag, x) for x in range(1,mission_locations+1)]
+            
+            self.save()
+            
+        def save(self):
+            #sane_name = '_'.join(self.name.lower().split(' '))
+            # create a copy of the player in the persistent storage
+            #setattr(persistent, 'village_' + sane_name, copy.deepcopy(self))
+            return 
 
         def add_to_ninja_ranks(self, player):
             for rank, level_range in NINJA_RANKS.iteritems():
@@ -40,6 +49,8 @@ init -6 python:
                     village_ranks = getattr(self, "{}s".format(rank))
                     village_ranks.append(player)
                     setattr(self, "{}s".format(rank), village_ranks)
+                    
+            self.save()
                     
         def update_ninja_ranks(self, player):
             self.genins = [g for g in self.genins if g != player]
@@ -50,6 +61,8 @@ init -6 python:
             village_ranks = getattr(self, "{}s".format(player.ninja_rank()))
             village_ranks.append(player)
             setattr(self, "{}s".format(player.ninja_rank()), village_ranks)
+            
+            self.save()
 
         def random_mission_location(self):
             return random.choice(self.mission_locations)
@@ -105,6 +118,7 @@ init -6 python:
             self.random_wealth_event()
             #self.random_control_event()
             #self.random_influence_event()
+            self.save()
             
         def __repr__(self):
             return "<Village>: {}".format(self.name)
@@ -121,6 +135,14 @@ init -6 python:
             self.npc = npc
             self.visits = visits
             self.unlocked = False
+            
+            self.save()
+            
+        def save(self):
+            #sane_name = '_'.join(self.name.lower().split(' '))
+            # create a copy of the location in the persistent storage
+            #setattr(persistent, 'location_' + sane_name, copy.deepcopy(self))
+            return
             
         def interact(self, player, village):
             renpy.call(self.label, player, village)

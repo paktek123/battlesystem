@@ -3,6 +3,7 @@
 #
 
 init -5 python:
+#python early:
     # This used to store information about recent actions (since renpy does not have a call action for screens)
     class CurrentSession:
         def __init__(self):

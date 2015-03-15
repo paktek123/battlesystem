@@ -26,6 +26,7 @@ init -1:
     ### HUD PICS ###
     image hero_hud = im.Scale("hero_hud.png", HUD_WIDTH, HUD_HEIGHT)
     image thug_hud = im.Scale("thug_hud.png", HUD_WIDTH, HUD_HEIGHT)
+    image will_hud = im.Scale("will_hud.png", HUD_WIDTH, HUD_HEIGHT)
     image bison_hud = im.Scale("bison_hud.png", HUD_WIDTH, HUD_HEIGHT)
     image ai_hud = im.Scale("ai_hud.png", HUD_WIDTH, HUD_HEIGHT)
     image monk_hud = im.Scale("monk_hud.png", HUD_WIDTH, HUD_HEIGHT)
@@ -61,13 +62,13 @@ init -1:
     ### SPRITES ###
     image thug_1 = im.Scale("thug_1.png", 270, 500)
     image sam_2 = im.Scale("sam_2.png", 270, 500)
-    image adam_1 = im.Scale("adam_1.png", 400, 600)
-    image adam_2 = im.Scale("adam_2.png", 400, 600)
-    image adam_3 = im.Scale("adam_3.png", 400, 600)
+    image adam_1 = im.Scale("adam_1.png", 450, 600)
+    image adam_2 = im.Scale("adam_2.png", 450, 600)
+    image adam_3 = im.Scale("adam_3.png", 450, 600)
     image amy_1 = im.Scale("amy_1.png", 270, 500)
     image amy_2 = im.Scale("amy_2.png", 270, 500)
     image amy_3 = im.Scale("amy_3.png", 270, 500)
-    image greyson_1 = im.Scale("greyson_1.png", 270, 500)
+    image greyson_1 = im.Scale("greyson_1.png", 330, 500)
     image will_1 = im.Scale("will_1.png", 270, 500)
     image bison_1 = im.Scale("bison_1.png", 270, 500)
     image ai_1 = im.Scale("ai_1.png", 300, 600)
@@ -142,8 +143,6 @@ init python:
     TILES = [tile1, tile2, tile3, tile4, tile5, tile6, tile7, tile8, tile9, tile10, tile11, tile12]
     
     ### TIME, DAY AND MONTHS ###
-            
-    main_time = GameTime(9, 1, 1, 1354)
     
     months = [copy.deepcopy(Month(m)) for m in range(1,13)]
     
@@ -172,97 +171,14 @@ init python:
     ##############################################################################
     # INITIALIZE ASSETS
     #
-        
-    ### EVENTS ###
-                    
-    e_chunin_exams = Event("Chunin Exams", "CE", start=(15, 5), finish=(14, 7), label="chunin_exam")
-    e_jounin_training = Event("Jounin Training", "JT", frequency=(1, ))
-    e_jinchurri_attack = Event("Jinchurri Attack", "???",chance=0.02, label="jinchurri_attack", occurrence=0)
-    e_weapon_discount = Event("Weapon Discount", "WD", frequency=(random.randint(2,30),)) 
-    e_hospital_discount = Event("Hospital Discount", "HD", frequency=(random.randint(2,30),)) 
-    
-    ALL_EVENTS = [e_chunin_exams, e_jounin_training, e_jinchurri_attack, e_weapon_discount, e_hospital_discount]
     
     def is_event_active_today(event):
         if event.name in [e.name for e in get_today().events]:
             return True
         return False
     
-    ### CURRENT SESSION ###
-        
-    current_session = CurrentSession()
-    
-    ### SKILLS ###
-    
-    # melee skills
-    punching_flurry = Skill(name='Punching Flurry', skill_type='melee', label="punchingflurry", range=2, damage=20)
-    onetwocombo = Skill(name='One Two Combo', skill_type='melee', label="onetwocombo", range=3, damage=30)
-    jaw_breaker = Skill(name="Jaw Breaker", skill_type='melee', label='jaw_breaker', range=2, damage=40)
-    thug_smash = Skill(name='Thug Smash', skill_type='melee', label="thug_smash", range=2, damage=25)
-    
-    
-    lioncombo = Skill('Lion Combo', 'melee', "lioncombo", 3, 2, 5, 20, unlock_exp=300)
-    
-    # special skills
-    blasting_kick = Skill(name="Blast Kick", skill_type="special", label="blast_kick", range=3, chakra_cost=30, damage=60)
-    rise_punch = Skill(name="Rise Punch", skill_type="special", label="rise_punch", range=2, chakra_cost=40, damage=35)
-    
-    rasengan = Skill('Rasengan', 'special', "rasengan", 2, 1, 25, 30, unlock_exp=500)
-    chidori = Skill('Chidori', 'special', "chidori", 2, 1, 25, 30, unlock_exp=1000)
-    raikiri = Skill('Raikiri', 'special', "raikiri", 2, 1, 50, 50, unlock_exp=1500)
-    
-    # ranged skills
-    rock_throw = Skill(name="Rock Throw", skill_type="ranged", label="rock_throw", range=7, chakra_cost=10, damage=15)
-    distance_hit = Skill(name="Distance Hit", skill_type="ranged", label="distance_hit", range=8, chakra_cost=20, damage=20)
-    
-    substitution = Skill('Substitution', 'ranged', "substitution", 8, 20, 15, 0, stun=True)
-    
-    # defensive skills
-    metal_jacket = Skill(name='Metal Jacket', skill_type='defence', label='metal_jacket', range=12, duration=3)
-    intimidate = Skill(name='Intimidate', skill_type='defence', label='intimidate', range=6, duration=3)
-    
-    
-    damage_reduction = Skill('Focus', 'defence', 'damagereduction', 12, 1, 10, duration=2, unlock_exp=300)
-    chakra_defence = Skill('Chakra Defence', 'defence', 'chakradefence', 12, 2, 15, duration=3, unlock_exp=500)
-    substitution = Skill('Substitution', 'counter', "substitution", 8, 20, 15, 0, stun=True)
-    reflect = Skill('Reflect', 'defence', 'reflect', 12, 20, 20, duration=2, unlock_exp=1500)
-    dampen = Skill('Dampen', 'defence', 'dampen', 6, 30, 30, duration=3, unlock_exp=2000)
-    yata_mirror = Skill('Yata Mirror', 'defence', 'yatamirror', 12, 50, 50, duration=2, unlock_exp=2500)
-    
-    ### WEAPONS ###
-    w_knife = Weapon(name='Knife', price=30, range=2, chakra_cost=5, damage=25)
-    w_bat = Weapon(name='Bat', price=50, range=3, chakra_cost=10, damage=30)
-    w_brass_knuckles = Weapon(name='Brass Knuckles', price=100, range=1, chakra_cost=5, damage=50)
-    w_bbgun = Weapon(name='BB Gun', price=400, range=10, chakra_cost=0, damage=40)
-    
-    w_kunai = Weapon("Kunai", price=50, range=4, chakra_cost=4, damage=20)
-    w_paper_bomb = Weapon("Paper Bomb", price=100, range=2, chakra_cost=5, damage=50)
-    shiruken = Weapon('Shiruken', 'weapon', "shiruken", 12, 7, 1, 20)
-    kunai = Weapon('Kunai', 'weapon', "kunai", 12, 4, 1, 20)
-    trap = Weapon('Trap', 'weapon', "trap", 3, 1, 2, 30)
-    
-    THUG_MELEE_SKILL_SET = [onetwocombo, jaw_breaker, thug_smash, metal_jacket, intimidate, w_knife, w_bat]
-    THUG_RANGED_SKILL_SET = [rock_throw, distance_hit, metal_jacket, w_bbgun]
-    
-    ### PLAYERS AND TEAMS ###
-    
-    # d = defensive skill
-    # f = range attack (weapon)
-    # a = attack (use any attack)
-    # t = set trap
-    # c = use team combo (formation attacks)
-    # melee = use taijutsu skills
-    # special = use ninjustsu skills
-    # ranged = use genjutsu skills
-    # healing items and tagging will be in enemy_move itself
-    defensive_enemy_pattern = 2*['d'] + 2*['f'] + 2*['a'] + 2*['t']
-    attack_enemy_pattern = 3*['a'] + 2*['f']
-    ranged_attack_pattern = 4*['f'] + 2*['d']
-    melee_enemy_pattern = 3*['melee'] + 2*['d']
-    special_enemy_pattern = 3*['special'] + ['d'] + ['a'] + ['f']
-    ranged_enemy_pattern = 3*['ranged'] + 2*['d'] + ['f']
-    
     ### CHARACTERS ###
+    
     nar_c = Character('    ',color="#FFFF00", who_color="#FFFF00")
     hero_c = Character('NO NAME',color="#FFFF00")
     thug_c = Character('Thug',color="#FFFFFF")
@@ -281,111 +197,6 @@ init python:
     kakashi_c = Character('Kakashi', color="#3399FF")
     itachi_c = Character('Itachi', color="#FFFFFF")
     ori_c = Character('Orichimaru', color="#FF0000")
-    
-    lvl_1_thug_melee = LevelledEnemy(lvl=1, skill_pool=THUG_MELEE_SKILL_SET, character=thug_c, tile=tile12)
-    lvl_1_thug_ranged = LevelledEnemy(lvl=1, skill_pool=THUG_RANGED_SKILL_SET, character=thug_c, tile=tile12)
-    
-    lvl_4_thug_melee = LevelledEnemy(lvl=4, skill_pool=THUG_MELEE_SKILL_SET, character=thug_c, tile=tile12)
-    lvl_4_thug_ranged = LevelledEnemy(lvl=4, skill_pool=THUG_RANGED_SKILL_SET, character=thug_c, tile=tile12)
-    
-    # give him unique skill set
-    lvl_8_bison_melee = LevelledEnemy(lvl=8, skill_pool=THUG_MELEE_SKILL_SET, character=bison_c, tile=tile12, hudpic="bison_hud")
-    
-    lvl_15_adam = LevelledEnemy(lvl=15, skill_pool=THUG_RANGED_SKILL_SET, character=adam_c, tile=tile12, picname="adam_1")
-    lvl_15_ai = LevelledEnemy(lvl=15, skill_pool=THUG_RANGED_SKILL_SET, character=ai_c, tile=tile12, picname="ai_1")
-    lvl_15_monk = LevelledEnemy(lvl=15, skill_pool=THUG_RANGED_SKILL_SET, character=monk_c, tile=tile12, picname="monk_1")
-
-    # Use this for quick character creation
-    #lvl_15_daniel = LevelledEnemy(lvl=15, skill_pool=THUG_MELEE_SKILL_SET, character=daniel_c, tile=tile12, tilepic="fe_1_r")
-    
-    hero = Player(name='NO NAME', picname="hero_tile_r", character=hero_c, tilepic="hero_tile_r", hudpic='hero_hud', 
-                  hp=100, maxhp=100, chakra=80, maxchakra=80, 
-                  strength=1, speed=1, evasion=1, defence=1, stamina=1, base_hit_rate=80, 
-                  tile=tile1, facing='right', 
-                  meleeskills=[punching_flurry], specialskills=[], rangedskills=[], 
-                  items=[], defensiveskills=[], bloodlineskills=[], 
-                  leader_pic="leader_pic", 
-                  weapons=[], 
-                  home_village=None)
-    
-    thug = Player(name='Thug', picname="thug_tile_r", character=thug_c, tilepic="thug_tile_r", hudpic='thug_hud', 
-                  hp=100, maxhp=100, chakra=80, maxchakra=80, 
-                  strength=5, speed=5, evasion=1, defence=1, stamina=1, base_hit_rate=80, 
-                  tile=tile1, facing='left', 
-                  meleeskills=[onetwocombo], specialskills=[], rangedskills=[], 
-                  items=[], defensiveskills=[], bloodlineskills=[], 
-                  leader_pic="leader_pic", 
-                  weapons=[w_knife], 
-                  home_village=None)
-    
-    # unique moves
-    sam = Player(name='Sam', picname="thug_tile_r", character=thug_c, tilepic="thug_tile_r", hudpic='thug_1_hud', 
-                  hp=150, maxhp=150, chakra=120, maxchakra=120, 
-                  strength=9, speed=6, evasion=6, defence=8, stamina=6, base_hit_rate=80, 
-                  tile=tile1, facing='left', 
-                  meleeskills=[onetwocombo], specialskills=[blasting_kick], rangedskills=[], 
-                  items=[], defensiveskills=[], bloodlineskills=[], 
-                  leader_pic="leader_pic", 
-                  weapons=[w_knife, w_brass_knuckles], 
-                  home_village=None)
-    
-    will = Player(name='Will', picname="will_tile_r", character=thug_c, tilepic="will_tile_r", hudpic='will_1_hud', 
-                  hp=200, maxhp=200, chakra=150, maxchakra=150, 
-                  strength=10, speed=6, evasion=6, defence=10, stamina=10, base_hit_rate=90, 
-                  tile=tile1, facing='left', 
-                  meleeskills=[onetwocombo, jaw_breaker], specialskills=[blasting_kick], rangedskills=[], 
-                  items=[], defensiveskills=[], bloodlineskills=[], 
-                  leader_pic="leader_pic", 
-                  weapons=[w_brass_knuckles], 
-                  home_village=None)
-    
-    greyson = Player(name='Greyson', picname="will_tile_r", character=thug_c, tilepic="will_tile_r", hudpic='will_1_hud', 
-                  hp=120, maxhp=120, chakra=60, maxchakra=60, 
-                  strength=7, speed=3, evasion=3, defence=4, stamina=3, base_hit_rate=70, 
-                  tile=tile1, facing='left', 
-                  meleeskills=[onetwocombo, jaw_breaker], specialskills=[blasting_kick], rangedskills=[], 
-                  items=[], defensiveskills=[], bloodlineskills=[], 
-                  leader_pic="leader_pic", 
-                  weapons=[w_brass_knuckles], 
-                  home_village=None)
-    
-    naruto = Player('Naruto',"thug_tile_r", naruto_c, "thug_tile_r", "thug_tile_r", 100, 100, 80, 80, 10, 4, 3, 4, 5, 80, tile1, 'right', 
-                    [onetwocombo], [rasengan], [substitution], [],
-                    [damage_reduction, chakra_defence, reflect, dampen, yata_mirror], [], "leader_pic", 
-                    weapons=[shiruken, kunai], home_village=None)
-    sasuke = Player('Sasuke', "thug_tile_r", sasuke_c, "thug_tile_r", "thug_tile_r", 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
-                    [onetwocombo, lioncombo], [chidori], [], [], [damage_reduction, chakra_defence], 
-                    battle_ai=special_enemy_pattern, weapons=[shiruken, kunai], home_village=None) #, interaction={'frequency': (1,)})
-    
-    sakura = Player('Sakura', "thug_tile_r", sakura_c, "thug_tile_r", "thug_tile_r", 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
-                    [onetwocombo, lioncombo], [chidori], [], [], [damage_reduction, chakra_defence], weapons=[shiruken, kunai])
-    kakashi = Player('Kakashi', "thug_tile_r", kakashi_c, "thug_tile_r", "thug_tile_r", 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
-                    [onetwocombo, lioncombo], [raikiri], [], [], [damage_reduction, chakra_defence], level=32,
-                    battle_ai=special_enemy_pattern, weapons=[shiruken, kunai])
-    anko = Player('Anko', "thug_tile_r", kakashi_c, "thug_tile_r","thug_tile_r", 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
-                    [onetwocombo, lioncombo], [raikiri], [], [], [damage_reduction, chakra_defence], level=32,
-                    battle_ai=special_enemy_pattern, weapons=[shiruken, kunai])
-    
-    itachi = copy.deepcopy(sasuke)
-    itachi.name, itachi.picname, itachi.character, itachi.level = "Itachi", "thug_tile_r", itachi_c, 46
-    ori = copy.deepcopy(naruto)
-    ori.name, ori.picname, ori.character, ori.level = "Orichimaru", "thug_tile_r", ori_c, 45
-    kyuubi = copy.deepcopy(naruto)
-    kyuubi.name, kyuubi.picname, kyuubi.character, kyuubi.level = "Kyuubi", "thug_tile_r", kakashi_c, 79
-    gai = copy.deepcopy(naruto)
-    gai.name, gai.picname, gai.character, gai.level = "Gai", "thug_tile_r", ori_c, 32
-    gai.add_to_village_ranks()
-    
-    team7 = Team("Team 7", kakashi, [sasuke, sakura, naruto]) 
-    naruto.team = team7
-    naruto.sensei = kakashi
-    
-    team_first = Team("First Team", None, [will, hero, greyson])
-    
-    ALL_PLAYERS = [hero, thug, will, lvl_1_thug_melee, lvl_1_thug_ranged]
-    
-    #ALL_PLAYERS = [naruto, sasuke, sakura, kakashi, itachi, ori, gai]
-    ALL_CHARACTERS = [c.character for c in ALL_PLAYERS]
         
     def get_random_jounin(player, village, exclude_sensei=False, exclude=[]):
         if exclude_sensei and player.sensei:
@@ -398,85 +209,308 @@ init python:
         remove_sensei_jounin = [j for j in village.jounins if j not in sensei]
         return random.choice(remove_sensei_jounin)
         
-    ### VILLAGE AND LOCATIONS ###
-
-    ### Use existing already defined labels not new ones 
-    
-    l_hospital = Location('Hospital', 'village_hospital', 'street_4', events=[e_hospital_discount])
-    l_police_station = Location('Police Station', 'village_police_station', 'building_1', events=[e_weapon_discount])
-    l_level_up = Location('Level Up', 'village_levelup', 'apartment_1')
-    l_training_ground = Location('Training', 'village_training', 'forest_2')
-    l_town_mission = Location('Mission', 'village_missions', events=[],)
-    l_apartment = Location('Apartment', 'village_home', 'apartment_1')
-
-    # locations that exist in each village
-    l_travel = Location('Travel', 'village_travel')
-    #l_level_up = Location('Level Up', 'village_levelup')
-    #l_training_ground = Location('Training', 'village_training', 'training')
-    l_arena = Location('Arena', 'village_arena')
-    l_jounin_station = Location('Jounin Standby Station', 'village_jounin_station', events=[e_jounin_training])
-    l_intelligence_division = Location('Intelligence Division', 'village_intelligence_division')
-    l_ninja_tool_facility = Location('Ninja Tool Facility', 'village_ninja_tool_facility', events=[e_weapon_discount])
-    l_villagemission = Location('Mission Assignment Desk', 'village_missions', events=[e_chunin_exams])
-    l_home = Location('Home', 'village_home')
-    
-    BASE_LOCATIONS = [l_level_up, l_training_ground, l_town_mission, l_apartment, l_hospital, l_police_station]
-    
-    #BASE_LOCATIONS = [l_travel, l_level_up, l_training_ground, l_arena, l_hospital, l_jounin_station, l_intelligence_division, l_ninja_tool_facility, l_villagemission, l_home]
-    
-    middle_town = Village(1, "Middle Town", lvl_15_adam, marker_xpos=0.40, marker_ypos=0.25, map="town_map_1", locations=BASE_LOCATIONS, village_tag="middle_town", mission_locations=2, wealth=50)
-    east_town = Village(2, "East Town", lvl_15_monk, marker_xpos=0.60, marker_ypos=0.25, map="town_map_1", locations=BASE_LOCATIONS, village_tag="east_town", mission_locations=2)    
-    south_town = Village(3, "South Town", lvl_15_ai, marker_xpos=0.45, marker_ypos=0.65, map="town_map_1", locations=BASE_LOCATIONS, village_tag="south_town", mission_locations=2)
-    west_town = Village(4, "West Town", None, marker_xpos=0.25, marker_ypos=0.25, map="town_map_1", locations=BASE_LOCATIONS, village_tag="west_town", mission_locations=2)    
-    north_town = Village(5, "North Town", None, marker_xpos=0.25, marker_ypos=0.25, map="town_map_1", locations=BASE_LOCATIONS, village_tag="north_town", mission_locations=2)    
-        
-    hidden_stone = Village(1, "Hidden Stone", None, marker_xpos=0.25, marker_ypos=0.25, map="stones_map", locations=BASE_LOCATIONS, village_tag="stones", mission_locations=2)
-    hidden_cloud = Village(2, "Hidden Cloud", None, marker_xpos=0.75, marker_ypos=0.20, map="clouds_map", locations=BASE_LOCATIONS, village_tag="cloud", mission_locations=2)
-    hidden_mist = Village(3, "Hidden Mist", None, marker_xpos=0.85, marker_ypos=0.70, map="mist_map", locations=BASE_LOCATIONS, village_tag="mist", mission_locations=2)
-    hidden_leaf = Village(4, "Hidden Leaf", None, marker_xpos=0.40, marker_ypos=0.60, map="konoha_map", locations=BASE_LOCATIONS, village_tag="leaf", mission_locations=2)
-    hidden_sand = Village(5, "Hidden Sand", None, marker_xpos=0.25, marker_ypos=0.90, map="sand_map", locations=BASE_LOCATIONS, village_tag="sand", mission_locations=4)
-        
-    ALL_VILLAGES = [east_town, south_town, middle_town] # west_town, north_town] 
-    
     def other_villages(village):
         return [v for v in ALL_VILLAGES if v.id != village.id]
         
-    ### STAGES ###
-            
+    ### STAGES (TODO: different tiles) ###
     clearing = Stage('Clearing', 1, 1)        
             
     ### SHOP ITEMS ###
     i_heal_paste = ShopItem("Heal Paste", 300, 30, health=30)
     i_chakra_paste = ShopItem("Chakra Paste", 300, 40, chakra=30)
     
-    ### SHOPS ###
-    hospital_shop = Shop("Hospital", 'leaf_hospital_1', items=[i_heal_paste, i_chakra_paste])
-    weapon_shop = Shop("Weapons", 'leaf_shrine', items=[w_kunai, w_paper_bomb])
+    # screen vars
+    screen_on = False
+    calendar_on = False
     
-    ### MISSIONS ###
+    battle1 = Battle(id="1", good_team=[], bad_team=[], xpos=100, ypos=100, battle_label="b_battle_1")
+    battle2 = Battle(id="2", good_team=[], bad_team=[], xpos=300, ypos=100, battle_label="b_battle_2")
+    battle_last = Battle(id="last", good_team=[], bad_team=[], xpos=500, ypos=100, battle_label="b_battle_last")
+    
+    ALL_BATTLES = [battle1, battle2, battle_last]
+    
+
+### DYNAMIC RESOURCES WITHIN THE GAME ###
+### THESE NEED TO BE HERE IN ORDER TO PERSIST ON A SAVE ###
+
+label declare_resources:
+    
+    ### TIME ###
+    $ main_time = GameTime(9, 1, 1, 2015)
+    
+    ### CURRENT SESSION ###
+    $ current_session = CurrentSession()
+    
+    ### EVENTS ###
+                    
+    $ e_chunin_exams = Event("Chunin Exams", "CE", start=(15, 5), finish=(14, 7), label="chunin_exam")
+    $ e_jounin_training = Event("Jounin Training", "JT", frequency=(1, ))
+    $ e_jinchurri_attack = Event("Jinchurri Attack", "???",chance=0.02, label="jinchurri_attack", occurrence=0)
+    $ e_weapon_discount = Event("Weapon Discount", "WD", frequency=(random.randint(2,30),)) 
+    $ e_hospital_discount = Event("Hospital Discount", "HD", frequency=(random.randint(2,30),)) 
+    
+    $ ALL_EVENTS = [e_chunin_exams, e_jounin_training, e_jinchurri_attack, e_weapon_discount, e_hospital_discount]
+    
+    # populate events like this
+    python:
+        for d in ALL_DAYS:
+            for e in ALL_EVENTS:
+                if e.start and e.finish:
+                    for r in e.date_range():
+                        if r.day == d.number and r.month == d.month.number:
+                            d.events.append(e)
+                elif e.frequency:
+                    for day in e.frequency:
+                        if d.number == day:
+                            d.events.append(e)
+                elif e.chance:
+                    if (100*e.chance) > random.randint(1, 101):
+                        d.events.append(e)
+                    
+        # only get unique events
+        for d in ALL_DAYS:
+            d.events = d.events #list(set(d.events))
+    
+    ### SKILLS AND AI ###
+    
+    # melee skills
+    $ punching_flurry = Skill(name='Punching Flurry', skill_type='melee', label="punchingflurry", range=2, damage=20)
+    $ onetwocombo = Skill(name='One Two Combo', skill_type='melee', label="onetwocombo", range=3, damage=30)
+    $ jaw_breaker = Skill(name="Jaw Breaker", skill_type='melee', label='jaw_breaker', range=2, damage=40)
+    $ thug_smash = Skill(name='Thug Smash', skill_type='melee', label="thug_smash", range=2, damage=25)
+    $ lioncombo = Skill('Lion Combo', 'melee', "lioncombo", 3, 2, 5, 20, unlock_exp=300)
+    
+    # special skills
+    $ blasting_kick = Skill(name="Blast Kick", skill_type="special", label="blast_kick", range=3, chakra_cost=30, damage=60)
+    $ rise_punch = Skill(name="Rise Punch", skill_type="special", label="rise_punch", range=2, chakra_cost=40, damage=35)
+    
+    $ rasengan = Skill('Rasengan', 'special', "rasengan", 2, 1, 25, 30, unlock_exp=500)
+    $ chidori = Skill('Chidori', 'special', "chidori", 2, 1, 25, 30, unlock_exp=1000)
+    $ raikiri = Skill('Raikiri', 'special', "raikiri", 2, 1, 50, 50, unlock_exp=1500)
+    
+    # ranged skills
+    $ rock_throw = Skill(name="Rock Throw", skill_type="ranged", label="rock_throw", range=7, chakra_cost=10, damage=15)
+    $ distance_hit = Skill(name="Distance Hit", skill_type="ranged", label="distance_hit", range=8, chakra_cost=20, damage=20)
+    
+    $ substitution = Skill('Substitution', 'ranged', "substitution", 8, 20, 15, 0, stun=True)
+    
+    # defensive skills
+    $ metal_jacket = Skill(name='Metal Jacket', skill_type='defence', label='metal_jacket', range=12, duration=3)
+    $ intimidate = Skill(name='Intimidate', skill_type='defence', label='intimidate', range=6, duration=3)
+    
+    $ damage_reduction = Skill('Focus', 'defence', 'damagereduction', 12, 1, 10, duration=2, unlock_exp=300)
+    $ chakra_defence = Skill('Chakra Defence', 'defence', 'chakradefence', 12, 2, 15, duration=3, unlock_exp=500)
+    $ substitution = Skill('Substitution', 'counter', "substitution", 8, 20, 15, 0, stun=True)
+    $ reflect = Skill('Reflect', 'defence', 'reflect', 12, 20, 20, duration=2, unlock_exp=1500)
+    $ dampen = Skill('Dampen', 'defence', 'dampen', 6, 30, 30, duration=3, unlock_exp=2000)
+    $ yata_mirror = Skill('Yata Mirror', 'defence', 'yatamirror', 12, 50, 50, duration=2, unlock_exp=2500)
+    
+    ### WEAPONS ###
+    $ w_knife = Weapon(name='Knife', price=30, range=2, chakra_cost=5, damage=25)
+    $ w_bat = Weapon(name='Bat', price=50, range=3, chakra_cost=10, damage=30)
+    $ w_brass_knuckles = Weapon(name='Brass Knuckles', price=100, range=1, chakra_cost=5, damage=50)
+    $ w_bbgun = Weapon(name='BB Gun', price=400, range=10, chakra_cost=0, damage=40)
+    
+    $ w_kunai = Weapon("Kunai", price=50, range=4, chakra_cost=4, damage=20)
+    $ w_paper_bomb = Weapon("Paper Bomb", price=100, range=2, chakra_cost=5, damage=50)
+    $ shiruken = Weapon('Shiruken', 'weapon', "shiruken", 12, 7, 1, 20)
+    $ kunai = Weapon('Kunai', 'weapon', "kunai", 12, 4, 1, 20)
+    $ trap = Weapon('Trap', 'weapon', "trap", 3, 1, 2, 30)
+
+    ### AI ###
+    
+    $ THUG_MELEE_SKILL_SET = [onetwocombo, jaw_breaker, thug_smash, metal_jacket, intimidate, w_knife, w_bat]
+    $ THUG_RANGED_SKILL_SET = [rock_throw, distance_hit, metal_jacket, w_bbgun]
+    
+    # d = defensive skill
+    # f = range attack (weapon)
+    # a = attack (use any attack)
+    # t = set trap
+    # c = use team combo (formation attacks)
+    # melee = use taijutsu skills
+    # special = use ninjustsu skills
+    # ranged = use genjutsu skills
+    # healing items and tagging will be in enemy_move itself
+    $ defensive_enemy_pattern = 2*['d'] + 2*['f'] + 2*['a'] + 2*['t']
+    $ attack_enemy_pattern = 3*['a'] + 2*['f']
+    $ ranged_attack_pattern = 4*['f'] + 2*['d']
+    $ melee_enemy_pattern = 3*['melee'] + 2*['d']
+    $ special_enemy_pattern = 3*['special'] + ['d'] + ['a'] + ['f']
+    $ ranged_enemy_pattern = 3*['ranged'] + 2*['d'] + ['f']
+    
+    ### PLAYERS AND TEAMS ###
+    
+    $ lvl_1_thug_melee = LevelledEnemy(lvl=1, skill_pool=THUG_MELEE_SKILL_SET, character=thug_c, tile=tile12)
+    $ lvl_1_thug_ranged = LevelledEnemy(lvl=1, skill_pool=THUG_RANGED_SKILL_SET, character=thug_c, tile=tile12)
+    $ lvl_4_thug_melee = LevelledEnemy(lvl=4, skill_pool=THUG_MELEE_SKILL_SET, character=thug_c, tile=tile12)
+    $ lvl_4_thug_ranged = LevelledEnemy(lvl=4, skill_pool=THUG_RANGED_SKILL_SET, character=thug_c, tile=tile12)
+    
+    # give him unique skill set
+    $ lvl_8_bison_melee = LevelledEnemy(lvl=8, skill_pool=THUG_MELEE_SKILL_SET, character=bison_c, tile=tile12, hudpic="bison_hud")
+    $ lvl_15_adam = LevelledEnemy(lvl=15, skill_pool=THUG_RANGED_SKILL_SET, character=adam_c, tile=tile12, picname="adam_1")
+    $ lvl_15_ai = LevelledEnemy(lvl=15, skill_pool=THUG_RANGED_SKILL_SET, character=ai_c, tile=tile12, picname="ai_1")
+    $ lvl_15_monk = LevelledEnemy(lvl=15, skill_pool=THUG_RANGED_SKILL_SET, character=monk_c, tile=tile12, picname="monk_1")
+
+    # Use this for quick character creation
+    #lvl_15_daniel = LevelledEnemy(lvl=15, skill_pool=THUG_MELEE_SKILL_SET, character=daniel_c, tile=tile12, tilepic="fe_1_r")
+    
+    $ hero = Player(name='NO NAME', picname="hero_tile_r", character=hero_c, tilepic="hero_tile_r", hudpic='hero_hud', 
+                  hp=100, maxhp=100, chakra=80, maxchakra=80, 
+                  strength=1, speed=1, evasion=1, defence=1, stamina=1, base_hit_rate=80, 
+                  tile=tile1, facing='right', 
+                  meleeskills=[punching_flurry], specialskills=[], rangedskills=[], 
+                  items=[], defensiveskills=[], bloodlineskills=[], 
+                  leader_pic="leader_pic", 
+                  weapons=[], 
+                  home_village=None)
+    
+    $ thug = Player(name='Thug', picname="thug_tile_r", character=thug_c, tilepic="thug_tile_r", hudpic='thug_hud', 
+                  hp=100, maxhp=100, chakra=80, maxchakra=80, 
+                  strength=5, speed=5, evasion=1, defence=1, stamina=1, base_hit_rate=80, 
+                  tile=tile1, facing='left', 
+                  meleeskills=[onetwocombo], specialskills=[], rangedskills=[], 
+                  items=[], defensiveskills=[], bloodlineskills=[], 
+                  leader_pic="leader_pic", 
+                  weapons=[w_knife], 
+                  home_village=None)
+    
+    # unique moves
+    $ sam = Player(name='Sam', picname="thug_tile_r", character=thug_c, tilepic="thug_tile_r", hudpic='thug_1_hud', 
+                  hp=150, maxhp=150, chakra=120, maxchakra=120, 
+                  strength=9, speed=6, evasion=6, defence=8, stamina=6, base_hit_rate=80, 
+                  tile=tile1, facing='left', 
+                  meleeskills=[onetwocombo], specialskills=[blasting_kick], rangedskills=[], 
+                  items=[], defensiveskills=[], bloodlineskills=[], 
+                  leader_pic="leader_pic", 
+                  weapons=[w_knife, w_brass_knuckles], 
+                  home_village=None)
+    
+    $ will = Player(name='Will', picname="will_tile_r", character=thug_c, tilepic="will_tile_r", hudpic='will_hud', 
+                  hp=200, maxhp=200, chakra=150, maxchakra=150, 
+                  strength=10, speed=6, evasion=6, defence=10, stamina=10, base_hit_rate=90, 
+                  tile=tile1, facing='left', 
+                  meleeskills=[onetwocombo, jaw_breaker], specialskills=[blasting_kick], rangedskills=[], 
+                  items=[], defensiveskills=[], bloodlineskills=[], 
+                  leader_pic="leader_pic", 
+                  weapons=[w_brass_knuckles], 
+                  home_village=None)
+    
+    $ greyson = Player(name='Greyson', picname="will_tile_r", character=thug_c, tilepic="will_tile_r", hudpic='will_1_hud', 
+                  hp=120, maxhp=120, chakra=60, maxchakra=60, 
+                  strength=7, speed=3, evasion=3, defence=4, stamina=3, base_hit_rate=70, 
+                  tile=tile1, facing='left', 
+                  meleeskills=[onetwocombo, jaw_breaker], specialskills=[blasting_kick], rangedskills=[], 
+                  items=[], defensiveskills=[], bloodlineskills=[], 
+                  leader_pic="leader_pic", 
+                  weapons=[w_brass_knuckles], 
+                  home_village=None)
+    
+    $ naruto = Player('Naruto',"thug_tile_r", naruto_c, "thug_tile_r", "thug_tile_r", 100, 100, 80, 80, 10, 4, 3, 4, 5, 80, tile1, 'right', 
+                    [onetwocombo], [rasengan], [substitution], [],
+                    [damage_reduction, chakra_defence, reflect, dampen, yata_mirror], [], "leader_pic", 
+                    weapons=[shiruken, kunai], home_village=None)
+    $ sasuke = Player('Sasuke', "thug_tile_r", sasuke_c, "thug_tile_r", "thug_tile_r", 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
+                    [onetwocombo, lioncombo], [chidori], [], [], [damage_reduction, chakra_defence], 
+                    battle_ai=special_enemy_pattern, weapons=[shiruken, kunai], home_village=None) #, interaction={'frequency': (1,)})
+    
+    $ sakura = Player('Sakura', "thug_tile_r", sakura_c, "thug_tile_r", "thug_tile_r", 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
+                    [onetwocombo, lioncombo], [chidori], [], [], [damage_reduction, chakra_defence], weapons=[shiruken, kunai])
+    $ kakashi = Player('Kakashi', "thug_tile_r", kakashi_c, "thug_tile_r", "thug_tile_r", 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
+                    [onetwocombo, lioncombo], [raikiri], [], [], [damage_reduction, chakra_defence], level=32,
+                    battle_ai=special_enemy_pattern, weapons=[shiruken, kunai])
+    $ anko = Player('Anko', "thug_tile_r", kakashi_c, "thug_tile_r","thug_tile_r", 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
+                    [onetwocombo, lioncombo], [raikiri], [], [], [damage_reduction, chakra_defence], level=32,
+                    battle_ai=special_enemy_pattern, weapons=[shiruken, kunai])
+    
+    $ itachi = copy.deepcopy(sasuke)
+    $ itachi.name, itachi.picname, itachi.character, itachi.level = "Itachi", "thug_tile_r", itachi_c, 46
+    $ ori = copy.deepcopy(naruto)
+    $ ori.name, ori.picname, ori.character, ori.level = "Orichimaru", "thug_tile_r", ori_c, 45
+    $ kyuubi = copy.deepcopy(naruto)
+    $ kyuubi.name, kyuubi.picname, kyuubi.character, kyuubi.level = "Kyuubi", "thug_tile_r", kakashi_c, 79
+    $ gai = copy.deepcopy(naruto)
+    $ gai.name, gai.picname, gai.character, gai.level = "Gai", "thug_tile_r", ori_c, 32
+    $ gai.add_to_village_ranks()
+    
+    $ team7 = Team("Team 7", kakashi, [sasuke, sakura, naruto]) 
+    $ naruto.team = team7
+    $ naruto.sensei = kakashi
+    
+    $ team_first = Team("First Team", None, [will, hero, greyson])
+    
+    $ ALL_PLAYERS = [hero, thug, will, lvl_1_thug_melee, lvl_1_thug_ranged]
+    
+    #ALL_PLAYERS = [naruto, sasuke, sakura, kakashi, itachi, ori, gai]
+    $ ALL_CHARACTERS = [c.character for c in ALL_PLAYERS]
+    
+    ### VILLAGE AND LOCATIONS ###
+
+    ### Use existing already defined labels not new ones 
+    
+    $ l_hospital = Location('Hospital', 'village_hospital', 'street_4', events=[e_hospital_discount])
+    $ l_police_station = Location('Police Station', 'village_police_station', 'building_1', events=[e_weapon_discount])
+    $ l_level_up = Location('Level Up', 'village_levelup', 'apartment_1')
+    $ l_training_ground = Location('Training', 'village_training', 'forest_2')
+    $ l_town_mission = Location('Mission', 'village_missions', events=[],)
+    $ l_apartment = Location('Apartment', 'village_home', 'apartment_1')
+
+    # locations that exist in each village
+    $ l_travel = Location('Travel', 'village_travel')
+    #l_level_up = Location('Level Up', 'village_levelup')
+    #l_training_ground = Location('Training', 'village_training', 'training')
+    $ l_arena = Location('Arena', 'village_arena')
+    $ l_jounin_station = Location('Jounin Standby Station', 'village_jounin_station', events=[e_jounin_training])
+    $ l_intelligence_division = Location('Intelligence Division', 'village_intelligence_division')
+    $ l_ninja_tool_facility = Location('Ninja Tool Facility', 'village_ninja_tool_facility', events=[e_weapon_discount])
+    $ l_villagemission = Location('Mission Assignment Desk', 'village_missions', events=[e_chunin_exams])
+    $ l_home = Location('Home', 'village_home')
+    
+    $ BASE_LOCATIONS = [l_level_up, l_training_ground, l_town_mission, l_apartment, l_hospital, l_police_station]
+    
+    #BASE_LOCATIONS = [l_travel, l_level_up, l_training_ground, l_arena, l_hospital, l_jounin_station, l_intelligence_division, l_ninja_tool_facility, l_villagemission, l_home]
+    
+    $ middle_town = Village(1, "Middle Town", lvl_15_adam, marker_xpos=0.40, marker_ypos=0.25, map="town_map_1", locations=BASE_LOCATIONS, village_tag="middle_town", mission_locations=2, wealth=50)
+    $ east_town = Village(2, "East Town", lvl_15_monk, marker_xpos=0.60, marker_ypos=0.25, map="town_map_1", locations=BASE_LOCATIONS, village_tag="east_town", mission_locations=2)    
+    $ south_town = Village(3, "South Town", lvl_15_ai, marker_xpos=0.45, marker_ypos=0.65, map="town_map_1", locations=BASE_LOCATIONS, village_tag="south_town", mission_locations=2)
+    $ west_town = Village(4, "West Town", None, marker_xpos=0.25, marker_ypos=0.25, map="town_map_1", locations=BASE_LOCATIONS, village_tag="west_town", mission_locations=2)    
+    $ north_town = Village(5, "North Town", None, marker_xpos=0.25, marker_ypos=0.25, map="town_map_1", locations=BASE_LOCATIONS, village_tag="north_town", mission_locations=2)    
+        
+    $ hidden_stone = Village(1, "Hidden Stone", None, marker_xpos=0.25, marker_ypos=0.25, map="stones_map", locations=BASE_LOCATIONS, village_tag="stones", mission_locations=2)
+    $ hidden_cloud = Village(2, "Hidden Cloud", None, marker_xpos=0.75, marker_ypos=0.20, map="clouds_map", locations=BASE_LOCATIONS, village_tag="cloud", mission_locations=2)
+    $ hidden_mist = Village(3, "Hidden Mist", None, marker_xpos=0.85, marker_ypos=0.70, map="mist_map", locations=BASE_LOCATIONS, village_tag="mist", mission_locations=2)
+    $ hidden_leaf = Village(4, "Hidden Leaf", None, marker_xpos=0.40, marker_ypos=0.60, map="konoha_map", locations=BASE_LOCATIONS, village_tag="leaf", mission_locations=2)
+    $ hidden_sand = Village(5, "Hidden Sand", None, marker_xpos=0.25, marker_ypos=0.90, map="sand_map", locations=BASE_LOCATIONS, village_tag="sand", mission_locations=4)
+        
+    $ ALL_VILLAGES = [east_town, south_town, middle_town] # west_town, north_town] 
+    
+    ### SHOPS (unlocking new items, needs to be dynamic) ###
+    $ hospital_shop = Shop("Hospital", 'leaf_hospital_1', items=[i_heal_paste, i_chakra_paste])
+    $ weapon_shop = Shop("Weapons", 'leaf_shrine', items=[w_kunai, w_paper_bomb])
+    
+    ### MISSIONS (BATTLES) ###
             
     # basic missions
-    m_secure_hospital = LabelMission('Secure Hospital', 'prologue_hospital', hours=11, location=l_hospital)
-    m_secure_police_station = LabelMission('Secure Police Station', 'prologue_police_station', hours=11, location=l_police_station)
-    m_infiltrate_hold = LabelMission('Infiltrate Hold', 'mission_infiltrate_hold', hours=5, rank='D')
-    m_defeat_sam = LabelMission('Defeat Sam', 'mission_defeat_sam', hours=6, rank='C')
+    $ m_secure_hospital = LabelMission('Secure Hospital', 'prologue_hospital', hours=11, location=l_hospital)
+    $ m_secure_police_station = LabelMission('Secure Police Station', 'prologue_police_station', hours=11, location=l_police_station)
+    $ m_infiltrate_hold = LabelMission('Infiltrate Hold', 'mission_infiltrate_hold', hours=5, rank='D')
+    $ m_defeat_sam = LabelMission('Defeat Sam', 'mission_defeat_sam', hours=6, rank='C')
     
-    m_d1 = BasicMission('Farming', hours=12)
-    m_d2 = BasicMission('Retrieve Cat', hours=8)
-    m_d3 = BasicMission('Organise Festival', hours=10, days=2)
-    m_d4 = BasicMission('Construction', hours=20, days=1)
-    m_d5 = BasicMission('Paper Work', hours=14)
-    m_d6 = BasicMission('Clean Academy', hours=5)
-    m_label_test = LabelMission('Label Test', 'labelmissiontest', hours=10)
+    $ m_d1 = BasicMission('Farming', hours=12)
+    $ m_d2 = BasicMission('Retrieve Cat', hours=8)
+    $ m_d3 = BasicMission('Organise Festival', hours=10, days=2)
+    $ m_d4 = BasicMission('Construction', hours=20, days=1)
+    $ m_d5 = BasicMission('Paper Work', hours=14)
+    $ m_d6 = BasicMission('Clean Academy', hours=5)
+    $ m_label_test = LabelMission('Label Test', 'labelmissiontest', hours=10)
     
-    m_test_fightmission = SimpleFightMission('Fight Itachi', days=10, rank='C', dialogue=[("", "I found you Itachi!")], 
+    $ m_test_fightmission = SimpleFightMission('Fight Itachi', days=10, rank='C', dialogue=[("", "I found you Itachi!")], 
                                              fights={'stage': clearing, 
                                                      'win_label': 'generic_win',
                                                      'lose_label': 'generic_lose',
                                                      'enemy': itachi,
                                                      'tag': []})
             
-    m_test_multifight = MultiPartMission('Test Multi Fight', days=5, rank='B', 
+    $ m_test_multifight = MultiPartMission('Test Multi Fight', days=5, rank='B', 
                                           dialogue=[("scene", "sand_2"), 
                                                     ("naruto", "Testing dialogue"), 
                                                     ("fight", 1), 
@@ -495,51 +529,16 @@ init python:
                                                    'tag': [kakashi],
                                                    'number': 2}])
                                                    
-    ALL_MISSIONS = [m_secure_hospital, m_secure_police_station, m_infiltrate_hold, m_defeat_sam]
+    $ ALL_MISSIONS = [m_secure_hospital, m_secure_police_station, m_infiltrate_hold, m_defeat_sam]
     
-    ### GENERAL ###
-    
-    # populate events like this
-    for d in ALL_DAYS:
-        for e in ALL_EVENTS:
-            if e.start and e.finish:
-                for r in e.date_range():
-                    if r.day == d.number and r.month == d.month.number:
-                        d.events.append(e)
-            elif e.frequency:
-                for day in e.frequency:
-                    if d.number == day:
-                        d.events.append(e)
-            elif e.chance:
-                if (100*e.chance) > random.randint(1, 101):
-                    d.events.append(e)
-                    
-    # only get unique events
-    for d in ALL_DAYS:
-        d.events = d.events #list(set(d.events))
-    
-    # screen vars
-    screen_on = False
-    calendar_on = False
-    
-    battle1 = Battle(id="1", good_team=[], bad_team=[], xpos=100, ypos=100, battle_label="b_battle_1")
-    battle2 = Battle(id="2", good_team=[], bad_team=[], xpos=300, ypos=100, battle_label="b_battle_2")
-    battle_last = Battle(id="last", good_team=[], bad_team=[], xpos=500, ypos=100, battle_label="b_battle_last")
-    
-    ALL_BATTLES = [battle1, battle2, battle_last]
-
     ### BattleMission Class
-    m_infiltrate_hold_battle = BattleMission(name="Infiltrate Hold", 
+    $ m_infiltrate_hold_battle = BattleMission(name="Infiltrate Hold", 
                                       hours=6, 
                                       good_team=team_first,
                                       battles={'1':[lvl_4_thug_ranged], '2':[lvl_4_thug_melee], 'last':[lvl_8_bison_melee]}, 
                                       follow_on='prologue_continue', 
                                       all_battles=ALL_BATTLES)
-    
-    #ALL_MISSIONS += m_infiltrate_hold
-
-    # called like this
-    #$ battlemission1.do_mission(hero_c)
+    return
     
             
 ##############################################################################
@@ -558,9 +557,9 @@ image creation_background:
     
 label start:
     
-    #jump intro_world_events
+    call declare_resources
     
-    $ at_map = False
+    $ persistent.at_map = False
         
     jump character_creation
     
@@ -586,7 +585,8 @@ label character_creation:
         $ player_name="Maxwell"
         
     $ hero_c.name = player_name.lower().capitalize()
-    $ hero.name = player_name
+    $ hero.name = player_name.lower().capitalize()
+    $ persistent.player_name = player_name.lower().capitalize()
     
     nar_c "Please choose stats for [hero.name]."
     
@@ -614,14 +614,22 @@ label reset_allocation_points:
 label prologue1:
     #"THE STORY NOW CONTINUES"
     #hero_c "Hello my name is [current_session.main_player.name]."
+    $ l_hospital.unlocked = True
+    
     scene street_3 night with dissolve
     
     nar_c "The sunsets and I finally end my shift."
     nar_c "It is a little late, I usually leave before its dark."
+    
+    nar_c "Hospital is [l_hospital.unlocked]"
+    
     nar_c "...."
     nar_c "I make my way towards the underpass."
     scene underpass_1 night with dissolve
     nar_c "My house is about a fifteen minute walk from my work place."
+    
+    nar_c "Hospital is [l_hospital.unlocked]"
+    
     nar_c "..."
     nar_c "In the distance I see two people wrestling on the road in front of me."
     nar_c "They clearly don't care about getting run over by cars."
@@ -811,7 +819,6 @@ label prologue2:
     adam_c "We need to move when it is dark to avoid detection."
     adam_c "Which one of you want to volunteer?"
     nar_c "We cannot stay like this, there are roughly 5 of us here and some wounded inside."
-    #### I AM HERE #### RESIZE GREYSON
     hide adam_1 with dissolve
     show greyson_1 with dissolve
     "???" "I will go."
@@ -843,7 +850,7 @@ label prologue2:
     will_c "Lets move."
     greyson_c "Yes."
     scene street_1 night with squares
-    "We climb over the walls and the streets seem to be clear."
+    nar_c "We climb over the walls and the streets seem to be clear."
     show will_1 at left with dissolve
     show greyson_1 at right with dissolve
     will_c "We have 3 locations we can possibly take and secure."
@@ -863,7 +870,7 @@ label prologue2:
     return
     
 label prologue_hospital:
-    if not at_map:
+    if not persistent.at_map:
         hero_c "We should go to the hospital to retrieve medical supplies and heal the wounded."
         hero_c "Someone there must also know what is going on here."
         greyson_c "But my family... I want make sure they are safe..."
@@ -932,7 +939,7 @@ label prologue_hospital2:
     will_c "I knew it, just had to be him."
     hero_c "You know him?"
     "Doctor" "Are you two okay!?"
-    "The Doctor interrupts us."
+    nar_c "The Doctor interrupts us."
     hero_c "Yes we are fine, are there anymore inside?"
     "Doctor" "No it was just the ones here."
     "Doctor" "They locked us inside since yesterday, we couldn't escape."
@@ -942,8 +949,8 @@ label prologue_hospital2:
     "Doctor" "Let me patch you guys up before you go."
     nar_c "He notices the cuts and bruises we got in the fight."
     will_c "Thanks, Doc."
-    $ l_hospital.unlocked = True
-    nar_c "{color=#006400}Hospital Secured! New location unlocked!{/color}" 
+    $ persistent.hospital_unlocked = True
+    nar_c "{color=#66CD00}Hospital Secured! New location unlocked!{/color}" 
     nar_c "....................."
     if at_map:
         jump town_map
@@ -959,7 +966,7 @@ label prologue_hospital2:
     jump prologue_school
     
 label prologue_police_station:
-    if not at_map:
+    if not persistent.at_map:
         hero_c "Lets go to the police station, we need to make sure we have some enforcement otherwise we can't survive."
         greyson_c "I knew I could count on you."
         greyson_c "Lets go!"
@@ -1029,7 +1036,7 @@ label prologue_police_station2:
     nar_c "The officers were locked up in the cells below the station."
     nar_c "I manage to free them and get Greyson and myself treated."
     "Police Officer" "Thank you for your brave work, we will try to contact neighboring towns to call for backup."
-    $ l_police_station.unlocked = True
+    $ persistent.police_station_unlocked = False
     nar_c "{color=#006400}Police Station Secured! New location unlocked!{/color}"
     nar_c "..........."
     if at_map:
@@ -1084,7 +1091,7 @@ label prologue_school:
     hide will_1 with dissolve
     nar_c "Will goes flying in the distance and crashes into a wall."
     nar_c "........"
-    "I see a familiar face."
+    nar_c "I see a familiar face."
     show sam_2 with dissolve
     "???" "Hey who do we have here."
     "???" "I might as well introduce myself."
@@ -1126,7 +1133,7 @@ label prologue_school:
     nar_c ".........."
     scene apartment_1 night with squares
     nar_c "............"
-    "Will puts both of us down."
+    nar_c "Will puts both of us down."
     will_c "Adam! Help!"
     show adam_1 with dissolve
     adam_c "Amy bring the equipment!"
@@ -1174,7 +1181,7 @@ label prologue_school:
     show will_1 at right with dissolve
     show adam_2 at left with dissolve
     adam_c "This reminds me of my days in service."
-    "He sighs."
+    nar_c "He sighs."
     adam_c "This violence cannot go on any longer."
     adam_c "Lets formulate a plan and quickly topple Sam."
     adam_c "I bought this map with me, when I first moved here."
@@ -1183,11 +1190,12 @@ label prologue_school:
     show screen villagemap(middle_town, hero)
     adam_c "Here is the map."
     adam_c "We have some locations we have already secured."
+    adam_c "Hospital is [l_hospital.unlocked]."
     
-    if l_hospital.unlocked:
+    if persistent.hospital_unlocked:
         adam_c "We managed to secure the hospital earlier."
         adam_c "The hospital can be used to heal wounds and buy supplies for healing."
-    elif l_police_station.unlocked:
+    elif persistent.police_station_unlocked:
         adam_c "We managed to secure the police station earlier."
         adam_c "The Police Station can be used to buy weapons."
     
@@ -1201,7 +1209,13 @@ label prologue_school:
     adam_c "Town missions are missions we must undertake to advance the story."
     adam_c "I will leave you to decide what needs to be done."
     
-    $ at_map = True
+    # Persist the data
+    $ persistent.apartment_unlocked = True
+    $ persistent.training_unlocked = True
+    $ persistent.missions_unlocked = True
+    $ persistent.levelup_unlocked = True
+    
+    $ persistent.at_map = True
     
     jump town_map
     

@@ -672,7 +672,7 @@ screen battlemenu(player, tag_p):
         # TODO: move trap to weapons
         #textbutton "Trap" action [Hide("specialactions"), Hide("rangedactions"), Hide("meleeactions"), Hide("weaponselection"), Hide("defenceactions"), Show("settrap")]
         for partner in tag_p:
-            textbutton "Tag [partner.name]" action [SetField(partner, 'main', True), SetField(partner, 'tile', player.tile), SetField(player, 'main', False), Jump('tag_partner')] ypos 5.0
+            textbutton "Tag [partner.name]" action [SetField(partner, 'main', True), SetField(partner, 'tile', player.tile), SetField(player, 'main', False), Jump('tag_partner')] ypos -6.5
         
 screen move_explanation(reason):
     text "[reason]" ypos 0.85 xpos 0.2
@@ -700,9 +700,13 @@ screen battlebars(tag_p, tag_e):
     #frame:
         #has vbox 
     $ rel_pos = abs(player.tile.position - enemy.tile.position)
+    $ player_centered = player.name.center(10, ' ')
+    $ enemy_centered = enemy.name.center(10, ' ')
     
-    text "{color=#FFF}Round [battle_turn]{/color}" xpos 0.45 ypos 0.1
-    text "{size=-5}{color=#FFF}[player.name] vs [enemy.name]{/color}{/size}" xpos 0.40 ypos 0.18
+    text "{color=#FFF}Round [battle_turn]{/color}" xpos 0.43 ypos 0.05
+    text "{size=-5}{color=#FFF}[player_centered]{/color}{/size}" xpos 0.43 ypos 0.10
+    text "{size=-5}{color=#FFF}vs{/color}{/size}" xpos 0.47 ypos 0.15
+    text "{size=-5}{color=#FFF}[enemy_centered]{/color}{/size}" xpos 0.43 ypos 0.20
     #text "[player.facing]" xpos 0.7 ypos 0.1
     #if current_session.battle:
     #    text "[current_session.battle.id]" xpos 0.80 ypos 0.1
@@ -760,23 +764,26 @@ screen battlebars(tag_p, tag_e):
     # show tag partners health here
     for position, partner in enumerate(tag_p):
         if position == 0:
-            text "[partner.name]" xpos 0.2 ypos 0.80
-            bar value partner.hp range partner.maxhp xpos 0.2 ypos 0.85 xmaximum 100
+            text "{size=-5}[partner.name]{/size}" xpos 0.02 ypos 0.80
+            text "{size=-5}[partner.hp]/[partner.maxhp]{/size}" xpos 0.02 ypos 0.84
+            #vbar value partner.hp range partner.maxhp xpos 0.05 ypos 0.80 ymaximum 100
             #bar value partner.chakra range partner.maxchakra xpos 0.25 ypos 0.8 xmaximum 100 
         else:
-            text "[partner.name]" xpos 0.2 ypos 0.90
-            bar value partner.hp range partner.maxhp xpos 0.2 ypos 0.95 xmaximum 100 
+            text "{size=-5}[partner.name]{/size}" xpos 0.02 ypos 0.90
+            text "{size=-5}[partner.hp]/[partner.maxhp]{/size}" xpos 0.02 ypos 0.94
+            #bar value partner.hp range partner.maxhp xpos 0.2 ypos 0.95 xmaximum 100 
             #bar value partner.chakra range partner.maxchakra xpos 0.35 ypos 0.8 xmaximum 100 
         
     # show tag partners health here
     for position, partner in enumerate(tag_e):
         if position == 0:
-            text "[partner.name]" xpos 0.7 ypos 0.90
-            bar value partner.hp range partner.maxhp xpos 0.7 ypos 0.95 xmaximum 100 #xmaximum 20
+            text "{size=-5}[partner.name]{/size}" xpos 0.87 ypos 0.80
+            text "{size=-5}[partner.hp]/[partner.maxhp]{/size}" xpos 0.87 ypos 0.84
+            #bar value partner.hp range partner.maxhp xpos 0.7 ypos 0.95 xmaximum 100 #xmaximum 20
             #bar value partner.chakra range partner.maxchakra xpos 0.65 ypos 0.8 ymaximum 100 xmaximum 20
         else:
-            text "[partner.name]" xpos 0.7 ypos 0.95
-            bar value partner.hp range partner.maxhp xpos 0.7 ypos 0.95 xmaximum 100 #xmaximum 20
+            text "{size=-5}[partner.name]{/size}" xpos 0.87 ypos 0.90
+            text "{size=-5}[partner.hp]/[partner.maxhp]{/size}" xpos 0.87 ypos 0.94
             #bar value partner.chakra range partner.maxchakra xpos 0.75 ypos 0.8 ymaximum 100 xmaximum 20
 
 label movemenu:

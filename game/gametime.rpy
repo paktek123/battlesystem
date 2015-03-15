@@ -5,6 +5,7 @@
 init -9 python:
     import random
     import copy
+    
     class GameTime:
         def __init__(self, hour, day, month, year):
             self.minute = 5
@@ -15,6 +16,10 @@ init -9 python:
             self.months = ["Stub", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sept", "Oct", "Nov", "Dec"]
             self.counter = 0
             self.current_time = self.now()
+            
+        def save(self):
+            #persistence.gametime = self
+            return
             
         def now(self):
             if self.counter == 2:
@@ -27,26 +32,31 @@ init -9 python:
         def dawn(self):
             minute = random.randint(0, 59)
             self.hour = random.randint(1,5)
+            self.save()
             return "{0}:{} {} {} {}".format(self.hour, minute, self.day, self.months[self.month], self.year)
             
         def morning(self):
             minute = random.randint(0, 59)
             self.hour = random.randint(6,11)
+            self.save()
             return "{}:{} {} {} {}".format(self.hour, minute, self.day, self.months[self.month], self.year)
             
         def afternoon(self):
             minute = random.randint(0, 59)
             self.hour = random.randint(12,17)
+            self.save()
             return "{}:} {} {} {}".format(self.hour, minute, self.day, self.months[self.month], self.year)
             
         def evening(self):
             minute = random.randint(0, 59)
             self.hour = random.randint(18,20)
+            self.save()
             return "{}:{} {} {} {}".format(self.hour, minute, self.day, self.months[self.month], self.year)
             
         def night(self):
             minute = random.randint(0, 59)
             self.hour = random.randint(21,0)
+            self.save()
             return "{}:{} {} {} {}".format(self.hour, minute, self.day, self.months[self.month], self.year)
             
         def next_month(self):
@@ -102,6 +112,7 @@ init -9 python:
                     self.next_month()
                     
             self.current_time = self.now()
+            self.save()
             
     class Month:
         def __init__(self, number, days=[]):

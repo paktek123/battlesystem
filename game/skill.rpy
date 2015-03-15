@@ -3,6 +3,7 @@
 #
 
 init -2 python:
+#python early:
     class Skill(object):
         def __init__(self, name, skill_type, label, range, tech=0, chakra_cost=0, damage=0, 
                      stun=False, duration=None, exp=0, unlock_exp=0, limbs=[]):
@@ -65,6 +66,7 @@ init -2 python:
             if self.exp >= self.unlock_exp:
                 self.exp = self.unlock_exp
                 self.unlock(current_session.main_player)
+                #current_session.main_player.save()
             return self.exp
             
         def activate(self):

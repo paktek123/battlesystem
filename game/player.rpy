@@ -18,7 +18,9 @@ init -4:
     image head_injured = LiveComposite((45, 30), (0, 0), anim.Blink(im.Scale("gfx/head.png", 45, 30)))
 
 init -4 python:
+#python early:
     import random
+    import copy
     
     INJURY_LEVELS = {1: "minor", 
                      2: "significant", 
@@ -130,6 +132,7 @@ init -4 python:
                      meleeskills=[], specialskills=[], rangedskills=[], items=[], defensiveskills=[], bloodlineskills=[],
                      leader_pic=None, melee=1, special=1, ranged=1, weapons=[], battle_ai=[], home_village=None, level=1,
                      interaction={}):
+            
             self.name = name
             self.picname = picname
             self.character = character
@@ -189,11 +192,19 @@ init -4 python:
             self.set_sensei()
             self.add_to_village_ranks()
             self.generate_events_for_interaction()
+            self.save()
+            
+        def save(self):
+            #sane_name = '_'.join(self.name.lower().split(' '))
+            # create a copy of the player in the persistent storage
+            #setattr(persistent, 'player_' + sane_name, copy.deepcopy(self))
+            return
             
         def full_heal(self):
             self.hp = self.maxhp
             self.chakra = self.maxchakra
             self.heal_all_injuries()
+            self.save()
             
         def generate_events_for_interaction(self):
             # this will jump to label called for Sasuke Uchiha sasuke_uchiha1, 1 is number of visits
@@ -249,12 +260,15 @@ init -4 python:
             limb = [l for l in self.get_limbs() if l.name == name][0]
             limb.injure()
             setattr(self, limb.name, limb)
+            self.save()
             
         def increase_limbs_severity(self, injured_limbs):
             for limb in injured_limbs:
                 l = getattr(self, limb.name)
                 l.injure()
                 setattr(self, limb.name, l)
+                
+            self.save()
             
         def get_limbs(self):
             return [self.head, self.torso, self.left_arm, self.right_arm, self.left_leg, self.right_leg]
@@ -282,8 +296,11 @@ init -4 python:
                 #renpy.say(self.character, "I don't have enough money")
                 return self.items
                 
+            self.save()
+                
         def remove_item(self, item):
             self.items = [i for i in self.items if i.name != item.name]
+            self.save()
                 
         def get_item(self, item):
             for i in self.items:
@@ -315,8 +332,11 @@ init -4 python:
                 #renpy.say(self.character, "I don't have enough money")
                 return self.weapons
                 
+            self.save()
+                
         def remove_weapon(self, weapon):
             self.weapons = [w for w in self.weapons if w.name != weapon.name]
+            self.save()
                 
         def get_weapon(self, weapon):
             for w in self.weapons:
@@ -352,15 +372,21 @@ init -4 python:
             if self.hp > self.maxhp:
                 self.hp = self.maxhp
                 
+            self.save()
+                
         def increase_chakra(self, chakra):
             self.chakra += chakra
             if self.chakra > self.maxchakra:
                 self.chakra = self.maxchakra
+                
+            self.save()
             
         def increase_bond(self, bond):
             self.bond += bond + renpy.random.randint(1,3)
             if self.bond > MAX_BOND:
                 self.bond = MAX_BOND
+                
+            self.save()
             
         def level_up(self):
             difference = self.exp - LEVELS[self.level + 1]
@@ -378,6 +404,7 @@ init -4 python:
             exp += renpy.random.randint(1,10)
             self.exp += exp
             self.level_up()
+            self.save()
             return self.exp
         
         def change_direction(self, direction):
@@ -407,6 +434,7 @@ init -4 python:
             for skill in self.all_skills:
                 if skill.name == name:
                     self.all_skills.remove(skill)
+            self.save()
                     
         def assign_all_skills(self):
             for skill in self.all_skills:
@@ -416,16 +444,19 @@ init -4 python:
         def remove_skill(self, skill):
             delattr(self, skill.label)
             self.all_skills.remove(skill)
+            self.save()
             
         def assign_skill(self, skill):
             setattr(self, skill.label, skill)
             skill.limbs = self.get_limbs()
             self.all_skills.append(skill)
+            self.save()
             
         def apply_skill(self, skill):
             skill.apply()
             setattr(self, skill.label, skill)
             setattr(getattr(self, skill.label), 'active', True)
+            self.save()
             
         def check_active_skill(self, skill):
             s = getattr(self, skill.label, None)
@@ -457,11 +488,13 @@ init -4 python:
             if self.chakra > self.maxchakra:
                 self.chakra = self.maxchakra
                 
+            self.save()
+                
         def __repr__(self):
             return "<Player>: {} {}/{}".format(self.name, self.hp, self.maxhp)
             
     class LevelledEnemy(Player):
-        def __init__(self, lvl, name='Thug', picname="thug_tile_r", character=None, tilepic="thug_tile_r", hudpic='thug_1_hud', 
+        def __init__(self, lvl, name='Thug', picname="thug_tile_r", character=None, tilepic="thug_tile_r", hudpic='thug_hud', 
                      skill_pool=[], special_tags=[], home_village=None, tile=None):
             self.lvl = lvl
             self.name = name

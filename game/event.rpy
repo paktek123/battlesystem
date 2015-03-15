@@ -2,7 +2,8 @@
 # EVENT DEFINITIONS
 #
 
-init -8 python:
+#init -8 python:
+python early:
 
     from datetime import date, timedelta
     

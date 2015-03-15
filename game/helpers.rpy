@@ -37,6 +37,8 @@ init -1 python:
         #renpy.say(world_events, "I am here now")
         renpy.jump(follow_on)
     
+    def location_persistent_data_unlock(persistent_attr, location):
+        location.unlocked = getattr(persistent, persistent_attr, False)
     
     def highlight_position(player, enemy, stage):
         for tile in TILES:
