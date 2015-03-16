@@ -180,7 +180,6 @@ init python:
     ### CHARACTERS ###
     
     nar_c = Character('    ',color="#FFFF00", who_color="#FFFF00")
-    hero_c = Character('NO NAME',color="#FFFF00")
     thug_c = Character('Thug',color="#FFFFFF")
     sam_c = Character('Sam', color="#FFFFFF")
     adam_c = Character('Adam',color="#FFFF00")
@@ -353,6 +352,9 @@ label declare_resources:
 
     # Use this for quick character creation
     #lvl_15_daniel = LevelledEnemy(lvl=15, skill_pool=THUG_MELEE_SKILL_SET, character=daniel_c, tile=tile12, tilepic="fe_1_r")
+    
+    # This has to be here because its dynamic
+    $ hero_c = Character('NO NAME',color="#FFFF00")
     
     $ hero = Player(name='NO NAME', picname="hero_tile_r", character=hero_c, tilepic="hero_tile_r", hudpic='hero_hud', 
                   hp=100, maxhp=100, chakra=80, maxchakra=80, 
