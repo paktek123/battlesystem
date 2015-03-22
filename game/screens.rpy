@@ -108,8 +108,13 @@ screen hospitalshop(village, player):
     
 screen weaponshop(village, player):
     $ counter = 0
-    text "Ryo: [player.ryo]" xpos 0.1
-    text "Weapons: [player.weapons]" xpos 0.1 ypos 0.2
+    text "Money: [player.ryo]" xpos 0.05
+    $ sort_weapons = sorted(player.weapons)
+    
+    imagebutton idle "black_fade_inventory" hover "black_fade_inventory" xpos 0.68 ypos 0.28
+    vbox xpos 0.7 ypos 0.3:
+        for weapon in sort_weapons:
+            text "[weapon.name] [weapon.quantity]"
     
     python:
         if is_event_active_today(e_weapon_discount) and not weapon_shop.price_halved:
@@ -156,7 +161,7 @@ screen missionselect(village, player, rank):
     $ missions = [mission for mission in ALL_MISSIONS if mission.rank == rank]
     
     for mission in missions:
-        if mission.location and not mission.location.unlocked:
+        if not mission.success:
             textbutton "[mission.name]" action [SetField(current_session, 'village', village), 
                                                 SetField(current_session, 'main_player', player), 
                                                 SetField(current_session, 'mission', mission),
@@ -385,19 +390,11 @@ screen villagemap(village, player):
             $ npc_counter += 1
     
     for location in village.locations:
-        # Getting rid of this for now (its depends on game)
-        #if player.home_village:
-        #    if not player.home_village == village:
-        #        if location.name == 'Home':
-        #            $ location.name = 'Hotel'
-        #else:
-        #    if location.name == 'Home':
-        #        $ location.name = 'Hotel'
-                
         if location.unlocked:
             textbutton "[location.name]" hovered Show('location_explanation', stat=location.label) unhovered Hide('location_explanation') action [SetField(current_session, 'main_player', player), 
                                                                                                                                     SetField(current_session, 'village', village), 
-                                                                                                                                    SetField(current_session, 'location', location), 
+                                                                                                                                    SetField(current_session, 'location', location),
+                                                                                                                                    Hide("location_explanation"),
                                                                                                                                     Hide("villagemap"), 
                                                                                                                                     Jump('location_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
         
@@ -414,18 +411,21 @@ screen villagemap(village, player):
                 
 screen location_explanation(stat):
     $ expl_dict = {'village_hospital': 'Heal injuries and buy healing items.', 
-                   'village_police_station': 'Buy weapons for combat.', 
+                   'village_police_station': ' '*60 + 'Buy weapons for combat.', 
                    'village_levelup': 'Spend points to increase stats like strength, speed, evasion etc.',
                    'village_training': 'Train with team members, learn new skills, unlock new skills.', 
-                   'village_missions': 'Perform missions.', 
+                   'village_missions': ' '*65 + 'Perform missions.', 
                    'village_home': 'Rest to heal injuries, skip time or view calendar for upcoming events.'}
     $ expl = expl_dict[stat]
     
-    text "[expl]" ypos 0.8 xpos 0.2
+    imagebutton idle "black_fade_text" hover "black_fade_text" xpos 0.15 ypos 0.65
+    hbox xmaximum 500 yminimum 200 xpos 0.10 ypos 0.6:
+        text "[expl]" ypos 0.8 xpos 0.1
         
 screen time_screen:
     #text "[current_session.initial_pos]" xpos 0.1
-    text "{color=#000}[main_time.current_time]{/color}" xpos 0.1 ypos 0.1
+    imagebutton idle "black_fade_time" hover "black_fade_time" xpos 0 ypos 0.0
+    text "[main_time.current_time]" xpos 0 ypos 0.04
         
 screen stats_screen(player):
     
@@ -454,23 +454,23 @@ screen stats_screen(player):
         if player.right_leg.injury:
             imagebutton idle "right_leg_injured" hover "right_leg_injured" xpos 0.685 ypos 0.145
     
-        text "{size=-5}Ryo: [player.ryo]{/size}" xpos 0.73 ypos 0.023
-        text "{size=-5}HP: [player.hp]/[player.maxhp]{/size}" xpos 0.85 ypos 0.024
-        text "{size=-5}[player.name]{/size}" xpos 0.73 ypos 0.05
-        text "{size=-5}Lv.[player.level]{/size}" xpos 0.83 ypos 0.05
+        text "{size=-10}Ryo: [player.ryo]{/size}" xpos 0.73 ypos 0.023
+        text "{size=-10}HP: [player.hp]/[player.maxhp]{/size}" xpos 0.85 ypos 0.024
+        text "{size=-10}[player.name]{/size}" xpos 0.73 ypos 0.05
+        text "{size=-10}Lv.[player.level]{/size}" xpos 0.83 ypos 0.05
         # TODO: this needs to be bar
         $ next_level_exp = LEVELS[player.level + 1]
-        text "{size=-5}Exp [player.exp]/[next_level_exp]{/size}" xpos 0.73 ypos 0.08
-        text "{size=-5}CP: [player.chakra]/[player.maxchakra]{/size}" xpos 0.85 ypos 0.08
-        text "{size=-5}Str: [player.strength]{/size}" xpos 0.735 ypos 0.12
-        text "{size=-5}Def: [player.defence]{/size}" xpos 0.735 ypos 0.16
-        text "{size=-5}Eva: [player.evasion]{/size}" xpos 0.735 ypos 0.20
-        text "{size=-5}Sta: [player.stamina]{/size}" xpos 0.83 ypos 0.12
-        text "{size=-5}Spd: [player.speed]{/size}" xpos 0.83 ypos 0.16
-        text "{size=-5}Hit: [player.base_hit_rate]{size=-5}" xpos 0.83 ypos 0.20
-        text "{size=-5}Mel: [player.melee]{/size}" xpos 0.915 ypos 0.12
-        text "{size=-5}Spe: [player.special]{/size}" xpos 0.915 ypos 0.16
-        text "{size=-5}Ran: [player.ranged]{/size}" xpos 0.915 ypos 0.20
+        text "{size=-10}Exp [player.exp]/[next_level_exp]{/size}" xpos 0.73 ypos 0.08
+        text "{size=-10}CP: [player.chakra]/[player.maxchakra]{/size}" xpos 0.87 ypos 0.08
+        text "{size=-10}Str: [player.strength]{/size}" xpos 0.735 ypos 0.12
+        text "{size=-10}Def: [player.defence]{/size}" xpos 0.735 ypos 0.16
+        text "{size=-10}Eva: [player.evasion]{/size}" xpos 0.735 ypos 0.20
+        text "{size=-10}Sta: [player.stamina]{/size}" xpos 0.83 ypos 0.12
+        text "{size=-10}Spd: [player.speed]{/size}" xpos 0.83 ypos 0.16
+        text "{size=-10}Hit: [player.base_hit_rate]{size=-5}" xpos 0.83 ypos 0.20
+        text "{size=-10}Mel: [player.melee]{/size}" xpos 0.915 ypos 0.12
+        text "{size=-10}Spe: [player.special]{/size}" xpos 0.915 ypos 0.16
+        text "{size=-10}Ran: [player.ranged]{/size}" xpos 0.915 ypos 0.20
     
         textbutton "Hide Stats" action [Hide("stats_screen"), Jump("toggle_screen_off")] xpos 0.4 ypos 0.0
     
@@ -576,13 +576,25 @@ screen battle_prep_screen:
     $ start = 50
     $ counter = 1
     $ battle_c = 1
+    $ drag_c = 1
     $ team = current_session.team.members
     $ battles = current_session.battles
     
     for battle in battles:
-        text "[battle.good_team]" xpos battle.xpos ypos battle.ypos
-        text "[battle.bad_team]" xpos battle.xpos ypos (battle.ypos + 50)
-        text "[battle.next_battle_label]" xpos battle.xpos ypos (battle.ypos - 50)
+        #text "[battle.good_team]" xpos battle.xpos ypos battle.ypos
+        #text "[battle.bad_team]" xpos battle.xpos ypos (battle.ypos + 50)
+        #text "[battle.next_battle_label]" xpos battle.xpos ypos (battle.ypos - 50)
+        imagebutton idle "black_fade_battle" hover "black_fade_battle" xpos (170*battle_c) ypos 0.1
+        vbox xmaximum 100 ymaximum 200 xpos (170*battle_c) ypos 0.1:
+            for p in battle.bad_team:
+                text "[p.name]"
+                
+        imagebutton idle "black_fade_battle" hover "black_fade_battle" xpos (170*battle_c) ypos 0.5 
+        vbox xmaximum 100 ymaximum 200 xpos (170*battle_c) ypos 0.5:
+            for p in battle.good_team:
+                text "[p.name]"
+                
+        $ battle_c += 1
     
     textbutton "Reset" action [Hide('battle_prep_screen'), 
                                Jump('reset_battle')] xpos 0.8
@@ -595,7 +607,7 @@ screen battle_prep_screen:
                 child p.tilepic
                 droppable False
                 dragged player_dragged
-                xpos (50*counter) ypos 300
+                xpos (50*counter) ypos 220
                 
             $ counter += 1
                 
@@ -604,9 +616,9 @@ screen battle_prep_screen:
                 drag_name battle.id
                 child "marker.png"
                 draggable False
-                xpos (100*battle_c) ypos 200
+                xpos (200*drag_c) ypos 270
                 
-            $ battle_c += 1
+            $ drag_c += 1
 
 
 
@@ -629,9 +641,10 @@ screen skill_actions(action_type):
                 # show another type of imagebutton here
                 textbutton "[skill.name]" hovered Show('move_explanation', reason=reason) unhovered Hide('move_explanation') action [[]] xpos (x_pos*counter) ypos (start - (counter*41))
             
-            textbutton "Back" action [Hide('skill_actions'), Show('battlemenu', player=player, tag_p=tag_p)] xpos (x_pos*counter) ypos (start - (counter*41))
 
             $ counter += 1
+            
+        textbutton "Back" action [Hide('skill_actions'), Show('battlemenu', player=player, tag_p=tag_p)] xpos (x_pos*counter) ypos (start - (counter*41))
 
 screen battlemenu(player, tag_p):
     $ move_types = ["melee", "special", "ranged", "weapons", "defensive"]

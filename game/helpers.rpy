@@ -22,9 +22,10 @@ init -1 python:
         # Upon reload in debug mode village and player are None
         renpy.hide(village.map) # remove it first otherwise it does not show the new image on top
         time_tag_show(village.map)
-        renpy.show_screen('villagemap', village, player)
-        renpy.say(player.character, "I need to choose a location.")
-        return show_village_map(village, player)
+        renpy.call_screen('villagemap', village, player)
+        #renpy.say(player.character, "I need to choose a location.")
+        #return show_village_map(village, player)
+        return
     
     def start_world_events(follow_on="town_map"):
         renpy.show("town_map_1") #, [ Position(xpos=0, ypos=0) ])

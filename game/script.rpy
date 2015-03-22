@@ -13,7 +13,11 @@ init -1:
     
     image bg = im.Scale("bg.jpg", 800, 600)
     image black_fade = "gfx/black.png" #Solid((0, 0, 0, 150))
-    image black_fade_small = Solid((0, 0, 0, 150), area=(0.4, 0.7, 0.6,0.4)) # im.Tile(im.Scale("black.png", 400, 300)
+    image black_fade_small = Solid((0, 0, 0, 150), area=(0.4, 0.7, 0.6,0.4))
+    image black_fade_time = Solid((0, 0, 0, 150), area=(0, 0, 0.28,0.1))
+    image black_fade_text = Solid((0, 0, 0, 150), area=(0, 0, 500,100))
+    image black_fade_inventory = Solid((0, 0, 0, 150), area=(0, 0, 0.3,0.3))
+    image black_fade_battle = Solid((0, 0, 0, 150), area=(0, 0, 0.2,0.2))
     image world_marker = im.Scale("marker.png", 33, 35)
     image leader_pic = im.Scale("leader_pic.png", 100, 150)
     define world_events = Character('World Events', color='#3399FF', window_left_padding=150, show_side_image=Image("leader_pic.png", xpos=0.03, yalign=0.96))
@@ -70,7 +74,7 @@ init -1:
     image amy_3 = im.Scale("amy_3.png", 270, 500)
     image greyson_1 = im.Scale("greyson_1.png", 330, 500)
     image will_1 = im.Scale("will_1.png", 270, 500)
-    image bison_1 = im.Scale("bison_1.png", 270, 500)
+    image bison_1 = im.Scale("bison_1.png", 320, 600)
     image ai_1 = im.Scale("ai_1.png", 300, 600)
     image monk_1 = im.Scale("monk_1.png", 300, 600)
     
@@ -345,7 +349,7 @@ label declare_resources:
     $ lvl_4_thug_ranged = LevelledEnemy(lvl=4, skill_pool=THUG_RANGED_SKILL_SET, character=thug_c, tile=tile12)
     
     # give him unique skill set
-    $ lvl_8_bison_melee = LevelledEnemy(lvl=8, skill_pool=THUG_MELEE_SKILL_SET, character=bison_c, tile=tile12, hudpic="bison_hud")
+    $ lvl_8_bison_melee = LevelledEnemy(lvl=8, name="Bison", skill_pool=THUG_MELEE_SKILL_SET, character=bison_c, tile=tile12, hudpic="bison_hud")
     $ lvl_15_adam = LevelledEnemy(lvl=15, skill_pool=THUG_RANGED_SKILL_SET, character=adam_c, tile=tile12, picname="adam_1")
     $ lvl_15_ai = LevelledEnemy(lvl=15, skill_pool=THUG_RANGED_SKILL_SET, character=ai_c, tile=tile12, picname="ai_1")
     $ lvl_15_monk = LevelledEnemy(lvl=15, skill_pool=THUG_RANGED_SKILL_SET, character=monk_c, tile=tile12, picname="monk_1")
@@ -438,7 +442,8 @@ label declare_resources:
     $ naruto.team = team7
     $ naruto.sensei = kakashi
     
-    $ team_first = Team("First Team", None, [will, hero, greyson])
+    $ team_first = Team("First Team", lvl_15_adam, [will, hero, greyson])
+    $ hero.sensei = lvl_15_adam
     
     $ ALL_PLAYERS = [hero, thug, will, lvl_1_thug_melee, lvl_1_thug_ranged]
     
@@ -486,8 +491,8 @@ label declare_resources:
     $ ALL_VILLAGES = [east_town, south_town, middle_town] # west_town, north_town] 
     
     ### SHOPS (unlocking new items, needs to be dynamic) ###
-    $ hospital_shop = Shop("Hospital", 'leaf_hospital_1', items=[i_heal_paste, i_chakra_paste])
-    $ weapon_shop = Shop("Weapons", 'leaf_shrine', items=[w_kunai, w_paper_bomb])
+    $ hospital_shop = Shop("Hospital", 'apartment_1', items=[i_heal_paste, i_chakra_paste])
+    $ weapon_shop = Shop("Weapons", 'building_1', items=[w_knife, w_bbgun, w_brass_knuckles, w_bat])
     
     ### MISSIONS (BATTLES) ###
             
@@ -533,13 +538,6 @@ label declare_resources:
                                                    
     $ ALL_MISSIONS = [m_secure_hospital, m_secure_police_station, m_infiltrate_hold, m_defeat_sam]
     
-    ### BattleMission Class
-    $ m_infiltrate_hold_battle = BattleMission(name="Infiltrate Hold", 
-                                      hours=6, 
-                                      good_team=team_first,
-                                      battles={'1':[lvl_4_thug_ranged], '2':[lvl_4_thug_melee], 'last':[lvl_8_bison_melee]}, 
-                                      follow_on='prologue_continue', 
-                                      all_battles=ALL_BATTLES)
     return
     
             
@@ -561,7 +559,7 @@ label start:
     
     call declare_resources
     
-    $ persistent.at_map = False
+    $ at_map = False
         
     jump character_creation
     
@@ -576,8 +574,6 @@ label start:
 label character_creation:
     show creation_background
     
-    nar_c "This is an example of a very long test that I am writing here right this instant and it will reach to the end of the this window where I cannot see anything and I dont like this very much."
-    
     # Assign a default value
     $ player_name="Maxwell"
     
@@ -588,7 +584,6 @@ label character_creation:
         
     $ hero_c.name = player_name.lower().capitalize()
     $ hero.name = player_name.lower().capitalize()
-    $ persistent.player_name = player_name.lower().capitalize()
     
     nar_c "Please choose stats for [hero.name]."
     
@@ -614,24 +609,14 @@ label reset_allocation_points:
     jump allocate_points
     
 label prologue1:
-    #"THE STORY NOW CONTINUES"
-    #hero_c "Hello my name is [current_session.main_player.name]."
-    $ l_hospital.unlocked = True
     
     scene street_3 night with dissolve
-    
     nar_c "The sunsets and I finally end my shift."
     nar_c "It is a little late, I usually leave before its dark."
-    
-    nar_c "Hospital is [l_hospital.unlocked]"
-    
     nar_c "...."
     nar_c "I make my way towards the underpass."
     scene underpass_1 night with dissolve
     nar_c "My house is about a fifteen minute walk from my work place."
-    
-    nar_c "Hospital is [l_hospital.unlocked]"
-    
     nar_c "..."
     nar_c "In the distance I see two people wrestling on the road in front of me."
     nar_c "They clearly don't care about getting run over by cars."
@@ -769,6 +754,8 @@ label prologue2:
     nar_c "I lay on my bed... hopefully this is a bad dream...."
     nar_c "...."
     scene black with fade
+    # heal everything
+    $ hero.full_heal()
     nar_c "......."
     nar_c "....."
     nar_c"..."
@@ -872,7 +859,7 @@ label prologue2:
     return
     
 label prologue_hospital:
-    if not persistent.at_map:
+    if not at_map:
         hero_c "We should go to the hospital to retrieve medical supplies and heal the wounded."
         hero_c "Someone there must also know what is going on here."
         greyson_c "But my family... I want make sure they are safe..."
@@ -951,7 +938,8 @@ label prologue_hospital2:
     "Doctor" "Let me patch you guys up before you go."
     nar_c "He notices the cuts and bruises we got in the fight."
     will_c "Thanks, Doc."
-    $ persistent.hospital_unlocked = True
+    $ l_hospital.unlocked = True
+    $ m_secure_hospital.success = True
     nar_c "{color=#66CD00}Hospital Secured! New location unlocked!{/color}" 
     nar_c "....................."
     if at_map:
@@ -968,7 +956,7 @@ label prologue_hospital2:
     jump prologue_school
     
 label prologue_police_station:
-    if not persistent.at_map:
+    if not at_map:
         hero_c "Lets go to the police station, we need to make sure we have some enforcement otherwise we can't survive."
         greyson_c "I knew I could count on you."
         greyson_c "Lets go!"
@@ -1038,7 +1026,8 @@ label prologue_police_station2:
     nar_c "The officers were locked up in the cells below the station."
     nar_c "I manage to free them and get Greyson and myself treated."
     "Police Officer" "Thank you for your brave work, we will try to contact neighboring towns to call for backup."
-    $ persistent.police_station_unlocked = False
+    $ l_police_station.unlocked = True
+    $ m_secure_hospital.success = True
     nar_c "{color=#006400}Police Station Secured! New location unlocked!{/color}"
     nar_c "..........."
     if at_map:
@@ -1142,6 +1131,9 @@ label prologue_school:
     nar_c "......."
     nar_c "....."
     scene black_fade with black_flash
+    $ hero.full_heal()
+    $ greyson.full_heal()
+    $ will_full_heal()
     nar_c ".............."
     nar_c ".........."
     nar_c "........."
@@ -1192,12 +1184,11 @@ label prologue_school:
     show screen villagemap(middle_town, hero)
     adam_c "Here is the map."
     adam_c "We have some locations we have already secured."
-    adam_c "Hospital is [l_hospital.unlocked]."
     
-    if persistent.hospital_unlocked:
+    if l_hospital.unlocked:
         adam_c "We managed to secure the hospital earlier."
         adam_c "The hospital can be used to heal wounds and buy supplies for healing."
-    elif persistent.police_station_unlocked:
+    elif l_police_station.unlocked:
         adam_c "We managed to secure the police station earlier."
         adam_c "The Police Station can be used to buy weapons."
     
@@ -1211,18 +1202,14 @@ label prologue_school:
     adam_c "Town missions are missions we must undertake to advance the story."
     adam_c "I will leave you to decide what needs to be done."
     
-    # Persist the data
-    $ persistent.apartment_unlocked = True
-    $ persistent.training_unlocked = True
-    $ persistent.missions_unlocked = True
-    $ persistent.levelup_unlocked = True
-    
-    $ persistent.at_map = True
+    $ at_map = True
     
     jump town_map
     
 label town_map:
     scene town_map_1 with dissolve
+    # Set the current village
+    $ current_session.village = middle_town
     show screen villagemap(middle_town, hero)
     $ show_village_map(middle_town, hero)
     
@@ -1236,10 +1223,9 @@ label mission_infiltrate_hold:
     nar_c "............"
     nar_c "The three of us make our way towards the school."
     nar_c "........."
-    
     scene school_1 night with squares
     nar_c ".............."
-    "It is the same as we saw the other day."
+    nar_c "It is the same as we saw the other day."
     show bison_1 with dissolve
     bison_c "Heh... heh... heh....."
     bison_c "So guys have arrived."
@@ -1251,8 +1237,17 @@ label mission_infiltrate_hold:
     bison_c "There is larger wave coming soon, I don't have time ot waste here."
     nar_c "Behind Bison, many other thugs with bats show up."
     bison_c "Fight me!"
+    hide bison_1 with dissolve
     
-    $ m_infiltrate_mission_battle.do_mission(hero_c)
+    ### BattleMission Class
+    $ m_infiltrate_hold_battle = BattleMission(name="Infiltrate Hold", 
+                                      hours=6, 
+                                      good_team=team_first,
+                                      battles={'1':[lvl_4_thug_ranged], '2':[lvl_4_thug_melee], 'last':[lvl_8_bison_melee]}, 
+                                      follow_on='prologue_continue', 
+                                      all_battles=ALL_BATTLES)
+    
+    $ m_infiltrate_hold_battle.do_mission(hero_c)
     
 label prologue_continue:
     call hidetiles
@@ -1464,7 +1459,7 @@ label battle_choose:
     
     $ populate_battles(current_session.battles, current_session.battle_follow_on)
     show screen battle_prep_screen
-    "Choose battlefield for players."
+    nar_c "Choose battlefield for players."
     jump battle_choose
     
             
