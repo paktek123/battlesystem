@@ -109,6 +109,7 @@ init -1 python:
     def hide_battle_screen(all=False):
         renpy.hide_screen("battlemenu")
         renpy.hide_screen("skill_actions")
+        renpy.hide_screen("item_actions")
         renpy.hide_screen("player_stats")
         renpy.hide_screen("stats_screen")
         renpy.hide_screen("time_screen")

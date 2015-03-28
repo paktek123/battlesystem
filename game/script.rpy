@@ -16,7 +16,7 @@ init -1:
     image black_fade_small = Solid((0, 0, 0, 150), area=(0.4, 0.7, 0.6,0.4))
     image black_fade_time = Solid((0, 0, 0, 150), area=(0, 0, 0.28,0.1))
     image black_fade_text = Solid((0, 0, 0, 150), area=(0, 0, 500,100))
-    image black_fade_inventory = Solid((0, 0, 0, 150), area=(0, 0, 0.3,0.3))
+    image black_fade_inventory = Solid((0, 0, 0, 150), area=(0, 0, 0.33,0.3))
     image black_fade_battle = Solid((0, 0, 0, 150), area=(0, 0, 0.2,0.2))
     image world_marker = im.Scale("marker.png", 33, 35)
     image leader_pic = im.Scale("leader_pic.png", 100, 150)
@@ -29,7 +29,9 @@ init -1:
     
     ### HUD PICS ###
     image hero_hud = im.Scale("hero_hud.png", HUD_WIDTH, HUD_HEIGHT)
+    image sam_hud = im.Scale("sam_hud.png", HUD_WIDTH, HUD_HEIGHT)
     image thug_hud = im.Scale("thug_hud.png", HUD_WIDTH, HUD_HEIGHT)
+    image greyson_hud = im.Scale("greyson_hud.png", HUD_WIDTH, HUD_HEIGHT)
     image will_hud = im.Scale("will_hud.png", HUD_WIDTH, HUD_HEIGHT)
     image bison_hud = im.Scale("bison_hud.png", HUD_WIDTH, HUD_HEIGHT)
     image ai_hud = im.Scale("ai_hud.png", HUD_WIDTH, HUD_HEIGHT)
@@ -64,7 +66,7 @@ init -1:
     image blue_bar = im.Scale("bar_blue.png", 130, 20) 
     
     ### SPRITES ###
-    image thug_1 = im.Scale("thug_1.png", 270, 500)
+    image sam_1 = im.Scale("sam_1.png", 270, 500)
     image sam_2 = im.Scale("sam_2.png", 270, 500)
     image adam_1 = im.Scale("adam_1.png", 450, 600)
     image adam_2 = im.Scale("adam_2.png", 450, 600)
@@ -75,8 +77,8 @@ init -1:
     image greyson_1 = im.Scale("greyson_1.png", 330, 500)
     image will_1 = im.Scale("will_1.png", 270, 500)
     image bison_1 = im.Scale("bison_1.png", 320, 600)
-    image ai_1 = im.Scale("ai_1.png", 300, 600)
-    image monk_1 = im.Scale("monk_1.png", 300, 600)
+    image ai_1 = im.Scale("ai_1.png", 350, 550)
+    image monk_1 = im.Scale("monk_1.png", 350, 550)
     
     ### SPECIAL EFFECTS ###
     $ sshake = Shake((0, 0, 0, 0), 1.0, dist=15)
@@ -381,7 +383,7 @@ label declare_resources:
                   home_village=None)
     
     # unique moves
-    $ sam = Player(name='Sam', picname="thug_tile_r", character=thug_c, tilepic="thug_tile_r", hudpic='thug_1_hud', 
+    $ sam = Player(name='Sam', picname="thug_tile_r", character=thug_c, tilepic="thug_tile_r", hudpic='thug_hud', 
                   hp=150, maxhp=150, chakra=120, maxchakra=120, 
                   strength=9, speed=6, evasion=6, defence=8, stamina=6, base_hit_rate=80, 
                   tile=tile1, facing='left', 
@@ -401,11 +403,11 @@ label declare_resources:
                   weapons=[w_brass_knuckles], 
                   home_village=None)
     
-    $ greyson = Player(name='Greyson', picname="will_tile_r", character=thug_c, tilepic="will_tile_r", hudpic='will_1_hud', 
+    $ greyson = Player(name='Greyson', picname="will_tile_r", character=thug_c, tilepic="will_tile_r", hudpic='greyson_hud', 
                   hp=120, maxhp=120, chakra=60, maxchakra=60, 
                   strength=7, speed=3, evasion=3, defence=4, stamina=3, base_hit_rate=70, 
                   tile=tile1, facing='left', 
-                  meleeskills=[onetwocombo, jaw_breaker], specialskills=[blasting_kick], rangedskills=[], 
+                  meleeskills=[onetwocombo, jaw_breaker], specialskills=[], rangedskills=[], 
                   items=[], defensiveskills=[], bloodlineskills=[], 
                   leader_pic="leader_pic", 
                   weapons=[w_brass_knuckles], 
@@ -620,10 +622,10 @@ label prologue1:
     nar_c "..."
     nar_c "In the distance I see two people wrestling on the road in front of me."
     nar_c "They clearly don't care about getting run over by cars."
-    show thug_1 with dissolve
+    show sam_1 with dissolve
     "Thug 1" "You bastard! I'll make sure you never stand up again!"
     "Thug 2" "I'll.... oooff."
-    hide thug_1 with dissolve
+    hide sam_1 with dissolve
     nar_c "Both of them are throwing punches at each other and rolling on the ground."
     nar_c "Just seeing those two go at it, puts me at unease."
     nar_c "My heart starts pounding faster and body fills up with adrenaline."
@@ -632,12 +634,12 @@ label prologue1:
     "Thug 2" "Oooooffff." with sshake
     nar_c "One of the thugs flies off to the side and bangs his head against the wall."
     nar_c "There are blood stains everywhere, he soon looses conciousness."
-    show thug_1 with dissolve
+    show sam_1 with dissolve
     "Thug 1" "You!"
     nar_c "He looks at me, I freeze."
     nar_c "My heart is pounding, I really don't want to be involved in this..."
     nar_c "...."
-    hide thug_1 with dissolve
+    hide sam_1 with dissolve
     nar_c "I turn around and make a run for it."
     scene street_2 night with dissolve 
     nar_c "I quickly take a turn into a side street." with sshake
@@ -649,7 +651,7 @@ label prologue1:
     hero_c "Owww...."
     nar_c "There is a sharp pain in my upper arm."
     nar_c "I look around to try to work out what just happenned."
-    show thug_1 with dissolve
+    show sam_1 with dissolve
     "Thug" "You thought you could get away from me!?"
     hero_c "How... did..."
     nar_c "I am lost for words, how did he get behind me?"
@@ -665,7 +667,7 @@ label prologue1:
     nar_c "A sharp pain starts building up around my abdomen."
     "Thug" "If I ever see your face again, I will pound your face in."
     "Thug" "Don't even think of talking to the police."
-    hide thug_1 with dissolve
+    hide sam_1 with dissolve
     nar_c "He turns around and starts to walk away."
     ### TODO: Add some motivation for our hero to get back on this feet and challenge Mr Thug to a fight
     ### Maybe some sort of past flashback or something
@@ -673,13 +675,13 @@ label prologue1:
     hero_c "Ohey... Bastard..."
     hero_c "You think you can do whatever you want, let me kick your ass."
     nar_c "As soon as he hears this, he turns around with an angry expression."
-    show thug_1 with dissolve
+    show sam_1 with dissolve
     "Thug" "Say that again!"
     nar_c "He throws a punch..."
     nar_c "... I grab his fist and push him away."
     "Thug" "Heh.... I'll pound you to death!"
     nar_c "I know I can't go back now but maybe that is what I want."
-    hide thug_1 with dissolve
+    hide sam_1 with dissolve
     $ renpy.call('fight', hero, thug, [], [], clearing, lose_label='prologue2', draw_label='prologue2', fight_limit=5)
     # fight redirects to prologue2 label
     return
@@ -691,7 +693,7 @@ label prologue2:
     hero_c "Ughhh...." with red_flash
     nar_c "Blood splatters everywhere."
     nar_c "My body is covered in bruises and cuts from his knife."
-    show thug_1 with dissolve
+    show sam_1 with dissolve
     nar_c "He is also in a similar condition, I am surprised he is standing."
     "Thug" "Hehh.... hehhh.... "
     nar_c "He gives off a strange laugh."
@@ -707,7 +709,7 @@ label prologue2:
     nar_c "He slashes my body with his knife and throws me to the ground." with sshake
     hero_c "Gahhh..."
     "Thug" "Next time I will kill you."
-    hide thug_1 with dissolve
+    hide sam_1 with dissolve
     nar_c "He runs away limping."
     nar_c "...."
     nar_c "My shirt has become red with my blood."
@@ -905,6 +907,12 @@ label prologue_hospital:
     nar_c "I follow him."
     "Thugs" "Hey! You come here."
     nar_c "The mob rushes at us.... we have no choice but to fight..."
+    $ will.buy_weapon(w_brass_knuckles)
+    $ will.buy_weapon(w_brass_knuckles)
+    $ will.buy_item(i_heal_paste)
+    $ will.buy_item(i_chakra_paste)
+    $ will.hp -= 50
+    $ will.chakra -= 50
     $ renpy.call('fight', hero, copy.deepcopy(lvl_1_thug_melee), [will], [copy.deepcopy(lvl_1_thug_ranged)], clearing, win_label='prologue_hospital2', lose_label='prologue_hospital2', draw_label='prologue_hospital2', fight_limit=15)
 
     
@@ -1253,6 +1261,8 @@ label prologue_continue:
     call hidetiles
     # hero gains experience
     $ hide_battle_screen(all=True)
+    # mission is complete
+    $ m_infiltrate_hold.success = True
     $ battle_turn = 0
     $ exp = renpy.random.randint(100,200) + 200
     $ hero.gain_exp(exp)
@@ -1267,50 +1277,47 @@ label prologue_continue:
     jump town_map
     
 label mission_defeat_sam:
-    if hero.lvl < 3:
+    if hero.level < 3:
         adam_c "You must be level 3 or above to do this mission, use level up to increase level."
         jump town_map
         
     
-    scene apartment_1 with squares
+    scene apartment_1 evening with squares
     nar_c "............"
     show adam_1 with dissolve
     adam_c "The seurity around the school has cleared."
     adam_c "We can go in a defeat Sam, the leader of the gang here."
     adam_c "............"
     adam_c "Go."
-    scene school_1 with squares
+    scene school_1 evening with squares
     nar_c "............"
     nar_c "........"
     nar_c "There is no security, I make my way towards the roof."
-    scene rooftop with squares
+    scene rooftop_1 evening with squares
+    show sam_1 with dissolve
     sam_c "Long time, no see."
     sam_c "Fight me 1 on 1."
     hero_c "I'll defeat you!"
+    hide sam_1 with dissolve
     
     $ renpy.call('fight', hero, sam, [], [], clearing, win_label='prologue_end', lose_label='prologue_end', draw_label='prologue_end', fight_limit=15)
     
 label prologue_end:
     
-    scene rooftop_1 with squares
-    
+    scene rooftop_1 evening with squares
     nar_c "Sam overpowers me." with sshake
-    
-    show sam_1 with dissolve
-    
+    show sam_2 with dissolve
     sam_c "You still cannot defeat me!"
-    
-    show sam_1 at left with dissolve
+    show sam_2 at left with dissolve
     show will_1 at right with dissolve
-    
     will_c "Thats enough Sam!"
     will_c "Lets end this before we all get hurt."
-    "Sam is bleeding too, he is in pain from our fight just now."
+    nar_c "Sam is bleeding too, he is in pain from our fight just now."
     sam_c "If I don't takeover this city, that guy will walk all over us."
     will_c "What do you mean!?"
     sam_c "You don't understand, the leader that came back was our father!"
     will_c "....."
-    "Will stares at Sam in shock."
+    nar_c "Will stares at Sam in shock."
     will_c "I... had no idea...."
     sam_c "Work with me Will, we do this."
     will_c "I don't approve of your methods and I am going to take you down here."
@@ -1319,20 +1326,16 @@ label prologue_end:
     will_c "Blast kick!" with sshake
     nar_c "The kick connects and send Sam flying into the wall."
     sam_c "......ughhh...."
-    "Sam is knocked out."
-    
+    nar_c "Sam is knocked out."
     hide sam_c with dissolve
     show will_1 with dissolve
-    
     will_c "Its over."
-    
     nar_c ".............."
     nar_c "Greyson helps me up and we head back to the apartment."
-    
-    scene apartment_1 with squares
+    scene apartment_1 night with squares
     nar_c "..........."
     nar_c ".........."
-    "Will brings Sam and Bison to the apartment too."
+    nar_c "Will brings Sam and Bison to the apartment too."
     show adam_1 with dissolve
     adam_c "We have secured Middle Town."
     adam_c "The leader was Sam, who is currently receieving treatment."
@@ -1343,17 +1346,17 @@ label prologue_end:
     nar_c "I wonder what the other parts of town are doing...."
     nar_c "............"
     nar_c ".........."
-    scene forest_1 with squares
+    scene forest_1 night with squares
     show ai_1 with dissolve
     ai_c "Seems like middle town are starting gather some force."
     ai_c "We should start to prepare for his return too."
     ai_c "I won't let what happened 10 years ago repeat again."
     nar_c "..........."
     nar_c "......."
-    scene home_1 with squares
+    scene home_1 night with squares
     show monk_1 with dissolve
     nar_c ".............."
-    monk_c "Looks like the vision were true."
+    monk_c "Looks like the visions were true."
     monk_c "I can't wait to spill blood again!"
     nar_c "..........."
     jump intro_world_events
@@ -1368,25 +1371,25 @@ label prologue_end2:
     nar_c "........"
     nar_c "A week has gone by since we defeated Sam."
     nar_c "He and Bison have been recovering."
-    show sam_1 with dissolve
+    show sam_2 with dissolve
     sam_c "Ok ok... I will join to help."
-    show sam_1 at left with dissolve
+    show sam_2 at left with dissolve
     show bison_1 at right with dissolve
     bison_c "If Sam joins that leaves me no choice, I will join too."
     show adam_1 with dissolve
     adam_c "That is good to know."
     adam_c "We need to stop your Father from making his comeback."
     adam_c "Sam and Bison you will join Will, Greyson and [hero.name] in their battles."
-    hide sam_1 with dissolve
+    hide sam_2 with dissolve
     hide bison_1 with dissolve
     hide adam_1 with dissolve
     nar_c ".........."
-    nar_c "Bison and Sam join Party!"
-    $ team_first.members += sam
-    $ team_first.members += bison
+    nar_c "{color=#66CD00}Bison and Sam join Party!{/color}"
+    $ team_first.add_member(sam)
+    $ team_first.add_member(lvl_8_bison_melee)
     show amy_1 with dissolve
     amy_c "I want to fight too."
-    "Amy joins party"
+    nar_c "{color=#66CD00}Amy joins party{/color}"
     # Add Amy to the team
     hide amy_1 with dissolve
     show adam_1 with dissolve
@@ -1398,16 +1401,20 @@ label prologue_end2:
     nar_c ".........."
     
     scene town_map_1 with dissolve
-    show screen villagemap(middle_town, hero)
+    #show screen villagemap(middle_town, hero)
     
-    $ renpy.pause(2.0, hard=True)
+    $ renpy.pause(5.0, hard=True)
     
     show screen announce("GANG RISER EPISODE 1")
     
-    $ renpy.pause(2.0, hard=True)
+    $ renpy.pause(5.0, hard=True)
+    
+    show screen announce("GAME OVER")
+    
+    # show credits
     
     # end game
-    return
+    $ renpy.full_restart()
     
     
     
@@ -1472,9 +1479,19 @@ label skill_redirect:
         
         if current_session.skill_type == 'attack':
             current_session.skill.action(player,enemy)
+        elif current_session.skill_type == 'weapon':
+            # decrease the quantity then attack
+            current_session.skill.quantity -= 1
+            current_session.skill.action(player,enemy)
         elif current_session.skill_type == 'defence':
             getattr(player, current_session.skill.label).apply()
             
+    jump enemymove
+    
+label item_redirect:
+    python:
+        current_session.item.consume(current_session.main_player)
+        
     jump enemymove
     
 label trap:

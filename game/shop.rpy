@@ -13,6 +13,8 @@ init -1 python:
             self.chakra = chakra
             
         def consume(self, player):
+            self.quantity -= 1
+            
             if self.health and self.chakra:
                 player.increase_hp(self.health)
                 player.increase_chakra(self.chakra)

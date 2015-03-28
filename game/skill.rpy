@@ -40,10 +40,19 @@ init -2 python:
                 
             if not self.is_unlocked():
                 return "Skill is learnt but not cannot be used in combat, can be unlocked by training."
+                
+            if not self.has_quantity(player):
+                return "Weapon not in inventory."
             
         def is_usable(self, player, enemy):
-            if self.is_chakra_requirement_met(player) and self.is_within_range(player, enemy) and self.is_unlocked():
+            if self.is_chakra_requirement_met(player) and self.is_within_range(player, enemy) and self.is_unlocked() and self.has_quantity(player):
                 return True
+            return False
+            
+        def has_quantity(self, player):
+            if hasattr(self, 'quantity'):
+                if self.quantity > 0:
+                    return True
             return False
             
         def is_chakra_requirement_met(self, player):
@@ -168,12 +177,12 @@ init -2 python:
             return "Skill: {} {}".format(self.skill_type, self.name)
             
     class Weapon(Skill):
-        def __init__(self, name, price, range, chakra_cost,  damage=0, stun=False, duration=None, element=None, tech=0, quantity=0, image=None):
+        def __init__(self, name, price, range, chakra_cost,  damage=0, stun=False, duration=None, element=None, tech=0, quantity=1, image=None):
             super(self.__class__, self).__init__(name, 'weapon', name.lower(), range, tech, chakra_cost, damage, stun, duration)
             self.price = price
             self.element = element
             self.tech = tech
-            self.quantity = quantity
+            self.quantity = quantity # this is set to 1 by default, so if assigned to player they can use once
             self.image = image
             
             # maybe apply element, electric etc

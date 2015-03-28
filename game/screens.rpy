@@ -71,9 +71,14 @@ screen hospitalshop(village, player):
     $ counter = 1
     #$ player.left_leg.injure()
     $ injury_bill = player.get_injury_bill()
-    text "Ryo: [player.ryo]" xpos 0.1
-    text "Items: [player.items]" xpos 0.1 ypos 0.2
-    text "[player.head.injury_severity] [player.torso.injury_severity] [player.left_arm.injury_severity] [player.right_arm.injury_severity] [player.left_leg.injury_severity] [player.right_leg.injury_severity]"
+    $ sorted_items = sorted(hospital_shop.items)
+    text "Money: [player.ryo]" xpos 0.05
+    #text "[player.head.injury_severity] [player.torso.injury_severity] [player.left_arm.injury_severity] [player.right_arm.injury_severity] [player.left_leg.injury_severity] [player.right_leg.injury_severity]"
+    
+    imagebutton idle "black_fade_inventory" hover "black_fade_inventory" xpos 0.68 ypos 0.28
+    vbox xpos 0.7 ypos 0.3:
+        for item in sorted_items:
+            text "[item.name] [item.quantity]"
     
     python:
         if is_event_active_today(e_hospital_discount) and not hospital_shop.price_halved:
@@ -82,13 +87,13 @@ screen hospitalshop(village, player):
             hospital_shop.double_prices()
     
     if injury_bill[0]:
-        textbutton "Heal all injuries [injury_bill[0]] [injury_bill[1]]" action [SetField(current_session, 'village', village), 
+        textbutton "Heal all injuries ([injury_bill[0]]) ([injury_bill[1]] days rest)" action [SetField(current_session, 'village', village), 
                                                                                  SetField(current_session, 'main_player', player),
                                                                                  SetField(current_session, 'time_to_advance', {'days': injury_bill[1]}),
                                                                                  SetField(current_session, 'rest', True),
                                                                                  Hide("hospitalshop"),
                                                                                  SetField(current_session, 'location', l_hospital), 
-                                                                                 Jump('hospital_injury')] xpos grid_place[0][0] ypos grid_place[0][1]
+                                                                                 Jump('hospital_injury')] xpos (grid_place[0][0] - 0.1) ypos grid_place[0][1]
     else:
         $ counter = 0
     
@@ -98,13 +103,13 @@ screen hospitalshop(village, player):
                                                         SetField(current_session, 'location', l_hospital),
                                                         SetField(current_session, 'item', item),
                                                         SetField(current_session, 'time_to_advance', {'hours': 2}),
-                                                        Jump("purchase_item_redirect")] xpos grid_place[counter][0] ypos grid_place[counter][1]
+                                                        Jump("purchase_item_redirect")] xpos (grid_place[counter][0] - 0.1) ypos grid_place[counter][1]
         $ counter += 1
                                          
     textbutton "Back to Location select" action [SetField(current_session, 'village', village), 
                                                  SetField(current_session, 'main_player', player), 
                                                  Hide("hospitalshop"),
-                                                 Jump('village_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
+                                                 Jump('village_redirect')] xpos (grid_place[counter][0] - 0.1) ypos grid_place[counter][1]
     
 screen weaponshop(village, player):
     $ counter = 0
@@ -542,14 +547,14 @@ label toggle_calendar_off:
 # MISC
 #
 screen announce(message):
-    text "{font=domai.ttf}{size=60}[message]{/size}{/font}" xpos 0.13 ypos 0.4
+    text "{color=#000}{font=domai.ttf}{size=60}[message]{/size}{/font}{/color}" xpos 0.13 ypos 0.4
 
 
 ##############################################################################
 # WORLD EVENTS
 #
 screen worldevents(village):
-    add village.leader.picname xpos 0.05 ypos 0.05 
+    add village.leader.picname xpos 0.01 ypos 0.1 
     #text "Wealth: [village.wealth]" xpos 0.3 ypos 0.03
     #text "Control:" xpos 0.3 ypos 0.08
     #text "Influence:" xpos 0.3 ypos 0.13
@@ -587,12 +592,12 @@ screen battle_prep_screen:
         imagebutton idle "black_fade_battle" hover "black_fade_battle" xpos (170*battle_c) ypos 0.1
         vbox xmaximum 100 ymaximum 200 xpos (170*battle_c) ypos 0.1:
             for p in battle.bad_team:
-                text "[p.name]"
+                text "[p.name] [p.hp]/[p.maxhp]"
                 
         imagebutton idle "black_fade_battle" hover "black_fade_battle" xpos (170*battle_c) ypos 0.5 
         vbox xmaximum 100 ymaximum 200 xpos (170*battle_c) ypos 0.5:
             for p in battle.good_team:
-                text "[p.name]"
+                text "[p.name] [p.hp]/[p.maxhp]"
                 
         $ battle_c += 1
     
@@ -607,7 +612,7 @@ screen battle_prep_screen:
                 child p.tilepic
                 droppable False
                 dragged player_dragged
-                xpos (50*counter) ypos 220
+                xpos (50*counter) ypos 200
                 
             $ counter += 1
                 
@@ -616,7 +621,7 @@ screen battle_prep_screen:
                 drag_name battle.id
                 child "marker.png"
                 draggable False
-                xpos (200*drag_c) ypos 270
+                xpos (200*drag_c) ypos 260
                 
             $ drag_c += 1
 
@@ -632,19 +637,47 @@ screen skill_actions(action_type):
     vbox:
         for skill in getattr(player, action_type):
             
+            $ skill_display_name = "{}".format(skill.name)
+            if skill.skill_type == 'weapon':
+                $ skill_display_name += " {}".format(skill.quantity)
+            
             if skill.is_usable(player, enemy):
-                textbutton "[skill.name]" action [SetField(current_session, 'skill', skill), 
-                                                  SetField(current_session, 'skill_type', 'attack'),
-                                                  Jump('skill_redirect')] xpos (x_pos*counter) ypos (start - (counter*41))
+                textbutton "[skill_display_name]" action [SetField(current_session, 'skill', skill), 
+                                                          SetField(current_session, 'skill_type', skill.skill_type),
+                                                          Jump('skill_redirect')] xpos (x_pos*counter) ypos (start - (counter*41))
+                    
             else:
                 $ reason = skill.unusable_reason(player, enemy)
                 # show another type of imagebutton here
-                textbutton "[skill.name]" hovered Show('move_explanation', reason=reason) unhovered Hide('move_explanation') action [[]] xpos (x_pos*counter) ypos (start - (counter*41))
+                textbutton "[skill_display_name]" hovered Show('move_explanation', reason=reason) unhovered Hide('move_explanation') action [[]] xpos (x_pos*(counter*2))  ypos (start - (counter*41))
             
 
             $ counter += 1
             
-        textbutton "Back" action [Hide('skill_actions'), Show('battlemenu', player=player, tag_p=tag_p)] xpos (x_pos*counter) ypos (start - (counter*41))
+        textbutton "Back" action [Hide('skill_actions'), Show('battlemenu', player=player, tag_p=tag_p)] xpos (x_pos*1) ypos (350 - (counter*41))
+        
+screen item_actions:
+    $ initial_pos = 0.8
+    $ interval = 0.1
+    $ counter = 1
+    $ start = 300
+    $ x_pos = 118
+    
+    vbox:
+        for item in player.items:
+            
+            if item.quantity > 0:
+                textbutton "[item.name] [item.quantity]" action [SetField(current_session, 'item', item), 
+                                                                 SetField(current_session, 'main_player', player),
+                                                                 Jump('item_redirect')] xpos (x_pos*counter*2) ypos (start - (counter*41))
+                    
+            else:
+                textbutton "[item.name] [item.quantity]" action [[]] xpos (x_pos*(counter*2)) ypos (start - (counter*41))
+            
+
+            $ counter += 1
+            
+        textbutton "Back" action [Hide('item_actions'), Show('battlemenu', player=player, tag_p=tag_p)] xpos (x_pos*1) ypos (350 - (counter*41))
 
 screen battlemenu(player, tag_p):
     $ move_types = ["melee", "special", "ranged", "weapons", "defensive"]
@@ -678,7 +711,7 @@ screen battlemenu(player, tag_p):
         textbutton "Standby" hovered Show('battle_explanation', stat='standby') unhovered Hide('battle_explanation') action Jump("standby") xpos 236 ypos 59
         
         if player.items:
-            textbutton "Items" hovered Show('battle_explanation', stat='items') unhovered Hide('battle_explanation') action Jump("items") xpos 471 ypos 18
+            textbutton "Items" hovered Show('battle_explanation', stat='items') unhovered Hide('battle_explanation') action [Hide('battlemenu'), Hide("battle_explanation"), Show("item_actions")]  xpos 471 ypos 18
         else:
             textbutton "Items" xpos 471 ypos 18
         
@@ -697,6 +730,7 @@ screen battle_explanation(stat):
                    'move': 'Move across the battle area.', 
                    'move_once': 'Can only move once per turn',
                    'weapons': 'Fixed damage attacks limited by quantity.', 
+                   'items': 'Heal HP or MP', 
                    'defensive': 'Reduce enemy damage for a limited amount of time.',
                    'standby': 'Regain magic, slightly heal health.'}
     $ expl = expl_dict[stat]
