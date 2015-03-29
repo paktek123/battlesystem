@@ -133,20 +133,20 @@ init python:
     
     ### TILES ###
     
-    tile1 = Tile(tile1pos, TILEIDLEPIC, TILEHOVERPIC, 1)
-    tile2 = Tile(tile2pos, TILEIDLEPIC, TILEHOVERPIC, 2)
-    tile3 = Tile(tile3pos, TILEIDLEPIC, TILEHOVERPIC, 3)
-    tile4 = Tile(tile4pos, TILEIDLEPIC, TILEHOVERPIC, 4)
-    tile5 = Tile(tile5pos, TILEIDLEPIC, TILEHOVERPIC, 5)
-    tile6 = Tile(tile6pos, TILEIDLEPIC, TILEHOVERPIC, 6)
-    tile7 = Tile(tile7pos, TILEIDLEPIC, TILEHOVERPIC, 7)
-    tile8 = Tile(tile8pos, TILEIDLEPIC, TILEHOVERPIC, 8)
-    tile9 = Tile(tile9pos, TILEIDLEPIC, TILEHOVERPIC, 9)
-    tile10 = Tile(tile10pos, TILEIDLEPIC, TILEHOVERPIC, 10)
-    tile11 = Tile(tile11pos, TILEIDLEPIC, TILEHOVERPIC, 11)
-    tile12 = Tile(tile12pos, TILEIDLEPIC, TILEHOVERPIC, 12)
+    #tile1 = Tile(tile1pos, TILEIDLEPIC, TILEHOVERPIC, 1)
+    #tile2 = Tile(tile2pos, TILEIDLEPIC, TILEHOVERPIC, 2)
+    #tile3 = Tile(tile3pos, TILEIDLEPIC, TILEHOVERPIC, 3)
+    #tile4 = Tile(tile4pos, TILEIDLEPIC, TILEHOVERPIC, 4)
+    #tile5 = Tile(tile5pos, TILEIDLEPIC, TILEHOVERPIC, 5)
+    #tile6 = Tile(tile6pos, TILEIDLEPIC, TILEHOVERPIC, 6)
+    #tile7 = Tile(tile7pos, TILEIDLEPIC, TILEHOVERPIC, 7)
+    #tile8 = Tile(tile8pos, TILEIDLEPIC, TILEHOVERPIC, 8)
+    #tile9 = Tile(tile9pos, TILEIDLEPIC, TILEHOVERPIC, 9)
+    #tile10 = Tile(tile10pos, TILEIDLEPIC, TILEHOVERPIC, 10)
+    #tile11 = Tile(tile11pos, TILEIDLEPIC, TILEHOVERPIC, 11)
+    #tile12 = Tile(tile12pos, TILEIDLEPIC, TILEHOVERPIC, 12)
     
-    TILES = [tile1, tile2, tile3, tile4, tile5, tile6, tile7, tile8, tile9, tile10, tile11, tile12]
+    #TILES = [tile1, tile2, tile3, tile4, tile5, tile6, tile7, tile8, tile9, tile10, tile11, tile12]
     
     ### TIME, DAY AND MONTHS ###
     
@@ -300,15 +300,15 @@ label declare_resources:
     $ substitution = Skill('Substitution', 'ranged', "substitution", 8, 20, 15, 0, stun=True)
     
     # defensive skills
-    $ metal_jacket = Skill(name='Metal Jacket', skill_type='defence', label='metal_jacket', range=12, duration=3)
-    $ intimidate = Skill(name='Intimidate', skill_type='defence', label='intimidate', range=6, duration=3)
+    $ metal_jacket = Skill(name='Metal Jacket', skill_type='defence', label='damagereduction', range=12, duration=3)
+    $ intimidate = Skill(name='Intimidate', skill_type='defence', label='dampen', range=6, duration=3)
     
     $ damage_reduction = Skill('Focus', 'defence', 'damagereduction', 12, 1, 10, duration=2, unlock_exp=300)
     $ chakra_defence = Skill('Chakra Defence', 'defence', 'chakradefence', 12, 2, 15, duration=3, unlock_exp=500)
     $ substitution = Skill('Substitution', 'counter', "substitution", 8, 20, 15, 0, stun=True)
     $ reflect = Skill('Reflect', 'defence', 'reflect', 12, 20, 20, duration=2, unlock_exp=1500)
     $ dampen = Skill('Dampen', 'defence', 'dampen', 6, 30, 30, duration=3, unlock_exp=2000)
-    $ yata_mirror = Skill('Yata Mirror', 'defence', 'yatamirror', 12, 50, 50, duration=2, unlock_exp=2500)
+    $ yata_mirror = Skill('Yata Mirror', 'defence', 'ignore', 12, 50, 50, duration=2, unlock_exp=2500)
     
     ### WEAPONS ###
     $ w_knife = Weapon(name='Knife', price=30, range=2, chakra_cost=5, damage=25)
@@ -345,19 +345,19 @@ label declare_resources:
     
     ### PLAYERS AND TEAMS ###
     
-    $ lvl_1_thug_melee = LevelledEnemy(lvl=1, skill_pool=THUG_MELEE_SKILL_SET, character=thug_c, tile=tile12)
-    $ lvl_1_thug_ranged = LevelledEnemy(lvl=1, skill_pool=THUG_RANGED_SKILL_SET, character=thug_c, tile=tile12)
-    $ lvl_4_thug_melee = LevelledEnemy(lvl=4, skill_pool=THUG_MELEE_SKILL_SET, character=thug_c, tile=tile12)
-    $ lvl_4_thug_ranged = LevelledEnemy(lvl=4, skill_pool=THUG_RANGED_SKILL_SET, character=thug_c, tile=tile12)
+    $ lvl_1_thug_melee = LevelledEnemy(lvl=1, skill_pool=THUG_MELEE_SKILL_SET, character=thug_c)
+    $ lvl_1_thug_ranged = LevelledEnemy(lvl=1, skill_pool=THUG_RANGED_SKILL_SET, character=thug_c)
+    $ lvl_4_thug_melee = LevelledEnemy(lvl=4, skill_pool=THUG_MELEE_SKILL_SET, character=thug_c)
+    $ lvl_4_thug_ranged = LevelledEnemy(lvl=4, skill_pool=THUG_RANGED_SKILL_SET, character=thug_c)
     
     # give him unique skill set
-    $ lvl_8_bison_melee = LevelledEnemy(lvl=8, name="Bison", skill_pool=THUG_MELEE_SKILL_SET, character=bison_c, tile=tile12, hudpic="bison_hud")
-    $ lvl_15_adam = LevelledEnemy(lvl=15, skill_pool=THUG_RANGED_SKILL_SET, character=adam_c, tile=tile12, picname="adam_1")
-    $ lvl_15_ai = LevelledEnemy(lvl=15, skill_pool=THUG_RANGED_SKILL_SET, character=ai_c, tile=tile12, picname="ai_1")
-    $ lvl_15_monk = LevelledEnemy(lvl=15, skill_pool=THUG_RANGED_SKILL_SET, character=monk_c, tile=tile12, picname="monk_1")
+    $ lvl_8_bison_melee = LevelledEnemy(lvl=8, name="Bison", skill_pool=THUG_MELEE_SKILL_SET, character=bison_c, hudpic="bison_hud")
+    $ lvl_15_adam = LevelledEnemy(lvl=15, skill_pool=THUG_RANGED_SKILL_SET, character=adam_c, picname="adam_1")
+    $ lvl_15_ai = LevelledEnemy(lvl=15, skill_pool=THUG_RANGED_SKILL_SET, character=ai_c, picname="ai_1")
+    $ lvl_15_monk = LevelledEnemy(lvl=15, skill_pool=THUG_RANGED_SKILL_SET, character=monk_c, picname="monk_1")
 
     # Use this for quick character creation
-    #lvl_15_daniel = LevelledEnemy(lvl=15, skill_pool=THUG_MELEE_SKILL_SET, character=daniel_c, tile=tile12, tilepic="fe_1_r")
+    #lvl_15_daniel = LevelledEnemy(lvl=15, skill_pool=THUG_MELEE_SKILL_SET, character=daniel_c, tilepic="fe_1_r")
     
     # This has to be here because its dynamic
     $ hero_c = Character('NO NAME',color="#FFFF00")
@@ -365,7 +365,7 @@ label declare_resources:
     $ hero = Player(name='NO NAME', picname="hero_tile_r", character=hero_c, tilepic="hero_tile_r", hudpic='hero_hud', 
                   hp=100, maxhp=100, chakra=80, maxchakra=80, 
                   strength=1, speed=1, evasion=1, defence=1, stamina=1, base_hit_rate=80, 
-                  tile=tile1, facing='right', 
+                  facing='right', 
                   meleeskills=[punching_flurry], specialskills=[], rangedskills=[], 
                   items=[], defensiveskills=[], bloodlineskills=[], 
                   leader_pic="leader_pic", 
@@ -375,7 +375,7 @@ label declare_resources:
     $ thug = Player(name='Thug', picname="thug_tile_r", character=thug_c, tilepic="thug_tile_r", hudpic='thug_hud', 
                   hp=100, maxhp=100, chakra=80, maxchakra=80, 
                   strength=5, speed=5, evasion=1, defence=1, stamina=1, base_hit_rate=80, 
-                  tile=tile1, facing='left', 
+                  facing='left', 
                   meleeskills=[onetwocombo], specialskills=[], rangedskills=[], 
                   items=[], defensiveskills=[], bloodlineskills=[], 
                   leader_pic="leader_pic", 
@@ -386,7 +386,7 @@ label declare_resources:
     $ sam = Player(name='Sam', picname="thug_tile_r", character=thug_c, tilepic="thug_tile_r", hudpic='thug_hud', 
                   hp=150, maxhp=150, chakra=120, maxchakra=120, 
                   strength=9, speed=6, evasion=6, defence=8, stamina=6, base_hit_rate=80, 
-                  tile=tile1, facing='left', 
+                  facing='left', 
                   meleeskills=[onetwocombo], specialskills=[blasting_kick], rangedskills=[], 
                   items=[], defensiveskills=[], bloodlineskills=[], 
                   leader_pic="leader_pic", 
@@ -396,7 +396,7 @@ label declare_resources:
     $ will = Player(name='Will', picname="will_tile_r", character=thug_c, tilepic="will_tile_r", hudpic='will_hud', 
                   hp=200, maxhp=200, chakra=150, maxchakra=150, 
                   strength=10, speed=6, evasion=6, defence=10, stamina=10, base_hit_rate=90, 
-                  tile=tile1, facing='left', 
+                  facing='left', 
                   meleeskills=[onetwocombo, jaw_breaker], specialskills=[blasting_kick], rangedskills=[], 
                   items=[], defensiveskills=[], bloodlineskills=[], 
                   leader_pic="leader_pic", 
@@ -406,27 +406,27 @@ label declare_resources:
     $ greyson = Player(name='Greyson', picname="will_tile_r", character=thug_c, tilepic="will_tile_r", hudpic='greyson_hud', 
                   hp=120, maxhp=120, chakra=60, maxchakra=60, 
                   strength=7, speed=3, evasion=3, defence=4, stamina=3, base_hit_rate=70, 
-                  tile=tile1, facing='left', 
+                  facing='left', 
                   meleeskills=[onetwocombo, jaw_breaker], specialskills=[], rangedskills=[], 
                   items=[], defensiveskills=[], bloodlineskills=[], 
                   leader_pic="leader_pic", 
                   weapons=[w_brass_knuckles], 
                   home_village=None)
     
-    $ naruto = Player('Naruto',"thug_tile_r", naruto_c, "thug_tile_r", "thug_tile_r", 100, 100, 80, 80, 10, 4, 3, 4, 5, 80, tile1, 'right', 
+    $ naruto = Player('Naruto',"thug_tile_r", naruto_c, "thug_tile_r", "thug_tile_r", 100, 100, 80, 80, 10, 4, 3, 4, 5, 80, 'right', 
                     [onetwocombo], [rasengan], [substitution], [],
-                    [damage_reduction, chakra_defence, reflect, dampen, yata_mirror], [], "leader_pic", 
+                    [damage_reduction, chakra_defence, reflect, dampen, yata_mirror], [], leader_pic="leader_pic", 
                     weapons=[shiruken, kunai], home_village=None)
-    $ sasuke = Player('Sasuke', "thug_tile_r", sasuke_c, "thug_tile_r", "thug_tile_r", 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
+    $ sasuke = Player('Sasuke', "thug_tile_r", sasuke_c, "thug_tile_r", "thug_tile_r", 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, 'left',
                     [onetwocombo, lioncombo], [chidori], [], [], [damage_reduction, chakra_defence], 
                     battle_ai=special_enemy_pattern, weapons=[shiruken, kunai], home_village=None) #, interaction={'frequency': (1,)})
     
-    $ sakura = Player('Sakura', "thug_tile_r", sakura_c, "thug_tile_r", "thug_tile_r", 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
+    $ sakura = Player('Sakura', "thug_tile_r", sakura_c, "thug_tile_r", "thug_tile_r", 100, 100, 80, 80, 11, 6, 3, 6, 4, 80,'left',
                     [onetwocombo, lioncombo], [chidori], [], [], [damage_reduction, chakra_defence], weapons=[shiruken, kunai])
-    $ kakashi = Player('Kakashi', "thug_tile_r", kakashi_c, "thug_tile_r", "thug_tile_r", 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
+    $ kakashi = Player('Kakashi', "thug_tile_r", kakashi_c, "thug_tile_r", "thug_tile_r", 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, 'left',
                     [onetwocombo, lioncombo], [raikiri], [], [], [damage_reduction, chakra_defence], level=32,
                     battle_ai=special_enemy_pattern, weapons=[shiruken, kunai])
-    $ anko = Player('Anko', "thug_tile_r", kakashi_c, "thug_tile_r","thug_tile_r", 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, tile12, 'left',
+    $ anko = Player('Anko', "thug_tile_r", kakashi_c, "thug_tile_r","thug_tile_r", 100, 100, 80, 80, 11, 6, 3, 6, 4, 80, 'left',
                     [onetwocombo, lioncombo], [raikiri], [], [], [damage_reduction, chakra_defence], level=32,
                     battle_ai=special_enemy_pattern, weapons=[shiruken, kunai])
     
@@ -913,6 +913,9 @@ label prologue_hospital:
     $ will.buy_item(i_chakra_paste)
     $ will.hp -= 50
     $ will.chakra -= 50
+    $ current_session.stage = clearing
+    #$ info = str(current_session.stage.tile11.BASE_TEXTURE)
+    #nar_c "[info]"
     $ renpy.call('fight', hero, copy.deepcopy(lvl_1_thug_melee), [will], [copy.deepcopy(lvl_1_thug_ranged)], clearing, win_label='prologue_hospital2', lose_label='prologue_hospital2', draw_label='prologue_hospital2', fight_limit=15)
 
     
@@ -1906,14 +1909,16 @@ label fight(player, enemy, tag_p, tag_e, stage=clearing, win_label='generic_win'
 label initial_pos(player, enemy):
     python:
         if current_session.initial_pos:
-            show_player_at_pos(enemy, player, current_session.stage, tile12)
-            show_player_at_pos(player, enemy, current_session.stage, tile1)
+            player.tile = current_session.stage.tile12
+            enemy.tile = current_session.stage.tile12
+            show_player_at_pos(enemy, player, current_session.stage, current_session.stage.tile12)
+            show_player_at_pos(player, enemy, current_session.stage, current_session.stage.tile1)
             current_session.initial_pos = False
     return
     
 label remove_projections:
     python:
-        for tile in TILES:
+        for tile in current_session.stage.tiles:
             tile.deproject()
     return
     
@@ -2031,31 +2036,37 @@ label enemymove:
     call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label, fight_limit)
     
 label showtiles:
-    show tile1im at tile1pos
-    show tile2im at tile2pos
-    show tile3im at tile3pos
-    show tile4im at tile4pos
-    show tile5im at tile5pos
-    show tile6im at tile6pos
-    show tile7im at tile7pos
-    show tile8im at tile8pos
-    show tile9im at tile9pos
-    show tile10im at tile10pos
-    show tile11im at tile11pos
-    show tile12im at tile12pos
+    python:
+        for tile in current_session.stage.tiles:
+            renpy.show(tile.base_texture, [ tile.pos ])
+    #show tile1im at tile1pos
+    #show tile2im at tile2pos
+    #show tile3im at tile3pos
+    #show tile4im at tile4pos
+    #show tile5im at tile5pos
+    #show tile6im at tile6pos
+    #show tile7im at tile7pos
+    #show tile8im at tile8pos
+    #show tile9im at tile9pos
+    #show tile10im at tile10pos
+    #show tile11im at tile11pos
+    #show tile12im at tile12pos
     return
     
 label hidetiles:
-    hide tile1im
-    hide tile2im
-    hide tile3im
-    hide tile4im
-    hide tile5im
-    hide tile6im
-    hide tile7im
-    hide tile8im
-    hide tile9im
-    hide tile10im
-    hide tile11im
-    hide tile12im
+    python:
+        for tile in current_session.stage.tiles:
+            renpy.hide(tile.base_texture)
+    #hide tile1im
+    #hide tile2im
+    #hide tile3im
+    #hide tile4im
+    #hide tile5im
+    #hide tile6im
+    #hide tile7im
+    #hide tile8im
+    #hide tile9im
+    #hide tile10im
+    #hide tile11im
+    #hide tile12im
     return

@@ -137,7 +137,7 @@ init -2 python:
                 damage = damage - (target.chakra * 0.1)
                 target.chakradefence.used += 1
                             
-            if check_active_skill(target, "dampen"):
+            if check_active_skill(player, "dampen"):
                 damage = damage * 0.5
                 target.dampen.used += 1
                 
@@ -147,7 +147,7 @@ init -2 python:
                 target.reflect.used += 1
                 target.damage_dealt = int((self.damage - player.defence)) 
                 return
-            elif check_active_skill(target, "yatamirror"):
+            elif check_active_skill(target, "ignore"):
                 renpy.say(target.character, "Your skills won't affect me!".format(target.name))
                 damage = 0
                 target.yatamirror.used += 1

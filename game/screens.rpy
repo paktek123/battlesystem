@@ -841,11 +841,11 @@ screen movemenu:
     
     $ highlight_position(player, enemy, clearing)
     
-    for tile in TILES:
+    for tile in current_session.stage.tiles:
         if tile.potential:
             imagebutton idle tile.idle hover tile.hover xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos - 0.05) action Jump("move{}".format(tile.position))
         elif tile.trap:
-            imagebutton idle TILETRAPPIC hover TILETRAPPIC xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos - 0.05)
+            imagebutton idle tile.TRAP_TEXTURE hover tile.TRAP_TEXTURE xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos - 0.05)
         else:
             imagebutton idle tile.idle hover tile.idle xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos - 0.05)
         #text "{}".format(tile.idle.split('.')[0]) xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos + 0.15)
@@ -864,9 +864,9 @@ label settrap:
 screen settrap:
     $ highlight_position(player, enemy, clearing)
     
-    for tile in TILES:
+    for tile in current_session.stage.tiles:
         if tile.potential:
-            imagebutton idle tile.idle hover TILETRAPPIC xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos - 0.05) action Jump("trap{}".format(tile.position))
+            imagebutton idle tile.idle hover tile.TRAP_TEXTURE xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos - 0.05) action Jump("trap{}".format(tile.position))
         else:
             imagebutton idle tile.idle hover tile.idle xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos - 0.05)
         #imagebutton idle tile.idle hover TILETRAPPIC xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos - 0.05) action Jump("trap{}".format(tile.position))

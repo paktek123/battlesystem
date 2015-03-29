@@ -42,7 +42,7 @@ init -1 python:
         location.unlocked = getattr(persistent, persistent_attr, False)
     
     def highlight_position(player, enemy, stage):
-        for tile in TILES:
+        for tile in stage.tiles:
             if not tile.trap:
                 tile.deactivate()
                 tile.deproject()
@@ -66,12 +66,12 @@ init -1 python:
         high_range = [x for x in high_range if x != enemy.tile.position]
         
         for tile_position in low_range:
-            tile = get_tile_from_position(tile_position)
+            tile = get_tile_from_position(tile_position, stage)
             if not tile.trap:
                 tile.project()
             
         for tile_position in high_range:
-            tile = get_tile_from_position(tile_position)
+            tile = get_tile_from_position(tile_position, stage)
             if not tile.trap:
                 tile.project()
             
@@ -81,6 +81,7 @@ init -1 python:
     def show_player_at_pos(player, enemy, stage, tile, initial_movement=False):
         
         #difference = abs(player.tile.position - tile.position)
+        #renpy.say(player.character, "Hullo: {}.".format(tile.BASE_TEXTURE))
         player.tile.deactivate()
         player.tile = tile
         player.tile.activate()
@@ -104,7 +105,7 @@ init -1 python:
             # This causes a ui.close() exception, commenting for now
             #renpy.say(player.character, "Oh no there is a trap here!")
             player.hp -= 30
-            remove_trap(tile)
+            remove_trap(tile, stage)
         
     def hide_battle_screen(all=False):
         renpy.hide_screen("battlemenu")
@@ -191,7 +192,7 @@ init -1 python:
             if enemy_tile_position < 1:
                 enemy_tile_position = 1
                 
-        new_tile = get_tile_from_position(enemy_tile_position)
+        new_tile = get_tile_from_position(enemy_tile_position, current_session.stage)
         enemy_tile = new_tile
         show_player_at_pos(enemy, player, None, new_tile)
         #renpy.show(enemy.tilepic, [ POSITIONS[enemy.tile.position] ])
@@ -216,9 +217,9 @@ init -1 python:
         old_tile = enemy.tile
         if player.tile.position == move_to:
             # TODO: this may lead to player going off grid
-            enemy_tile = get_tile_from_position(player.tile.position + 1)
+            enemy_tile = get_tile_from_position(player.tile.position + 1, current_session.stage)
         else:
-            enemy_tile = get_tile_from_position(move_to)
+            enemy_tile = get_tile_from_position(move_to, current_session.stage)
             
         # this is to prevent error where tile is None
         if not enemy.tile:
@@ -272,7 +273,7 @@ init -1 python:
                     enemy_position = player.tile.position + current_skill.range
                 
             #renpy.say("HELLO", "Enemy position is {}.".format(enemy_position))
-            enemy_tile = get_tile_from_position(abs(enemy_position))
+            enemy_tile = get_tile_from_position(abs(enemy_position), current_session.stage)
             
             if not enemy.tile or not enemy_tile:
                 enemy_tile = old_tile
@@ -297,7 +298,7 @@ init -1 python:
             #renpy.say(enemy.character, "Oh no!")
             # TODO: some affect similar but not text
             enemy.hp -= 30
-            remove_trap(enemy.tile)
+            remove_trap(enemy.tile, stage)
             
         Jump("fight")
         
@@ -320,10 +321,10 @@ init -1 python:
         renpy.say(enemy.character, "You left yourself open.")
         enemy_pos = enemy.tile.position
         if enemy_pos < 12:
-            player.tile = get_tile_from_position(enemy_pos + 1)
+            player.tile = get_tile_from_position(enemy_pos + 1, current_session.stage)
             player.change_direction(player.facing)
         else:
-            player.tile = get_tile_from_position(player.tile.position - 1)
+            player.tile = get_tile_from_position(player.tile.position - 1, current_session.stage)
             
         player.counter_state = False
         renpy.say(player.character, "Got you!")
@@ -357,8 +358,8 @@ init -1 python:
                 setattr(enemy, s.label, s)
                 
     def remove_traps_from_all_tiles():
-        for tile in TILES:
-            remove_trap(tile)
+        for tile in current_session.stage.tiles:
+            remove_trap(tile, current_session.stage)
             
     def hide_player_pics(player):
         renpy.hide(player.tilepic)

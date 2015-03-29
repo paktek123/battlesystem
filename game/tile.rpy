@@ -109,47 +109,59 @@ init -10 python:
                     }
     
     class Tile:
-        def __init__(self, pos, idle, hover, position):
+        def __init__(self, position, pos, idle, hover, trap, project_tex):
+            # these will be dynamic
             self.pos = pos 
             self.idle = idle
             self.hover = hover
             self.position = position
             self.trap = False
             self.active = False
-            self.trap_pic = TILETRAPPIC
+            self.trap_pic = trap
             self.potential = False
+            self.project_tex = project_tex
+            
+            # static
+            self.base_texture = idle
+            self.active_texture = hover
+            self.trap_texture = trap
+            self.project_texture = project_tex
             
         def project(self):
-            self.idle = TILEPROJECTPIC
+            self.idle = self.project_texture
             self.potential = True
             
         def deproject(self):
-            self.hover = TILEIDLEPIC
+            self.hover = self.base_texture
             self.potential = False
             
         def activate(self):
-            self.idle = self.hover
+            self.idle = self.active_texture
             self.active = True
             
         def deactivate(self):
-            self.idle = TILEIDLEPIC
+            #renpy.say("....", "{}".format(self.base_texture))
+            self.idle = self.base_texture
             self.active = False
             
         def activate_trap(self):
             self.trap = True
-            self.idle = TILETRAPPIC
+            self.idle = self.trap_texture
             
         def deactivate_trap(self):
             self.trap = False
-            self.idle = TILEIDLEPIC
+            self.idle = self.base_texture
+        
+        #def __repr__(self):
+        #    return "<Tile>: {}".format(self.position)
             
     
-    def get_tile_from_position(position):
-        for tile in TILES:
+    def get_tile_from_position(position, stage):
+        for tile in stage.tiles:
             if tile.position == position:
                 return tile
     
-    def remove_trap(trap_tile):
-        for tile in TILES:
+    def remove_trap(trap_tile, stage):
+        for tile in stage.tiles:
             if tile.position == trap_tile.position:
                 tile.deactivate_trap()
