@@ -7,20 +7,62 @@ PLAN
 3. gets attacked by 'thugs', combat tutorial, etc (DONE)
 4. other members of the 'rebel' group save the hero (DONE)
 5. the rebel group explain the situation, introduce team mates, teacher (DONE)
-7. introductory mission
-6. tutorial on the 'open world' aspect (hospital, missions, home, weapons etc)
-8. Group 1 missions appear
-9. Lets decide when we get here...
+7. introductory mission (DONE)
+6. tutorial on the 'open world' aspect (hospital, missions, home, weapons etc) (DONE)
+8. Group 1 missions appear (infiltrate hold and defeat sam), hosptial/police station (DONE)
+9. Preview the other opponents using the world rotator (DONE)
+10. First turn.... with options... (DONE)
+11. End game (DONE)
 
 2nd iteration (make menus look good, art etc)
 
-3rd iteration (DRY code, cleanup)
+1. Improve character screen (DONE)
+2. Improve dialogue screen (DONE)
+3. improve battlemenu (DONE) + tag interface (DONE)
+4. persistent_data (DONE)
+5. Sort of name issue for hero (DONE)
+6. sort shop menu (DONE)
+7. Improve battle selection menu (DONE)
+8. Add item usage in battle (DONE), weapon depletion in battle (DONE), defence handling in skill (DONE)
+9. stage tile change (DONE)
+10. defensive abilities show up in battle (DONE)
+
+3rd iteration (DRY code, cleanup) - (IN PROGRESS)
+
+What to Demo
+- Fight system
+  - mechanics
+  - single fights
+  - tag team fights
+  - battles and rounds
+  - skills 
+- character creation screen
+- stage change
+- current session
+- open world 
+  - locations
+  - other villages / travel
+  - calendar and time
+  - events / planned events
+  - npc events
+  - shops / inventory / weapons
+  - training
+  - experience and leveling
+  - team / bonding
+  - player / sensei system
+
+9. DO credits
+10. Main Menu Screen
 
 4th Testing, fixes
 
 5th Release
 
 6th Android build
+
+Bibliography
+
+http://www.fantasticmaps.com/wp-content/uploads/2010/06/townpackunlabelled.jpg
 
 
 

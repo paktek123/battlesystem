@@ -4,6 +4,8 @@
 
 init -1 python:
     
+    #### PYTHON HELPERS ####
+    
     def time_tag_show(image_name):
         if main_time.hour in (6, 7, 8, 9, 10, 11):
             renpy.show((image_name, 'morning'))
@@ -481,6 +483,25 @@ init -1 python:
         for battle in current_session.battles:
             if battle.id == id:
                 return battle
+                
+    def is_event_active_today(event):
+        if event.name in [e.name for e in get_today().events]:
+            return True
+        return False
+        
+    def get_random_jounin(player, village, exclude_sensei=False, exclude=[]):
+        if exclude_sensei and player.sensei:
+            sensei =  [player.sensei]
+        else:
+            sensei = [None] + exclude
+            
+        #renpy.say(player.character, "jounins: {}".format(village.jounins))
+        
+        remove_sensei_jounin = [j for j in village.jounins if j not in sensei]
+        return random.choice(remove_sensei_jounin)
+        
+    def other_villages(village):
+        return [v for v in ALL_VILLAGES if v.id != village.id]
                 
     def player_dragged(drags, drop):
 
