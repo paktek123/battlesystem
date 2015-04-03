@@ -2,10 +2,17 @@
 # STAGE DEFINITIONS
 #
 
+init -3:
+    image clearing_base_texture = im.Scale("tile.png", 50, 30)
+    image clearing_active_texture = im.Scale("tileh.png", 50, 30)
+    image clearing_project_texture = im.Scale("tilep.png", 50, 30)
+    image clearing_trap_texture = im.Scale("tiletrap.png", 50, 30)
+
 init -3 python:
     class Stage:
         def __init__(self, name, pull, range, 
-                     base_texture="tile.png", active_texture="tileh.png", project_texture="tilep.png", trap_texture="tiletrap.png"):
+                     base_texture="clearing_base_texture", active_texture="clearing_active_texture", 
+                     project_texture="clearing_project_texture", trap_texture="clearing_trap_texture"):
             self.name = name
             self.pull = pull
             self.range = range

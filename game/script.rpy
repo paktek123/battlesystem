@@ -1909,7 +1909,7 @@ label fight(player, enemy, tag_p, tag_e, stage=clearing, win_label='generic_win'
 label initial_pos(player, enemy):
     python:
         if current_session.initial_pos:
-            player.tile = current_session.stage.tile12
+            player.tile = current_session.stage.tile1
             enemy.tile = current_session.stage.tile12
             show_player_at_pos(enemy, player, current_session.stage, current_session.stage.tile12)
             show_player_at_pos(player, enemy, current_session.stage, current_session.stage.tile1)
@@ -2037,8 +2037,10 @@ label enemymove:
     
 label showtiles:
     python:
-        for tile in current_session.stage.tiles:
-            renpy.show(tile.base_texture, [ tile.pos ])
+        show_positions = [tile.pos for tile in current_session.stage.tiles]
+        #for tile in current_session.stage.tiles:
+        #renpy.show(tile.base_texture, [ tile.pos ], what=tile.base_texture, tag='tile{}'.format(tile.position))
+        #renpy.show(tile.base_texture, show_positions)
     #show tile1im at tile1pos
     #show tile2im at tile2pos
     #show tile3im at tile3pos

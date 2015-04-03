@@ -807,6 +807,13 @@ screen battlebars(tag_p, tag_e):
         text "CD" xpos 0.75 ypos 0.15
         
     #text "[tag_e]" xpos 0.45 ypos 0.10
+    
+    #### TILES ####
+    $ highlight_position(player, enemy, clearing)
+    
+    for tile in current_session.stage.tiles:
+        imagebutton idle current_session.stage.base_texture hover current_session.stage.base_texture xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos - 0.05)
+    
         
     # show tag partners health here
     for position, partner in enumerate(tag_p):
@@ -843,7 +850,8 @@ screen movemenu:
     
     for tile in current_session.stage.tiles:
         if tile.potential:
-            imagebutton idle tile.idle hover tile.hover xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos - 0.05) action Jump("move{}".format(tile.position))
+            imagebutton idle tile.idle hover tile.hover xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos - 0.05) action [SetField(current_session, 'tile', tile),
+                                                                                                                      Jump("move_redirect")]
         elif tile.trap:
             imagebutton idle tile.TRAP_TEXTURE hover tile.TRAP_TEXTURE xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos - 0.05)
         else:
@@ -854,6 +862,10 @@ screen movemenu:
             
         if enemy.tile == tile:
             text "E" xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos + 0.25)
+    
+label move_redirect:
+    $ show_player_at_pos(player, enemy, clearing, current_session.tile)
+    jump move_continue
     
 label settrap:
     call hidetiles
@@ -866,122 +878,19 @@ screen settrap:
     
     for tile in current_session.stage.tiles:
         if tile.potential:
-            imagebutton idle tile.idle hover tile.TRAP_TEXTURE xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos - 0.05) action Jump("trap{}".format(tile.position))
+            imagebutton idle tile.idle hover tile.TRAP_TEXTURE xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos - 0.05) action [SetField(current_session, 'tile', tile),
+                                                                                                                             Jump("trap_redirect")]
         else:
             imagebutton idle tile.idle hover tile.idle xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos - 0.05)
         #imagebutton idle tile.idle hover TILETRAPPIC xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos - 0.05) action Jump("trap{}".format(tile.position))
 
+label trap_redirect:
+    $ set_trap_at_pos(player, enemy, clearing, current_session.tile)
+    jump enemymove
+
 label move_continue:
     $ moved = True
     call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label, fight_limit)
-    
-label move1:
-    $ show_player_at_pos(player, enemy, clearing, tile1)
-    jump move_continue
-    
-label move2:
-    $ show_player_at_pos(player, enemy, clearing, tile2)
-    jump move_continue
-    
-label move3:
-    $ show_player_at_pos(player, enemy, clearing, tile3)
-    jump move_continue
-    
-label move4:
-    $ show_player_at_pos(player, enemy, clearing, tile4)
-    jump move_continue
-
-label move5:
-    $ show_player_at_pos(player, enemy, clearing, tile5)
-    jump move_continue
-
-label move6:
-    $ show_player_at_pos(player, enemy, clearing, tile6)
-    jump move_continue
-    
-label move7:
-    $ show_player_at_pos(player, enemy, clearing, tile7)
-    jump move_continue
-    
-label move8:
-    $ show_player_at_pos(player, enemy, clearing, tile8)
-    jump move_continue
-    
-label move9:
-    $ show_player_at_pos(player, enemy, clearing, tile9)
-    jump move_continue
-    
-label move10:
-    $ show_player_at_pos(player, enemy, clearing, tile10)
-    jump move_continue
-    
-label move11:
-    $ show_player_at_pos(player, enemy, clearing, tile11)
-    jump move_continue
-    
-label move12:
-    $ show_player_at_pos(player, enemy, clearing, tile12)
-    jump move_continue
-    
-label trap1:
-    $ set_trap_at_pos(player, enemy, clearing, tile1)
-    jump enemymove
-    #call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
-    
-label trap2:
-    $ set_trap_at_pos(player, enemy, clearing, tile2)
-    jump enemymove
-    #call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
-    
-label trap3:
-    $ set_trap_at_pos(player, enemy, clearing, tile3)
-    jump enemymove
-    #call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
-    
-label trap4:
-    $ set_trap_at_pos(player, enemy, clearing, tile4)
-    jump enemymove
-    #call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
-    
-label trap5:
-    $ set_trap_at_pos(player, enemy, clearing, tile5)
-    jump enemymove
-    #call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
-    
-label trap6:
-    $ set_trap_at_pos(player, enemy, clearing, tile6)
-    jump enemymove
-    #call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
-    
-label trap7:
-    $ set_trap_at_pos(player, enemy, clearing, tile7)
-    jump enemymove
-    #call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
-    
-label trap8:
-    $ set_trap_at_pos(player, enemy, clearing, tile8)
-    jump enemymove
-    #call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
-    
-label trap9:
-    $ set_trap_at_pos(player, enemy, clearing, tile9)
-    jump enemymove
-    #call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
-    
-label trap10:
-    $ set_trap_at_pos(player, enemy, clearing, tile10)
-    jump enemymove
-    #call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
-    
-label trap11:
-    $ set_trap_at_pos(player, enemy, clearing, tile11)
-    jump enemymove
-    #call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
-    
-label trap12:
-    $ set_trap_at_pos(player, enemy, clearing, tile12)
-    jump enemymove
-    #call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label)
 
 
 ##############################################################################

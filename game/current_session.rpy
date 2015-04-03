@@ -11,6 +11,7 @@ init -5 python:
             self.location = None
             self.village = None
             self.limb = None
+            self.tile = None
             self.mission = None
             self.mission_rank = None
             self.skill = None
@@ -40,6 +41,7 @@ init -5 python:
             self.location = None
             self.village = None
             self.limb = None
+            self.tile = None
             self.mission = None
             self.mission_rank = None
             self.item = None
