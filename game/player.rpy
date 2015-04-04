@@ -3,22 +3,21 @@
 #
 
 init -4:
-    image body = im.Scale("gfx/body.png", 100, 150)
-    image left_arm_normal = "gfx/arm.png"
-    image right_arm_normal = im.Flip("gfx/arm.png", horizontal=True)
-    image left_leg_normal = "gfx/leg.png"
-    image right_leg_normal = im.Flip("gfx/leg.png", horizontal=True)
-    image torso_normal = "gfx/torso.png"
-    image head_normal = "gfx/head.png"
-    image left_arm_injured = LiveComposite((25, 55), (0, 0), anim.Blink(im.Scale("gfx/arm.png", 25, 55)))
-    image right_arm_injured = LiveComposite((25, 55), (0, 0), anim.Blink(im.Flip(im.Scale("gfx/arm.png", 25, 55), horizontal=True)))
-    image left_leg_injured = LiveComposite((30, 60), (0, 0), anim.Blink(im.Scale("gfx/leg.png", 30, 60)))
-    image right_leg_injured = LiveComposite((30, 60), (0, 0), anim.Blink(im.Flip(im.Scale("gfx/leg.png", 30, 60), horizontal=True)))
-    image torso_injured = LiveComposite((35, 55), (0, 0), anim.Blink(im.Scale("gfx/torso.png", 35, 55)))
-    image head_injured = LiveComposite((45, 30), (0, 0), anim.Blink(im.Scale("gfx/head.png", 45, 30)))
+    image body = im.Scale("misc/body.png", 100, 150)
+    image left_arm_normal = "misc/arm.png"
+    image right_arm_normal = im.Flip("misc/arm.png", horizontal=True)
+    image left_leg_normal = "misc/leg.png"
+    image right_leg_normal = im.Flip("misc/leg.png", horizontal=True)
+    image torso_normal = "misc/torso.png"
+    image head_normal = "misc/head.png"
+    image left_arm_injured = LiveComposite((25, 55), (0, 0), anim.Blink(im.Scale("misc/arm.png", 25, 55)))
+    image right_arm_injured = LiveComposite((25, 55), (0, 0), anim.Blink(im.Flip(im.Scale("misc/arm.png", 25, 55), horizontal=True)))
+    image left_leg_injured = LiveComposite((30, 60), (0, 0), anim.Blink(im.Scale("misc/leg.png", 30, 60)))
+    image right_leg_injured = LiveComposite((30, 60), (0, 0), anim.Blink(im.Flip(im.Scale("misc/leg.png", 30, 60), horizontal=True)))
+    image torso_injured = LiveComposite((35, 55), (0, 0), anim.Blink(im.Scale("misc/torso.png", 35, 55)))
+    image head_injured = LiveComposite((45, 30), (0, 0), anim.Blink(im.Scale("misc/head.png", 45, 30)))
 
 init -4 python:
-#python early:
     import random
     import copy
     
@@ -70,7 +69,6 @@ init -4 python:
                 self.days_rested += days
                 if self.injury_length == self.days_rested:
                     self.heal_injury(full=True)
-            # TODO: maybe some dialogue here
             
         def heal_injury(self, full=True):
             if full:
@@ -190,21 +188,12 @@ init -4 python:
             
             self.assign_all_skills()
             self.set_sensei()
-            self.add_to_village_ranks()
             self.generate_events_for_interaction()
-            self.save()
-            
-        def save(self):
-            #sane_name = '_'.join(self.name.lower().split(' '))
-            # create a copy of the player in the persistent storage
-            #setattr(persistent, 'player_' + sane_name, copy.deepcopy(self))
-            return
             
         def full_heal(self):
             self.hp = self.maxhp
             self.chakra = self.maxchakra
             self.heal_all_injuries()
-            self.save()
             
         def generate_events_for_interaction(self):
             # this will jump to label called for Sasuke Uchiha sasuke_uchiha1, 1 is number of visits
@@ -220,7 +209,6 @@ init -4 python:
                     'npc_icon': None}
             data.update(self.interaction)
             new_event = Event(**data)
-            #location.events.append(new_event)
             self.npc_event = new_event
             ALL_EVENTS.append(new_event)
             
@@ -247,28 +235,16 @@ init -4 python:
                     
             return (price, stay_days) # this has to be tuple so renpy string interpolation can pick up
             
-        def add_to_village_ranks(self):
-            if self.home_village:
-                self.home_village.add_to_ninja_ranks(self)
-            
-        def ninja_rank(self):
-            for rank, level_range in NINJA_RANKS.iteritems():
-                if self.level in level_range:
-                    return rank #.capitalize()
-            
         def injure_limb(self, name):
             limb = [l for l in self.get_limbs() if l.name == name][0]
             limb.injure()
             setattr(self, limb.name, limb)
-            self.save()
             
         def increase_limbs_severity(self, injured_limbs):
             for limb in injured_limbs:
                 l = getattr(self, limb.name)
                 l.injure()
                 setattr(self, limb.name, l)
-                
-            self.save()
             
         def get_limbs(self):
             return [self.head, self.torso, self.left_arm, self.right_arm, self.left_leg, self.right_leg]
@@ -284,23 +260,17 @@ init -4 python:
                     current_inventory_item.quantity += 1
                     self.remove_item(item)
                     self.items.append(current_inventory_item)
-                    #renpy.say(self.character, "I buy a {}".format(item.name))
                     return self.items
                 else:
                     item.quantity += 1
                     self.items.append(copy.deepcopy(item))
-                    #renpy.say(self.character, "I buy a {}".format(item.name))
                     return self.items
                 
             else:
-                #renpy.say(self.character, "I don't have enough money")
                 return self.items
-                
-            self.save()
                 
         def remove_item(self, item):
             self.items = [i for i in self.items if i.name != item.name]
-            self.save()
                 
         def get_item(self, item):
             for i in self.items:
@@ -320,23 +290,17 @@ init -4 python:
                     current_inventory_weapon.quantity += 1
                     self.remove_weapon(weapon)
                     self.weapons.append(current_inventory_weapon)
-                    #renpy.say(self.character, "I buy a {}".format(weapon.name))
                     return self.weapons
                 else:
                     weapon.quantity += 1
                     self.weapons.append(copy.deepcopy(weapon))
-                    #renpy.say(self.character, "I buy a {}".format(weapon.name))
                     return self.weapons
                 
             else:
-                #renpy.say(self.character, "I don't have enough money")
                 return self.weapons
-                
-            self.save()
                 
         def remove_weapon(self, weapon):
             self.weapons = [w for w in self.weapons if w.name != weapon.name]
-            self.save()
                 
         def get_weapon(self, weapon):
             for w in self.weapons:
@@ -372,21 +336,15 @@ init -4 python:
             if self.hp > self.maxhp:
                 self.hp = self.maxhp
                 
-            self.save()
-                
         def increase_chakra(self, chakra):
             self.chakra += chakra
             if self.chakra > self.maxchakra:
                 self.chakra = self.maxchakra
-                
-            self.save()
             
         def increase_bond(self, bond):
             self.bond += bond + renpy.random.randint(1,3)
             if self.bond > MAX_BOND:
                 self.bond = MAX_BOND
-                
-            self.save()
             
         def level_up(self):
             difference = self.exp - LEVELS[self.level + 1]
@@ -404,16 +362,13 @@ init -4 python:
             exp += renpy.random.randint(1,10)
             self.exp += exp
             self.level_up()
-            self.save()
             return self.exp
         
         def change_direction(self, direction):
-            #renpy.say(self.character, "I was {} : {}".format(direction, self.tilepic))
             if direction == 'left':
                 self.tilepic = self.tilepic.replace("_r", "_l")
             else:
                 self.tilepic = self.tilepic.replace("_l", "_r")
-            #renpy.say(self.character, "Now I am {} : {}".format(direction, self.tilepic))
             
         def is_bleeding(self):
             for limb in self.get_limbs():
@@ -444,19 +399,16 @@ init -4 python:
         def remove_skill(self, skill):
             delattr(self, skill.label)
             self.all_skills.remove(skill)
-            self.save()
             
         def assign_skill(self, skill):
             setattr(self, skill.label, skill)
             skill.limbs = self.get_limbs()
             self.all_skills.append(skill)
-            self.save()
             
         def apply_skill(self, skill):
             skill.apply()
             setattr(self, skill.label, skill)
             setattr(getattr(self, skill.label), 'active', True)
-            self.save()
             
         def check_active_skill(self, skill):
             s = getattr(self, skill.label, None)
@@ -488,12 +440,10 @@ init -4 python:
             if self.chakra > self.maxchakra:
                 self.chakra = self.maxchakra
                 
-            self.save()
-                
         def __repr__(self):
             return "<Player>: {} {}/{}".format(self.name, self.hp, self.maxhp)
             
-    class LevelledEnemy(Player):
+    class LevelledPlayer(Player):
         def __init__(self, lvl, name='Thug', picname="thug_tile_r", character=None, tilepic="thug_tile_r", hudpic='thug_hud', 
                      skill_pool=[], special_tags=[], home_village=None, tile=None):
             self.lvl = lvl
@@ -538,7 +488,10 @@ init -4 python:
                     
             for tag in special_tags:
                 ability = getattr(self, tag)
-                ability += random.randint(6,10)
+                if tag == 'speed':
+                    ability = 10
+                else:
+                    ability += random.randint(6,10)
                 setattr(self, tag, ability)
                 
             super(self.__class__, self).__init__(name=self.name, 

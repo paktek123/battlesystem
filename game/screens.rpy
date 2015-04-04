@@ -11,18 +11,15 @@ screen allocatepoints(player):
     $ STATS = ['strength', 'speed', 'evasion', 'defence', 'stamina', 'melee', 'special', 'ranged']
     $ counter = 0
     text "Allocation Points: [player.allocation_points]" xpos 0.35 ypos 0.20
-    #text "Strength: [player.strength] Defence: [player.defence] Evasion: [player.evasion]" xpos 0.50
-    #text "Stamina: [player.stamina] Speed: [player.speed] Hit: [player.base_hit_rate]" xpos 0.50 ypos 0.05
-    #text "Melee: [player.melee] Special: [player.special] Ranged: [player.ranged]" xpos 0.50 ypos 0.1
     
     if player.allocation_points:
         for stat in STATS:
             $ player_stat = getattr(player, stat)
             $ cap_stat = stat.capitalize()
             textbutton "[cap_stat] [player_stat] (+1)" hovered Show('explanation', stat=stat) unhovered Hide('explanation') action [SetField(player, stat, getattr(player, stat) + 1), 
-                                                                                                                SetField(player, 'allocation_points', getattr(player, 'allocation_points') - 1), 
-                                                                                                                SetField(current_session, 'main_player', player), 
-                                                                                                                Jump('allocate_points')] xpos (grid_place[counter][0] + 0.1) ypos grid_place[counter][1]
+                                                                                                                                    SetField(player, 'allocation_points', getattr(player, 'allocation_points') - 1), 
+                                                                                                                                    SetField(current_session, 'main_player', player), 
+                                                                                                                                    Jump('allocate_points')] xpos (grid_place[counter][0] + 0.1) ypos grid_place[counter][1]
             $ counter +=1
             
         textbutton "Reset stats" action Jump('reset_allocation_points') xpos (grid_place[counter][0] + 0.1) ypos grid_place[counter][1]
@@ -44,7 +41,7 @@ screen explanation(stat):
     
 
 ##############################################################################
-# VILLAGE SCREENS
+# VILLAGE / LOCATION SCREENS
 #
 screen villagearena(village, player):
     $ counter = 0
@@ -52,14 +49,12 @@ screen villagearena(village, player):
                                  SetField(current_session, 'main_player', player),
                                  SetField(current_session, 'time_to_advance', {'hours': 8}),
                                  Hide("villagearena"),
-                                 SetField(current_session, 'location', l_arena), 
                                  Jump('village_arena_level5')] xpos grid_place[0][0] ypos grid_place[0][1]
     
     textbutton "Level 10" action [SetField(current_session, 'village', village), 
                                   SetField(current_session, 'main_player', player),
                                   SetField(current_session, 'time_to_advance', {'hours': 8}),
                                   Hide("villagearena"),
-                                  SetField(current_session, 'location', l_arena), 
                                   Jump('village_arena_level10')] xpos grid_place[1][0] ypos grid_place[1][1]
     
     textbutton "Back" action [SetField(current_session, 'village', village), 
@@ -69,11 +64,9 @@ screen villagearena(village, player):
             
 screen hospitalshop(village, player):
     $ counter = 1
-    #$ player.left_leg.injure()
     $ injury_bill = player.get_injury_bill()
     $ sorted_items = sorted(hospital_shop.items)
     text "Money: [player.ryo]" xpos 0.05
-    #text "[player.head.injury_severity] [player.torso.injury_severity] [player.left_arm.injury_severity] [player.right_arm.injury_severity] [player.left_leg.injury_severity] [player.right_leg.injury_severity]"
     
     imagebutton idle "black_fade_inventory" hover "black_fade_inventory" xpos 0.68 ypos 0.28
     vbox xpos 0.7 ypos 0.3:
@@ -88,19 +81,17 @@ screen hospitalshop(village, player):
     
     if injury_bill[0]:
         textbutton "Heal all injuries ([injury_bill[0]]) ([injury_bill[1]] days rest)" action [SetField(current_session, 'village', village), 
-                                                                                 SetField(current_session, 'main_player', player),
-                                                                                 SetField(current_session, 'time_to_advance', {'days': injury_bill[1]}),
-                                                                                 SetField(current_session, 'rest', True),
-                                                                                 Hide("hospitalshop"),
-                                                                                 SetField(current_session, 'location', l_hospital), 
-                                                                                 Jump('hospital_injury')] xpos (grid_place[0][0] - 0.1) ypos grid_place[0][1]
+                                                                                               SetField(current_session, 'main_player', player),
+                                                                                               SetField(current_session, 'time_to_advance', {'days': injury_bill[1]}),
+                                                                                               SetField(current_session, 'rest', True),
+                                                                                               Hide("hospitalshop"),
+                                                                                               Jump('hospital_injury')] xpos (grid_place[0][0] - 0.1) ypos grid_place[0][1]
     else:
         $ counter = 0
     
     for item in hospital_shop.items:
         textbutton "[item.name] ([item.price])" action [SetField(current_session, 'village', village), 
                                                         SetField(current_session, 'main_player', player),
-                                                        SetField(current_session, 'location', l_hospital),
                                                         SetField(current_session, 'item', item),
                                                         SetField(current_session, 'time_to_advance', {'hours': 2}),
                                                         Jump("purchase_item_redirect")] xpos (grid_place[counter][0] - 0.1) ypos grid_place[counter][1]
@@ -130,7 +121,6 @@ screen weaponshop(village, player):
     for weapon in weapon_shop.items:
         textbutton "[weapon.name] ([weapon.price])" action [SetField(current_session, 'village', village), 
                                                             SetField(current_session, 'main_player', player),
-                                                            SetField(current_session, 'location', l_ninja_tool_facility),
                                                             SetField(current_session, 'item', weapon),
                                                             SetField(current_session, 'time_to_advance', {'hours': 2}),
                                                             Jump("purchase_weapon_redirect")] xpos grid_place[counter][0] ypos grid_place[counter][1]
@@ -177,7 +167,6 @@ screen missionselect(village, player, rank):
     textbutton "Back" action [SetField(current_session, 'village', village), 
                               SetField(current_session, 'main_player', player),
                               Hide("missionselect"),
-                              SetField(current_session, 'location', l_villagemission), 
                               Jump('location_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
     
 
@@ -193,14 +182,12 @@ screen training(village, player):
     if player.sensei:
         textbutton "Learn skills" action [SetField(current_session, 'village', village), 
                                           SetField(current_session, 'main_player', player), 
-                                          SetField(current_session, 'location', l_training_ground),
                                           Hide("training"), 
                                           Jump("training_sensei")] xpos grid_place[3][0] ypos grid_place[3][1]
                                       
     textbutton "Train (+ exp)" action [SetField(current_session, 'time_to_advance', {'hours': 4}),
                                        SetField(current_session, 'village', village), 
                                        SetField(current_session, 'main_player', player), 
-                                       SetField(current_session, 'location', l_training_ground),
                                        Hide("training"), 
                                        Jump('train_gain_exp')] xpos grid_place[1][0] ypos grid_place[1][1]
     
@@ -237,7 +224,6 @@ screen train_with_team(village, player):
     textbutton "Back" action [SetField(current_session, 'village', village), 
                               SetField(current_session, 'main_player', player),
                               Hide("train_with_team"),
-                              SetField(current_session, 'location', l_training_ground), 
                               Jump('location_redirect')] xpos grid_place[3][0] ypos grid_place[3][1]
     
     
@@ -257,16 +243,11 @@ screen train_skills(village, player):
     textbutton "Back" action [SetField(current_session, 'village', village), 
                               SetField(current_session, 'main_player', player),
                               Hide("train_skills"),
-                              SetField(current_session, 'location', l_training_ground), 
                               Jump('location_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
 
 screen levelup(village, player):
     $ STATS = ['strength', 'speed', 'evasion', 'defence', 'stamina', 'melee', 'special', 'ranged']
     $ counter = 0
-    #text "Allocation Points: [player.allocation_points]" xpos 0.1
-    #text "Str: [player.strength] Def: [player.defence] Eva: [player.evasion]" xpos 0.50
-    #text "Sta: [player.stamina] Speed: [player.speed] Hit: [player.base_hit_rate]" xpos 0.50 ypos 0.05
-    #text "Tai: [player.taijutsu] Nin: [player.ninjutsu] Gen: [player.genjutsu]" xpos 0.50 ypos 0.1
     
     if player.allocation_points:
         for stat in STATS:
@@ -274,7 +255,6 @@ screen levelup(village, player):
                                            SetField(player, 'allocation_points', getattr(player, 'allocation_points') - 1), 
                                            SetField(current_session, 'village', village), 
                                            SetField(current_session, 'main_player', player), 
-                                           SetField(current_session, 'location', l_level_up), 
                                            Jump('location_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
             $ counter +=1 
     else:
@@ -293,11 +273,13 @@ screen villagetravel(village, player):
         textbutton "[v.name] [village_time]" action [SetField(current_session, 'village', v), 
                                                      SetField(current_session, 'main_player', player), 
                                                      SetField(current_session, 'time_to_advance', {'days': village_time}),
+                                                     Hide('villagetravel'),
                                                      Jump('village_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
         $ counter += 1
         
     textbutton "Back to Location select" action [SetField(current_session, 'village', village), 
                                                  SetField(current_session, 'main_player', player), 
+                                                 Hide('villagetravel'),
                                                  Jump('village_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
 
 screen villagehome(village, player):
@@ -325,7 +307,6 @@ screen rest_screen(village, player):
                                 SetField(current_session, 'time_to_advance', {'hours': 1}),
                                 SetField(current_session, 'rest', True),
                                 Hide("rest_screen"),
-                                SetField(current_session, 'location', l_home), 
                                 Jump('location_redirect')] xpos grid_place[0][0] ypos grid_place[0][1]
     
     textbutton "2 Hours" action [SetField(current_session, 'village', village), 
@@ -333,7 +314,6 @@ screen rest_screen(village, player):
                                  SetField(current_session, 'time_to_advance', {'hours': 2}),
                                  SetField(current_session, 'rest', True),
                                  Hide("rest_screen"),
-                                 SetField(current_session, 'location', l_home), 
                                  Jump('location_redirect')] xpos grid_place[1][0] ypos grid_place[1][1]
     
     textbutton "12 Hours" action [SetField(current_session, 'village', village), 
@@ -341,7 +321,6 @@ screen rest_screen(village, player):
                                   SetField(current_session, 'time_to_advance', {'hours': 12}),
                                   SetField(current_session, 'rest', True),
                                   Hide("rest_screen"),
-                                  SetField(current_session, 'location', l_home), 
                                   Jump('location_redirect')] xpos grid_place[2][0] ypos grid_place[2][1]
     
     textbutton "1 Day" action [SetField(current_session, 'village', village), 
@@ -349,7 +328,6 @@ screen rest_screen(village, player):
                                SetField(current_session, 'time_to_advance', {'days': 1}),
                                SetField(current_session, 'rest', True),
                                Hide("rest_screen"),
-                               SetField(current_session, 'location', l_home), 
                                Jump('location_redirect')] xpos grid_place[3][0] ypos grid_place[3][1]
     
     textbutton "1 Week" action [SetField(current_session, 'village', village), 
@@ -357,7 +335,6 @@ screen rest_screen(village, player):
                                 SetField(current_session, 'time_to_advance', {'days': 7}),
                                 SetField(current_session, 'rest', True),
                                 Hide("rest_screen"),
-                                SetField(current_session, 'location', l_home), 
                                 Jump('location_redirect')] xpos grid_place[4][0] ypos grid_place[4][1]
     
     textbutton "1 Month" action [SetField(current_session, 'village', village), 
@@ -365,13 +342,11 @@ screen rest_screen(village, player):
                                  SetField(current_session, 'time_to_advance', {'months': 1}),
                                  SetField(current_session, 'rest', True),
                                  Hide("rest_screen"),
-                                 SetField(current_session, 'location', l_home), 
                                  Jump('location_redirect')] xpos grid_place[5][0] ypos grid_place[5][1]
     
     textbutton "Back" action [SetField(current_session, 'village', village), 
                               SetField(current_session, 'main_player', player),
                               Hide("rest_screen"),
-                              SetField(current_session, 'location', l_home), 
                               Jump('location_redirect')] xpos grid_place[6][0] ypos grid_place[6][1]
 
 screen villagemap(village, player):
@@ -380,10 +355,6 @@ screen villagemap(village, player):
     $ npc_counter = 0
     $ x_adj = 0.05
     $ npc_x_adj = 0.2
-    
-    #text "[village.locations[0].unlocked]" xpos 0.1
-    
-    #imagebutton idle "black_fade_small" hover "black_fade_small"
     
     for today_e in get_today().events:
         if today_e.npc and not today_e.stop:
@@ -403,7 +374,7 @@ screen villagemap(village, player):
                                                                                                                                     Hide("villagemap"), 
                                                                                                                                     Jump('location_redirect')] xpos grid_place[counter][0] ypos grid_place[counter][1]
         
-        
+        # show events next to buttons
         if location.events:
             for e in location.events:
                 for today_e in get_today().events:
@@ -428,14 +399,10 @@ screen location_explanation(stat):
         text "[expl]" ypos 0.8 xpos 0.1
         
 screen time_screen:
-    #text "[current_session.initial_pos]" xpos 0.1
     imagebutton idle "black_fade_time" hover "black_fade_time" xpos 0 ypos 0.0
     text "[main_time.current_time]" xpos 0 ypos 0.04
         
 screen stats_screen(player):
-    
-    #python:
-     #   screen_on = screen_on
     
     if screen_on:
         imagebutton idle "stats_idle" hover "stats_idle" xpos 0.38 ypos 0.0
@@ -463,7 +430,6 @@ screen stats_screen(player):
         text "{size=-10}HP: [player.hp]/[player.maxhp]{/size}" xpos 0.85 ypos 0.024
         text "{size=-10}[player.name]{/size}" xpos 0.73 ypos 0.05
         text "{size=-10}Lv.[player.level]{/size}" xpos 0.83 ypos 0.05
-        # TODO: this needs to be bar
         $ next_level_exp = LEVELS[player.level + 1]
         text "{size=-10}Exp [player.exp]/[next_level_exp]{/size}" xpos 0.73 ypos 0.08
         text "{size=-10}CP: [player.chakra]/[player.maxchakra]{/size}" xpos 0.87 ypos 0.08
@@ -488,13 +454,9 @@ screen calendar_screen_toggle:
         textbutton "Show Calendar" action Jump("toggle_calendar_on") xpos 0.2 ypos 0.0
         
 screen calendar_screen(village, player, current_month):
-    #$ current_month.days = [current_month.days[0]]
     $ stuff = [(d.day, d.month) for d in e_chunin_exams.date_range()]
-    #$ stuff = DAY_RANGES
-    
-    #text "[stuff]" ypos 0.4
-    #if calendar_on:
-    imagebutton idle "black_fade" hover "black_fade" # "gfx/black.png" hover "gfx/black.png"
+
+    imagebutton idle "black_fade" hover "black_fade"
     
     textbutton "Last month" action [Hide('calendar_screen'), 
                                     Show('calendar_screen', village=village, player=player, current_month=get_month(current_month.number - 1))] xpos 0.15 ypos 0.1
@@ -502,16 +464,14 @@ screen calendar_screen(village, player, current_month):
     textbutton "Next month" action [Hide('calendar_screen'), 
                                     Show('calendar_screen', village=village, player=player, current_month=get_month(current_month.number + 1))] xpos 0.65 ypos 0.1
     
-    grid 6 5 spacing -200 ypos 0.2 xpos 0.15 xfill True yfill True: #6, 5 # area (0.1, 0.1, 240, 200):
+    grid 6 5 spacing -200 ypos 0.2 xpos 0.15 xfill True yfill True:
         for day in current_month.days:
             $ how_many = day.parse_events()
-            #if day.events:
+            
             if main_time.day == day.number and current_month.number == main_time.month:
                 text "[day.number]\n([how_many])" color "#F00"
             else:
                 text "[day.number]\n([how_many])" 
-            #else:
-            #    text "[day.number]"
                     
     textbutton "Hide Calendar" action [Hide('calendar_screen'), Show("villagehome", player=player, village=village)] xpos 0.2 ypos 0.0
 
@@ -520,7 +480,6 @@ label toggle_screen_on:
     python:
         if current_session.location:
             renpy.jump("location_redirect")
-        #elif current_session.location
         else:
             renpy.jump("village_redirect")
     
@@ -555,29 +514,18 @@ screen announce(message):
 #
 screen worldevents(village):
     add village.leader.picname xpos 0.01 ypos 0.1 
-    #text "Wealth: [village.wealth]" xpos 0.3 ypos 0.03
-    #text "Control:" xpos 0.3 ypos 0.08
-    #text "Influence:" xpos 0.3 ypos 0.13
-    #text "Uprising:" xpos 0.3 ypos 0.18
-    #bar value village.control range 100 xpos 0.45 ypos 0.08 xmaximum 100 ymaximum 30
-    #bar value village.influence range 100 xpos 0.45 ypos 0.13 xmaximum 100 ymaximum 30
-    #bar value village.uprising range 100 xpos 0.45 ypos 0.18 xmaximum 100 ymaximum 30
         
 
 ##############################################################################
 # BATTLE SCREENS
 #
 screen battle_selection_screen(battles):
-    #text "[battle1.good_team]" xpos battle1.xpos ypos battle1.ypos
-    #text "[battle2.good_team]" xpos battle2.xpos ypos battle2.ypos
     for battle in battles:
         text "[battle.good_team]" xpos battle.xpos ypos battle.ypos
     
 
 screen battle_prep_screen:
 
-    # A map as background.
-    #add "europe.jpg"
     $ start = 50
     $ counter = 1
     $ battle_c = 1
@@ -586,9 +534,6 @@ screen battle_prep_screen:
     $ battles = current_session.battles
     
     for battle in battles:
-        #text "[battle.good_team]" xpos battle.xpos ypos battle.ypos
-        #text "[battle.bad_team]" xpos battle.xpos ypos (battle.ypos + 50)
-        #text "[battle.next_battle_label]" xpos battle.xpos ypos (battle.ypos - 50)
         imagebutton idle "black_fade_battle" hover "black_fade_battle" xpos (170*battle_c) ypos 0.1
         vbox xmaximum 100 ymaximum 200 xpos (170*battle_c) ypos 0.1:
             for p in battle.bad_team:
@@ -624,7 +569,6 @@ screen battle_prep_screen:
                 xpos (200*drag_c) ypos 260
                 
             $ drag_c += 1
-
 
 
 screen skill_actions(action_type):
@@ -674,7 +618,6 @@ screen item_actions:
             else:
                 textbutton "[item.name] [item.quantity]" action [[]] xpos (x_pos*(counter*2)) ypos (start - (counter*41))
             
-
             $ counter += 1
             
         textbutton "Back" action [Hide('item_actions'), Show('battlemenu', player=player, tag_p=tag_p)] xpos (x_pos*1) ypos (350 - (counter*41))
@@ -685,7 +628,6 @@ screen battlemenu(player, tag_p):
     $ start = 300
     $ x_pos = 118
     vbox:
-        # TODO: Add items menu
         for move_type in move_types:
             $ capital = move_type.capitalize()
             if move_type == "weapons":
@@ -693,8 +635,6 @@ screen battlemenu(player, tag_p):
                 $ capital = "Weapon"
             else:
                 $ player_atr = move_type + "skills"
-                
-            #text "[player_atr]" xpos 0.5
                 
             if getattr(player, player_atr):
                 textbutton "[capital]" hovered Show('battle_explanation', stat=move_type) unhovered Hide('battle_explanation') action [Hide('battlemenu'), Hide("battle_explanation"), Show("skill_actions", action_type=player_atr)] xpos (counter*x_pos) ypos  (start - (counter*41))
@@ -715,8 +655,6 @@ screen battlemenu(player, tag_p):
         else:
             textbutton "Items" xpos 471 ypos 18
         
-        # TODO: move trap to weapons
-        #textbutton "Trap" action [Hide("specialactions"), Hide("rangedactions"), Hide("meleeactions"), Hide("weaponselection"), Hide("defenceactions"), Show("settrap")]
         for partner in tag_p:
             textbutton "Tag [partner.name]" action [SetField(partner, 'main', True), SetField(partner, 'tile', player.tile), SetField(player, 'main', False), Jump('tag_partner')] ypos -6.5
         
@@ -744,34 +682,27 @@ screen stats:
     text "Sta: [enemy.stamina] Hit: [enemy.base_hit_rate]" xpos 0.65 ypos 0.05
         
 screen battlebars(tag_p, tag_e):
-    #frame:
-        #has vbox 
+    
     $ rel_pos = abs(player.tile.position - enemy.tile.position)
     $ player_centered = player.name.center(10, ' ')
     $ enemy_centered = enemy.name.center(10, ' ')
     
+    # Show middle text / battle info
     text "{color=#FFF}Round [battle_turn]{/color}" xpos 0.43 ypos 0.05
     text "{size=-5}{color=#FFF}[player_centered]{/color}{/size}" xpos 0.43 ypos 0.10
     text "{size=-5}{color=#FFF}vs{/color}{/size}" xpos 0.47 ypos 0.15
     text "{size=-5}{color=#FFF}[enemy_centered]{/color}{/size}" xpos 0.43 ypos 0.20
-    #text "[player.facing]" xpos 0.7 ypos 0.1
-    #if current_session.battle:
-    #    text "[current_session.battle.id]" xpos 0.80 ypos 0.1
-
-    #text "[player.name]" xpos 0.20 ypos 0.05
-    #text "[player.chakra]" xpos 0.49 ypos 0.45
+    
+    # Player HUD
     imagebutton idle player.hudpic hover player.hudpic xpos 0.16 ypos 0.06 #action NullAction()
-    #text "[player.hp]" xpos 0.55 ypos 0.45
     text "{size=-5}{color=#FFF}HP{/color}{/size}" xpos 0.10 ypos 0.3
     text "{size=-5}{color=#FFF}MP{/color}{/size}" xpos 0.10 ypos 0.35
     bar value player.hp range player.maxhp xpos 0.15 ypos 0.30 xmaximum 150 #ymaximum 30 left_bar "blue_bar"
     text "{size=-5}{color=#FFF}[player.hp]/[player.maxhp]{/color}{/size}" xpos 0.35 ypos 0.3
     text "{size=-5}{color=#FFF}[player.chakra]/[player.maxchakra]{/color}{/size}" xpos 0.35 ypos 0.35
     bar value player.chakra range player.maxchakra xpos 0.15 ypos 0.35 xmaximum 150
-    #if enemy.damage_dealt > 0:
-    #    text "-[enemy.damage_dealt]" xpos 0.59 ypos 0.3
     
-    #text "[player.facing]" xpos 0.2 ypos 0.25
+    # If skills active show (these will overlap warning)
     if player.check_active_skill(damage_reduction):
         text "DR" xpos 0.3 ypos 0.15
         
@@ -787,35 +718,30 @@ screen battlebars(tag_p, tag_e):
     if player.check_active_skill(yata_mirror):
         text "Yata" xpos 0.3 ypos 0.15
     
-    #text "[enemy.name]" xpos 0.70 ypos 0.05
-    #text "[enemy.chakra]" xpos 0.64 ypos 0.45
+    # Enemy HUD
     imagebutton idle enemy.hudpic hover enemy.hudpic xpos 0.66 ypos 0.06
-    #text "[enemy.hp]" xpos 0.70 ypos 0.45
     text "{size=-5}{color=#FFF}HP{/color}{/size}" xpos 0.60 ypos 0.3
     text "{size=-5}{color=#FFF}MP{/color}{/size}" xpos 0.60 ypos 0.35
     text "{size=-5}{color=#FFF}[enemy.hp]/[enemy.maxhp]{/color}{/size}" xpos 0.85 ypos 0.3
     text "{size=-5}{color=#FFF}[enemy.chakra]/[enemy.maxchakra]{/color}{/size}" xpos 0.85 ypos 0.35
     bar value enemy.hp range enemy.maxhp xpos 0.65 ypos 0.30 xmaximum 150
     bar value enemy.chakra range enemy.maxchakra xpos 0.65 ypos 0.35 xmaximum 150
-    #if player.damage_dealt > 0:
-    #    text "-[player.damage_dealt]" xpos 0.75 ypos 0.3
         
+    # If skills active show (these will overlap warning)
     if enemy.check_active_skill(damage_reduction):
         text "DR" xpos 0.75 ypos 0.15
         
     if enemy.check_active_skill(chakra_defence):
         text "CD" xpos 0.75 ypos 0.15
-        
-    #text "[tag_e]" xpos 0.45 ypos 0.10
+
     
-    #### TILES ####
+    # Show tiles
     $ highlight_position(player, enemy, clearing)
     
     for tile in current_session.stage.tiles:
         imagebutton idle current_session.stage.base_texture hover current_session.stage.base_texture xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos - 0.05)
-    
         
-    # show tag partners health here
+    # show tag partners health here (player)
     for position, partner in enumerate(tag_p):
         if position == 0:
             text "{size=-5}[partner.name]{/size}" xpos 0.02 ypos 0.80
@@ -828,7 +754,7 @@ screen battlebars(tag_p, tag_e):
             #bar value partner.hp range partner.maxhp xpos 0.2 ypos 0.95 xmaximum 100 
             #bar value partner.chakra range partner.maxchakra xpos 0.35 ypos 0.8 xmaximum 100 
         
-    # show tag partners health here
+    # show tag partners health here (enemy)
     for position, partner in enumerate(tag_e):
         if position == 0:
             text "{size=-5}[partner.name]{/size}" xpos 0.87 ypos 0.80
@@ -841,7 +767,6 @@ screen battlebars(tag_p, tag_e):
             #bar value partner.chakra range partner.maxchakra xpos 0.75 ypos 0.8 ymaximum 100 xmaximum 20
 
 label movemenu:
-    call hidetiles
     show screen movemenu
     
 screen movemenu:
@@ -856,23 +781,26 @@ screen movemenu:
             imagebutton idle tile.TRAP_TEXTURE hover tile.TRAP_TEXTURE xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos - 0.05)
         else:
             imagebutton idle tile.idle hover tile.idle xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos - 0.05)
-        #text "{}".format(tile.idle.split('.')[0]) xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos + 0.15)
-        if player.tile == tile:
-            text "P" xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos + 0.25)
-            
-        if enemy.tile == tile:
-            text "E" xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos + 0.25)
     
+# These are so tightly coupled with tiles, leaving these here
 label move_redirect:
     $ show_player_at_pos(player, enemy, clearing, current_session.tile)
     jump move_continue
     
+label move_continue:
+    $ moved = True
+    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label, fight_limit)
+    
+    
+# Tap functionality is in BETA (untested, do not use)
 label settrap:
-    call hidetiles
     hide screen movemenu
     show screen settrap
     player.character "Where should I place the trap?"
-    
+
+label trap:
+    jump settrap    
+
 screen settrap:
     $ highlight_position(player, enemy, clearing)
     
@@ -882,15 +810,11 @@ screen settrap:
                                                                                                                              Jump("trap_redirect")]
         else:
             imagebutton idle tile.idle hover tile.idle xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos - 0.05)
-        #imagebutton idle tile.idle hover TILETRAPPIC xpos (tile.pos.xpos - 25) ypos (tile.pos.ypos - 0.05) action Jump("trap{}".format(tile.position))
 
 label trap_redirect:
     $ set_trap_at_pos(player, enemy, clearing, current_session.tile)
     jump enemymove
 
-label move_continue:
-    $ moved = True
-    call fight(player, enemy, tag_p, tag_e, clearing, win_label, lose_label, draw_label, fight_limit)
 
 
 ##############################################################################

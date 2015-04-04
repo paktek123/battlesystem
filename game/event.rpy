@@ -2,17 +2,17 @@
 # EVENT DEFINITIONS
 #
 
-#init -8 python:
-python early:
+init -8 python:
 
     from datetime import date, timedelta
     
     class Event:
         """
-        start = (day, month)
-        finish = (day, month)
-        frequency = (day1, day2, day3) e.g. (1, 14, 30) event will happen on 1st, 14th and 30th of month
-        chance = 0.1 (10% chance of event happening)
+        These events will show up on the calendar
+        start takes tuple e.g. (day, month)
+        finish takes tuple e.g. (day, month)
+        frequency takes tuple e.g. (day1, day2, day3) e.g. (1, 14, 30) event will happen on 1st, 14th and 30th of month
+        chance takes a float e.g. 0.1 (10% chance of event happening)
         """
         def __init__(self, name, small_name, start=None, finish=None, frequency=None, chance=None, label=None, 
                      occurrence=None, npc=None, npc_icon=None):
@@ -40,6 +40,9 @@ python early:
                 return dd
             
         def check_active(self, game_time):
+            """
+            Check is the event is happening now, if it is jump to event label
+            """
             if self.start and self.finish:
                 if self.start < date(game_time.day, game_time.month) < self.finish:
                     self.active = True

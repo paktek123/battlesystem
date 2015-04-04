@@ -3,7 +3,7 @@
 #
 
 init -2 python:
-#python early:
+
     class Skill(object):
         def __init__(self, name, skill_type, label, range, tech=0, chakra_cost=0, damage=0, 
                      stun=False, duration=None, exp=0, unlock_exp=0, limbs=[]):
@@ -33,7 +33,7 @@ init -2 python:
             
         def unusable_reason(self, player, enemy):
             if not self.is_chakra_requirement_met(player):
-                return 'Not enough CP.'
+                return 'Not enough MP.'
                 
             if not self.is_within_range(player, enemy):
                 return "Out of range, must be within {}.".format(self.range)
@@ -75,7 +75,6 @@ init -2 python:
             if self.exp >= self.unlock_exp:
                 self.exp = self.unlock_exp
                 self.unlock(current_session.main_player)
-                #current_session.main_player.save()
             return self.exp
             
         def activate(self):
@@ -160,7 +159,7 @@ init -2 python:
            
         def hit_successful(self, player, enemy):
             hit_rate = player.base_hit_rate + self.tech - (enemy.evasion * enemy.speed)
-            #renpy.say(player.character, "Hit rate is {}".format(hit_rate))
+            #renpy.say(player.character, "Hit rate is {}".format(hit_rate)) # uncomment this to see hit rate
             if renpy.random.randint(1, 100) <= hit_rate:
                 return True
             else:
@@ -169,9 +168,6 @@ init -2 python:
         def stun(self, player, enemy):
             enemy.stunned = True
             return 
-            
-        def saysay(self):
-            renpy.say(enemy.character, "Skill: {} {}".format(self.skill_type, self.name))
             
         def __repr__(self):
             return "Skill: {} {}".format(self.skill_type, self.name)
@@ -185,7 +181,6 @@ init -2 python:
             self.quantity = quantity # this is set to 1 by default, so if assigned to player they can use once
             self.image = image
             
-            # maybe apply element, electric etc
         def half_price(self):
             self.price = self.price / 2
             

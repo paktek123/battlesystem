@@ -35,7 +35,7 @@ init -7 python:
     
     class BasicMission(Mission):
         """
-        No fighting just advance time with a blank background
+        No fighting just advance time with current background
         One line of dialogue, Rank D
         Mission cannot fail
         Dialogue Structure = [('character', "I say this")]
@@ -44,11 +44,11 @@ init -7 python:
             super(self.__class__, self).__init__(name, hours, days, months, rank, dialogue)
             
         def do_mission(self, player, village, dest_village=None):
-            # play clock animation here / black background?
             for p, d in self.dialogue:
                 renpy.say(player.character, d.format(self.name))
+                
+            # chance of injury to the player
             player.injury_chance(0.05)
-            renpy.say(player.character, "{} {}".format(self.hours, self.days))
             main_time.advance_time(hours=self.hours, days=self.days)
             self.success = True
             self.reward(player)
@@ -65,9 +65,8 @@ init -7 python:
             self.label = label
             self.location = location
             
-            
         def do_mission(self, player, village, dest_village=None):
-            # show some dialogues between the transaction phases to make it seemless
+            # advance time
             main_time.advance_time(hours=self.hours, days=self.days)
             renpy.call(self.label)
             # handle reward and redirect in label ^^^
@@ -75,6 +74,7 @@ init -7 python:
     class SimpleFightMission(Mission):
         """
         Travel to a destination and fight an enemy
+        BETA, do not use
         Many lines of dailogue, Rank C/D
         Mission can fail / failure is either death or half exp
         Dialogue Structure = [('character', "I say this")]
@@ -86,14 +86,14 @@ init -7 python:
         """
         def __init__(self, name, hours=0, days=0, months=0, rank="D", dialogue=[("char", " ")], fights={}, background=None, location=None):
             super(self.__class__, self).__init__(name, hours, days, months, rank, dialogue, fights)
-            self.background = None # put this in Mission?
+            self.background = None
             self.location = None
             
         def do_mission(self, player, from_village, dest_village):
             if self.background:
                 renpy.show(self.background)
             
-            # show some dialogues between the transaction phases to make it seemless
+            # advance time
             if self.days:
                 main_time.advance_time(hours=self.hours, days=self.days)
             else:
@@ -154,6 +154,7 @@ init -7 python:
                 
     class MultiPartMission(Mission):
         """
+        BETA, not ready yet
         Travel to destinations and fight an enemy
         Many lines of dailogue, Rank C/B/A/S
         Mission can fail / failure is either death or half exp
@@ -208,7 +209,7 @@ init -7 python:
                         self.success = False
             
         def do_mission(self, player, from_village, dest_village):
-            # show some dialogues between the transaction phases to make it seemless
+            # advance time
             main_time.advance_time(hours=self.hours, days=time_between_village(from_village, dest_village))
             for function in dialogue:
                 self.evaluate_function(function)

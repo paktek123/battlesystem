@@ -4,9 +4,12 @@
 
 init -1 python:
     
-    #### PYTHON HELPERS ####
+    #### MAPS AND WORLD EVENTS ####
     
     def time_tag_show(image_name):
+        """
+        Depending on the time show the particular background
+        """
         if main_time.hour in (6, 7, 8, 9, 10, 11):
             renpy.show((image_name, 'morning'))
         elif main_time.hour in (12, 13, 14, 15, 16, 17):
@@ -17,38 +20,47 @@ init -1 python:
             renpy.show((image_name, 'night'))
     
     def show_village_map(village, player):
+        # Remove any locations
         current_session.location = None
+        
+        # Show screens for village
         renpy.show_screen("player_stats")
         renpy.show_screen("stats_screen", player)
         renpy.show_screen("time_screen")
-        # Upon reload in debug mode village and player are None
+        
+        # Upon reload in debug mode village and player are None (solved by going to main menu then reloading)
         renpy.hide(village.map) # remove it first otherwise it does not show the new image on top
+        
+        # Show the map
         time_tag_show(village.map)
         renpy.call_screen('villagemap', village, player)
-        #renpy.say(player.character, "I need to choose a location.")
-        #return show_village_map(village, player)
         return
     
-    def start_world_events(follow_on="town_map"):
-        renpy.show("town_map_1") #, [ Position(xpos=0, ypos=0) ])
+    def start_world_events(background, follow_on_label):
+        renpy.show(background)
+        
+        # Go through each village and do random event
         for village in ALL_VILLAGES:
             renpy.show_screen('worldevents', village)
             village.random_event()
             renpy.hide_screen('worldevents')
-            #renpy.call('world_update', village)
             
-        #renpy.say(world_events, "I am here now")
-        renpy.jump(follow_on)
+        renpy.jump(follow_on_label)
     
-    def location_persistent_data_unlock(persistent_attr, location):
-        location.unlocked = getattr(persistent, persistent_attr, False)
+    #### FIGHT HELPERS ####
     
     def highlight_position(player, enemy, stage):
+        """
+        Used to highlight projected tiles and active tiles
+        """
+        
+        # deactive and deproject all tiles
         for tile in stage.tiles:
             if not tile.trap:
                 tile.deactivate()
                 tile.deproject()
                 
+        # incase we are off the grid put the player back in place
         max_limit = player.tile.position + player.speed
         min_limit = player.tile.position - player.speed
         
@@ -58,10 +70,11 @@ init -1 python:
         if min_limit < 1:
             min_limit = 1
             
+        # Get the low and high ranges
         low_range = range(min_limit, player.tile.position)
         high_range = range(player.tile.position + 1, max_limit + 1)
         
-        #remove the current player and enemy positions
+        # remove the current player and enemy positions
         low_range = [x for x in low_range if x != player.tile.position]
         high_range = [x for x in high_range if x != player.tile.position]
         low_range = [x for x in low_range if x != enemy.tile.position]
@@ -81,15 +94,16 @@ init -1 python:
         show_player_at_pos(enemy, player, stage, enemy.tile)
     
     def show_player_at_pos(player, enemy, stage, tile, initial_movement=False):
-        
-        #difference = abs(player.tile.position - tile.position)
-        #renpy.say(player.character, "Hullo: {}.".format(tile.BASE_TEXTURE))
+        """
+        Show tilepic of player / enemy on a tile
+        """
         player.tile.deactivate()
         player.tile = tile
         player.tile.activate()
         
         renpy.hide(player.tilepic)
         
+        # change the facing of player relative to the enemy
         if player.tile.position < enemy.tile.position:
             player.facing = 'right'
             player.change_direction(player.facing)
@@ -97,19 +111,20 @@ init -1 python:
             player.facing = 'left'
             player.change_direction(player.facing)
             
-        #if not initial_movement:
-            #player.chakra -= (stage.remove_chakra() + (difference * stage.pull))
-            
         renpy.show(player.tilepic, [ POSITIONS[tile.position] ])
         
-        # Handle traps
-        if tile.trap:
+        # Handle traps / BETA do not use
+        #if tile.trap:
             # This causes a ui.close() exception, commenting for now
             #renpy.say(player.character, "Oh no there is a trap here!")
-            player.hp -= 30
-            remove_trap(tile, stage)
+        #    player.hp -= 30
+        #    remove_trap(tile, stage)
         
     def hide_battle_screen(all=False):
+        """
+        Usually called during a teardown of the battle to hide all screens
+        and return to dialogue
+        """
         renpy.hide_screen("battlemenu")
         renpy.hide_screen("skill_actions")
         renpy.hide_screen("item_actions")
@@ -124,9 +139,22 @@ init -1 python:
             renpy.hide_screen("move_explanation") 
             renpy.hide_screen("player_limbs") 
             renpy.hide_screen("enemy_limbs") 
-
+            
+    ##### ENEMY FIGHT AI #####
     
     def find_suitable_tag_partner(tag):
+        """
+        This is used for enemy AI tagging
+        Logic:
+            If there is only 1 tag partner then if he/she has more than 0 hp
+            return them
+        
+            If there are 2 tag partners then if one has more hp than the other
+            return that partner, if the same HP return return the first.
+        
+            If None of the above criteria is met return None
+        """
+        
         if len(tag) == 1:
             if tag[0].hp > 0:
                 return tag[0]
@@ -142,10 +170,13 @@ init -1 python:
         return None
     
     def enemy_tag_move(enemy, player, tag_p, tag_e):
+        """
+        Enemy tagging AI
+        """
+        # Tag if chakra or hp below 40%
         if (enemy.hp < (enemy.maxhp*0.4) and tag_e) or (enemy.chakra < (enemy.maxchakra*0.4) and tag_e):
             # only 50% chance of tagging partner
             if random.randint(1, 100) < 50:
-                #renpy.say(enemy.character, "CHANCE")
                 partner = find_suitable_tag_partner(tag_e)
                 if partner:
                     partner.main = True
@@ -165,16 +196,16 @@ init -1 python:
                                current_session.draw_label)
     
     def enemy_pattern(enemy):
+        """
+        This determines the weighting on certain skills
+        """
         PATTERN_HASH = {'d': enemy.defensiveskills,
                         'f': enemy.weapons,
                         'a': enemy.meleeskills + enemy.specialskills + enemy.rangedskills,
-                        #'t': None, # need logic for trap here
-                        #'c': None, # need logic for team combinations
                         'melee': enemy.meleeskills,
                         'special': enemy.specialskills,
                         'ranged': enemy.rangedskills}
         
-        #renpy.say(enemy.character, "skill: {}".format(len(enemy.battle_ai)))
         try:
             current_skill = random.choice(PATTERN_HASH[random.choice(enemy.battle_ai)])
         except IndexError:
@@ -183,8 +214,12 @@ init -1 python:
         return current_skill
         
     def enemy_move_back(enemy, player, spaces=0):
+        """
+        This moves enemy back the number of given spaces (tiles) with in the limits
+        """
         relative_position = enemy.tile.position - player.tile.position
         enemy_tile_position = enemy.tile.position
+        
         if relative_position > 0:
             enemy_tile_position += spaces
             if enemy_tile_position > 12:
@@ -196,10 +231,12 @@ init -1 python:
                 
         new_tile = get_tile_from_position(enemy_tile_position, current_session.stage)
         enemy_tile = new_tile
-        show_player_at_pos(enemy, player, None, new_tile)
-        #renpy.show(enemy.tilepic, [ POSITIONS[enemy.tile.position] ])
+        show_player_at_pos(enemy, player, current_session.stage, new_tile)
         
     def enemy_use_item(enemy, player):
+        """
+        If enemy hp below 30% or chakra below 20% use item to heal
+        """
         if enemy.hp < (enemy.maxhp*0.3):
             enemy_move_back(enemy, player, 3)
             if random.randint(1, 100) < 40:
@@ -215,10 +252,13 @@ init -1 python:
                 Jump("fight")
                 
     def enemy_move_around(enemy, player):
+        """
+        This will be deprecated because only 1 move allowed per turn
+        """
         move_to = random.randint(1, enemy.speed)
         old_tile = enemy.tile
         if player.tile.position == move_to:
-            # TODO: this may lead to player going off grid
+            # warning: this may lead to player going off grid
             enemy_tile = get_tile_from_position(player.tile.position + 1, current_session.stage)
         else:
             enemy_tile = get_tile_from_position(move_to, current_session.stage)
@@ -228,9 +268,11 @@ init -1 python:
             enemy_tile = old_tile
             
         show_player_at_pos(enemy, player, None, enemy_tile)
-        #renpy.show(enemy.tilepic, [ POSITIONS[enemy.tile.position] ])
         
     def enemy_move(player, enemy, stage, tag_p, tag_e):
+        """
+        Master logic on how the enemy AI moves during fight
+        """
         hide_battle_screen()
         show_player_at_pos(enemy, player, stage, enemy.tile)
         
@@ -242,20 +284,24 @@ init -1 python:
             if partner.hp > enemy.hp:
                 enemy_tag_move(enemy, player, tag_p, tag_e)
         
+        # comment this out if enemy can't heal
         enemy_use_item(enemy, player)
         
         current_skill = enemy_pattern(enemy)
         
+        # if its a defensive skill check if is already applied 
+        # if already applied then do another attacking skill instead
+        # if not applied apply it to enemy
         if current_skill.skill_type == 'defence':
             if not enemy.active_defensive_skill():
                 enemy.apply_skill(current_skill)
                 Jump("fight")
             else:
-                current_skill = random.choice(enemy.meleeskills)
+                current_skill = random.choice(enemy.meleeskills + enemy.specialskills + enemy.weapons + enemy.rangedskills)
                 
+        # if within range execute the skill
         if current_skill.range >= abs(player.tile.position - enemy.tile.position):
             show_player_at_pos(enemy, player, None, enemy.tile)
-            #renpy.show(enemy.tilepic, [ POSITIONS[enemy.tile.position] ])
             current_skill.action(enemy, player)
         else:
             # move enemy to near player
@@ -268,22 +314,23 @@ init -1 python:
                 else:
                     enemy_position = enemy.tile.position + enemy.speed
             else:
-                # TODO: enemy does not honour enemy.speed
+                # must be within range
                 if enemy.tile.position > player.tile.position:
                     enemy_position = player.tile.position - current_skill.range
                 else:
                     enemy_position = player.tile.position + current_skill.range
                 
-            #renpy.say("HELLO", "Enemy position is {}.".format(enemy_position))
             enemy_tile = get_tile_from_position(abs(enemy_position), current_session.stage)
             
+            # if no tile is return for whatever reason keep enemy on same tile
             if not enemy.tile or not enemy_tile:
                 enemy_tile = old_tile
                 
+            # enemy cannot be on the same tile as player
             if enemy.tile == player.tile or enemy_tile == player.tile:
                 enemy_tile = old_tile
+                
             show_player_at_pos(enemy, player, None, enemy_tile)
-            #renpy.show(enemy.tilepic, [ POSITIONS[enemy.tile.position] ])
             
             # Do the attack
             current_skill.action(enemy, player)
@@ -294,17 +341,18 @@ init -1 python:
         # bleeding
         player_bleed(player)
         
-        # trap
-        if enemy.tile.trap:
-            #renpy.say(player.character, "You got stuck in my trap!")
-            #renpy.say(enemy.character, "Oh no!")
+        # trap (BETA / do not use)
+        #if enemy.tile.trap:
             # TODO: some affect similar but not text
-            enemy.hp -= 30
-            remove_trap(enemy.tile, stage)
+        #    enemy.hp -= 30
+        #    remove_trap(enemy.tile, stage)
             
         Jump("fight")
         
     def player_bleed(target):
+        """
+        If targets HP is below 30% there is a 60% chance of injury to a random limb
+        """
         if target.hp < (0.3 * target.maxhp):
             if renpy.random.randint(1,3) > 2:
                 limb = random.choice(target.get_limbs())
@@ -315,13 +363,21 @@ init -1 python:
                 setattr(target, limb.name, limb)
         
     def drain_blood(target):
+        """
+        BETA functionality of blood draining, idea is to have a blood meter appear
+        if that drains then that player looses conciousness irrelevant of HP
+        """
         if target.is_bleeding():
             target.blood -= target.bleeding_limbs_count() * (5 + renpy.random.randint(0, 2))
             renpy.say(target.character, "I need to end this soon, I am loosing too much blood.")
         
     def counter_move(player, enemy):
+        """
+        If player uses a defensive skill that puts them into a counter state
+        """
         renpy.say(enemy.character, "You left yourself open.")
         enemy_pos = enemy.tile.position
+        
         if enemy_pos < 12:
             player.tile = get_tile_from_position(enemy_pos + 1, current_session.stage)
             player.change_direction(player.facing)
@@ -334,6 +390,9 @@ init -1 python:
         Jump("fight")    
         
     def set_trap_at_pos(player, enemy, stage, tile):
+        """
+        Beta functionality / not used
+        """
         if not tile.trap:
             renpy.say(player.character, "I set a trap here.")
             tile.activate_trap()
@@ -342,6 +401,9 @@ init -1 python:
             set_trap_at_pos(player, enemy, stage, tile)
         
     def remove_all_skill_affects(player, enemy):
+        """
+        Remove any defensive skills applied and fix negative stats
+        """
         player.fix_stats()
         enemy.fix_stats()
         
@@ -366,10 +428,11 @@ init -1 python:
     def hide_player_pics(player):
         renpy.hide(player.tilepic)
         renpy.hide(player.hudpic)
-        renpy.hide(player.picname)
                 
     def end_match_teardown(player, enemy, match_result):
-        """Things to do when match ends, avoid putting labels here"""
+        """
+        Teardown all data and setup for next battle 
+        """
         player.damage_dealt = 0
         enemy.damage_dealt = 0
         current_session.enemy_tag = None
@@ -383,7 +446,6 @@ init -1 python:
         hide_player_pics(player)
         hide_player_pics(enemy)
         hide_battle_screen(all=True)
-        #renpy.call('hidetiles')
         
     def end_match(player, enemy, tag_p, tag_e, win_label, lose_label, draw_label):
         # if player hp reaches zero force tag to partner with good hp
@@ -435,6 +497,9 @@ init -1 python:
                 renpy.call(win_label)
             
     def get_tag_info(player, tag_p):
+        """
+        Change the main player depending on the the player.main flag
+        """
         one_list = [player] + tag_p
         info = {}
         new_tag_p = []
@@ -453,12 +518,14 @@ init -1 python:
                 
         # deactivate tiles
         info['main'].tile.activate()
-        #for p in info['tag']:
-        #    p.tile.deactivate()
                 
         return info
         
     def get_sensei_skill(sensei, student):
+        """
+        Get a random skill from Sensei, check if student already has it, if not
+        then assign it to student
+        """
         sensei_skills = [skill.label for skill in sensei.all_skills]
         student_skills = [skill.label for skill in student.all_skills]
         skills_to_teach = list(set(sensei_skills) - set(student_skills))
@@ -473,6 +540,8 @@ init -1 python:
             return learnt_skill
         else:
             return None
+            
+    ##### MISC ######
             
     def get_player_by_name(name):
         for player in current_session.team.members:
@@ -489,21 +558,16 @@ init -1 python:
             return True
         return False
         
-    def get_random_jounin(player, village, exclude_sensei=False, exclude=[]):
-        if exclude_sensei and player.sensei:
-            sensei =  [player.sensei]
-        else:
-            sensei = [None] + exclude
-            
-        #renpy.say(player.character, "jounins: {}".format(village.jounins))
-        
-        remove_sensei_jounin = [j for j in village.jounins if j not in sensei]
-        return random.choice(remove_sensei_jounin)
-        
     def other_villages(village):
         return [v for v in ALL_VILLAGES if v.id != village.id]
                 
+                
+    #### BATTLE DRAG ####
     def player_dragged(drags, drop):
+        """
+        If player id dragged to a particular battle field they are added
+        to the good team
+        """
 
         if not drop:
             return
@@ -527,15 +591,14 @@ init -1 python:
                     b.good_team.remove(p)
         
         battle.add_good_member(player)
-        
        
         return True
         
     def populate_battles(battles, follow_on):
-        # Turn off limit for now, mainly for big battles
-        #if len(battles) < 2:
-        #    raise Exception("Must have more than 1 battle or at least 2")
-            
+        """
+        Populate the follow_on for battles, this allows the battle to jump
+        to the next one after a fight ends
+        """
         for index, battle in enumerate(battles):
             if battle.id == "last":
                 battle.next_battle_label = "battle_choose"
@@ -549,7 +612,10 @@ init -1 python:
                 return battle
                 
     def battle_finished(battles):
-        
+        """
+        If all team members have 0 hp, end battle otherwise
+        continue
+        """
         result = {'outcome': 'loss', 'is_finished': False}
         
         hps = [m.hp for m in current_session.team.members]
@@ -568,7 +634,6 @@ init -1 python:
         
         return result
         
-
             
     import math
 

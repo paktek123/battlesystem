@@ -2,20 +2,6 @@
 # TILE DEFINITIONS
 #
 
-init -10:
-    image tile1im = im.Scale("tile.png", 50, 30)
-    image tile2im = im.Scale("tile.png", 50, 30)
-    image tile3im = im.Scale("tile.png", 50, 30)
-    image tile4im = im.Scale("tile.png", 50, 30)
-    image tile5im = im.Scale("tile.png", 50, 30)
-    image tile6im = im.Scale("tile.png", 50, 30)
-    image tile7im = im.Scale("tile.png", 50, 30)
-    image tile8im = im.Scale("tile.png", 50, 30)
-    image tile9im = im.Scale("tile.png", 50, 30)
-    image tile10im = im.Scale("tile.png", 50, 30)
-    image tile11im = im.Scale("tile.png", 50, 30)
-    image tile12im = im.Scale("tile.png", 50, 30)
-
 init -10 python:
     
     TILE1POS = 100
@@ -33,11 +19,6 @@ init -10 python:
     
     TILEYPOS = 0.80
     PLAYERYPOS = 0.75
-    
-    TILEIDLEPIC = "tile.png"
-    TILEHOVERPIC = "tileh.png"
-    TILEPROJECTPIC = "tilep.png"
-    TILETRAPPIC = "tiletrap.png"
     
     # Positions
     tile1pos = Position(xpos=TILE1POS+25, ypos=TILEYPOS)
@@ -121,12 +102,6 @@ init -10 python:
             self.potential = False
             self.project_tex = project_tex
             
-            # static
-            self.base_texture = idle
-            self.active_texture = hover
-            self.trap_texture = trap
-            self.project_texture = project_tex
-            
         def project(self):
             self.idle = self.project_texture
             self.potential = True
@@ -140,7 +115,6 @@ init -10 python:
             self.active = True
             
         def deactivate(self):
-            #renpy.say("....", "{}".format(self.base_texture))
             self.idle = self.base_texture
             self.active = False
             
@@ -152,8 +126,8 @@ init -10 python:
             self.trap = False
             self.idle = self.base_texture
         
-        #def __repr__(self):
-        #    return "<Tile>: {}".format(self.position)
+        def __repr__(self):
+            return "<Tile>: {}".format(self.position)
             
     
     def get_tile_from_position(position, stage):

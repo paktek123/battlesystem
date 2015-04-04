@@ -3,9 +3,12 @@
 #
 
 init -5 python:
-#python early:
-    # This used to store information about recent actions (since renpy does not have a call action for screens)
+    
     class CurrentSession:
+        """
+        This used to store information about recent actions (since renpy does 
+        not have a call action for screens and jumps don't take params)
+        """
         def __init__(self):
             self.main_player = None
             self.location = None

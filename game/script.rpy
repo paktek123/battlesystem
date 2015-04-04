@@ -50,7 +50,7 @@ init python:
     import random
     
     BACKGROUND_WIDTH = 800
-    BACKGROUND HEIGHT = 600
+    BACKGROUND_HEIGHT = 600
     HUD_WIDTH = 140
     HUD_HEIGHT = 150
     
@@ -60,7 +60,7 @@ init python:
     for fname in os.listdir(config.gamedir + '/backgrounds'):
         if fname.endswith(('.jpg', '.png')):
             tag = fname[:-4]
-            fname =  'gfx/' + fname
+            fname =  'backgrounds/' + fname
             renpy.image(tag, im.Scale(fname, BACKGROUND_WIDTH, BACKGROUND_HEIGHT))
             for t in ['morning', 'afternoon', 'evening', 'night']:
                 if t == 'evening':
@@ -179,7 +179,7 @@ label declare_resources:
     
     $ ALL_EVENTS = [e_chunin_exams, e_jounin_training, e_jinchurri_attack, e_weapon_discount, e_hospital_discount]
     
-    # populate events like this
+    # populate events
     python:
         for d in ALL_DAYS:
             for e in ALL_EVENTS:
@@ -197,7 +197,7 @@ label declare_resources:
                     
         # only get unique events
         for d in ALL_DAYS:
-            d.events = d.events #list(set(d.events))
+            d.events = d.events
     
     ### SKILLS AND AI ###
     
@@ -211,10 +211,6 @@ label declare_resources:
     # special skills
     $ blasting_kick = Skill(name="Blast Kick", skill_type="special", label="blast_kick", range=3, chakra_cost=30, damage=60)
     $ rise_punch = Skill(name="Rise Punch", skill_type="special", label="rise_punch", range=2, chakra_cost=40, damage=35)
-    
-    $ rasengan = Skill('Rasengan', 'special', "rasengan", 2, 1, 25, 30, unlock_exp=500)
-    $ chidori = Skill('Chidori', 'special', "chidori", 2, 1, 25, 30, unlock_exp=1000)
-    $ raikiri = Skill('Raikiri', 'special', "raikiri", 2, 1, 50, 50, unlock_exp=1500)
     
     # ranged skills
     $ rock_throw = Skill(name="Rock Throw", skill_type="ranged", label="rock_throw", range=7, chakra_cost=10, damage=15)
@@ -238,12 +234,6 @@ label declare_resources:
     $ w_bat = Weapon(name='Bat', price=50, range=3, chakra_cost=10, damage=30)
     $ w_brass_knuckles = Weapon(name='Brass Knuckles', price=100, range=1, chakra_cost=5, damage=50)
     $ w_bbgun = Weapon(name='BB Gun', price=400, range=10, chakra_cost=0, damage=40)
-    
-    $ w_kunai = Weapon("Kunai", price=50, range=4, chakra_cost=4, damage=20)
-    $ w_paper_bomb = Weapon("Paper Bomb", price=100, range=2, chakra_cost=5, damage=50)
-    $ shiruken = Weapon('Shiruken', 'weapon', "shiruken", 12, 7, 1, 20)
-    $ kunai = Weapon('Kunai', 'weapon', "kunai", 12, 4, 1, 20)
-    $ trap = Weapon('Trap', 'weapon', "trap", 3, 1, 2, 30)
 
     ### AI ###
     
@@ -252,16 +242,16 @@ label declare_resources:
     
     ### PLAYERS AND TEAMS ###
     
-    $ lvl_1_thug_melee = LevelledEnemy(lvl=1, skill_pool=THUG_MELEE_SKILL_SET, character=thug_c)
-    $ lvl_1_thug_ranged = LevelledEnemy(lvl=1, skill_pool=THUG_RANGED_SKILL_SET, character=thug_c)
-    $ lvl_4_thug_melee = LevelledEnemy(lvl=4, skill_pool=THUG_MELEE_SKILL_SET, character=thug_c)
-    $ lvl_4_thug_ranged = LevelledEnemy(lvl=4, skill_pool=THUG_RANGED_SKILL_SET, character=thug_c)
+    $ lvl_1_thug_melee = LevelledPlayer(lvl=1, skill_pool=THUG_MELEE_SKILL_SET, character=thug_c)
+    $ lvl_1_thug_ranged = LevelledPlayer(lvl=1, skill_pool=THUG_RANGED_SKILL_SET, character=thug_c)
+    $ lvl_4_thug_melee = LevelledPlayer(lvl=4, skill_pool=THUG_MELEE_SKILL_SET, character=thug_c)
+    $ lvl_4_thug_ranged = LevelledPlayer(lvl=4, skill_pool=THUG_RANGED_SKILL_SET, character=thug_c)
     
     # give him unique skill set
-    $ lvl_8_bison_melee = LevelledEnemy(lvl=8, name="Bison", skill_pool=THUG_MELEE_SKILL_SET, character=bison_c, hudpic="bison_hud")
-    $ lvl_15_adam = LevelledEnemy(lvl=15, skill_pool=THUG_RANGED_SKILL_SET, character=adam_c, picname="adam_1")
-    $ lvl_15_ai = LevelledEnemy(lvl=15, skill_pool=THUG_RANGED_SKILL_SET, character=ai_c, picname="ai_1")
-    $ lvl_15_monk = LevelledEnemy(lvl=15, skill_pool=THUG_RANGED_SKILL_SET, character=monk_c, picname="monk_1")
+    $ lvl_8_bison_melee = LevelledPlayer(lvl=8, name="Bison", skill_pool=THUG_MELEE_SKILL_SET, character=bison_c, hudpic="bison_hud")
+    $ lvl_15_adam = LevelledPlayer(lvl=15, skill_pool=THUG_RANGED_SKILL_SET, character=adam_c, picname="adam_1")
+    $ lvl_15_ai = LevelledPlayer(lvl=15, skill_pool=THUG_RANGED_SKILL_SET, character=ai_c, picname="ai_1")
+    $ lvl_15_monk = LevelledPlayer(lvl=15, skill_pool=THUG_RANGED_SKILL_SET, character=monk_c, picname="monk_1")
     
     # This has to be here because its dynamic
     $ hero_c = Character('NO NAME',color="#FFFF00")
@@ -321,8 +311,6 @@ label declare_resources:
     $ hero.sensei = lvl_15_adam
     
     $ ALL_PLAYERS = [hero, thug, will, lvl_1_thug_melee, lvl_1_thug_ranged]
-    
-    #ALL_PLAYERS = [naruto, sasuke, sakura, kakashi, itachi, ori, gai]
     $ ALL_CHARACTERS = [c.character for c in ALL_PLAYERS]
     
     ### VILLAGE AND LOCATIONS ###
@@ -1201,7 +1189,7 @@ label prologue_end:
     
 label intro_world_events:
     
-    $ start_world_events('prologue_end2')
+    $ start_world_events(background="town_map_1", follow_on_label='prologue_end2')
     
 label prologue_end2:
     scene apartment_1 with squares

@@ -3,6 +3,7 @@
 #
 
 init -1 python:
+    
     class ShopItem:
         def __init__(self, name, price, role='heal', health=0, chakra=0, quantity=0):
             self.name = name

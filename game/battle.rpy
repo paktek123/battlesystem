@@ -22,6 +22,9 @@ init -6 python:
             self.good_team.remove(player)
             
         def finished(self):
+            """
+            Return Boolean, if all enemy HPs total to 0 then return True
+            """
             
             hps = [m.hp for m in self.bad_team]
             
@@ -33,7 +36,7 @@ init -6 python:
         def cleanup(self, other_battles):
             """
             This method is required to clean up this race condition 
-            where players are being added to other battles for no reason
+            where players are being added to other battles
             """
             iterbattle = [b for b in other_battles if b != self]
             for b in iterbattle:
@@ -52,12 +55,17 @@ init -6 python:
                     self.good_team.remove(p)
                     
         def fight(self, stage, win_label='generic_win', lose_label='generic_win', draw_label='generic_win', fight_limit=20):
+            
+            # Sanity checks
+            
+            # If no good team or bad team, skip the fight for that battle
             if not self.good_team or not self.bad_team:
                 renpy.jump(self.next_battle_label)
                 
             bad_hps = [m.hp for m in self.bad_team]
             good_hps = [m.hp for m in self.good_team]
             
+            # If all enemies in good or bad team is 0 then skip fight for that battle
             if sum(bad_hps) < 1 or sum(good_hps) < 1:
                 renpy.jump(self.next_battle_label)
                 
@@ -68,7 +76,6 @@ init -6 python:
             else:
                 # skip the battle
                 renpy.jump(self.next_battle_label)
-                #raise Exception("More than 3 members not supported in good team")
                 
             if len(self.bad_team) == 1:
                 bad_tag = []
@@ -77,7 +84,5 @@ init -6 python:
             else:
                 # skip the battle
                 renpy.jump(self.next_battle_label)
-                #raise Exception("More than 3 members not supported in bad team")
-                
                 
             renpy.call('fight', self.good_team[0], self.bad_team[0], good_tag, bad_tag, clearing, win_label, lose_label, draw_label, fight_limit)

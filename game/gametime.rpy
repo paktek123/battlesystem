@@ -17,10 +17,6 @@ init -9 python:
             self.counter = 0
             self.current_time = self.now()
             
-        def save(self):
-            #persistence.gametime = self
-            return
-            
         def now(self):
             if self.counter == 2:
                 self.counter = 0
@@ -32,31 +28,26 @@ init -9 python:
         def dawn(self):
             minute = random.randint(0, 59)
             self.hour = random.randint(1,5)
-            self.save()
             return "{0}:{} {} {} {}".format(self.hour, minute, self.day, self.months[self.month], self.year)
             
         def morning(self):
             minute = random.randint(0, 59)
             self.hour = random.randint(6,11)
-            self.save()
             return "{}:{} {} {} {}".format(self.hour, minute, self.day, self.months[self.month], self.year)
             
         def afternoon(self):
             minute = random.randint(0, 59)
             self.hour = random.randint(12,17)
-            self.save()
             return "{}:} {} {} {}".format(self.hour, minute, self.day, self.months[self.month], self.year)
             
         def evening(self):
             minute = random.randint(0, 59)
             self.hour = random.randint(18,20)
-            self.save()
             return "{}:{} {} {} {}".format(self.hour, minute, self.day, self.months[self.month], self.year)
             
         def night(self):
             minute = random.randint(0, 59)
             self.hour = random.randint(21,0)
-            self.save()
             return "{}:{} {} {} {}".format(self.hour, minute, self.day, self.months[self.month], self.year)
             
         def next_month(self):
@@ -89,8 +80,6 @@ init -9 python:
                 
         def advance_time(self, minutes=0, hours=0, days=0, months=0, years=0):
             
-            #renpy.say(current_session.player.character, "{} {} {}".format(hours, days, months))
-            
             if minutes:
                 while minutes > 0:
                     minutes -= 1
@@ -112,7 +101,6 @@ init -9 python:
                     self.next_month()
                     
             self.current_time = self.now()
-            self.save()
             
     class Month:
         def __init__(self, number, days=[]):
@@ -129,6 +117,9 @@ init -9 python:
             self.month = month
             
         def parse_events(self):
+            """
+            Return events for a day (comma delimited)
+            """
             if self.events:
                 names = [e.small_name for e in self.events]
                 return ', '.join(names)
