@@ -6,6 +6,8 @@
 
 init 2 python:
     
+    import copy
+    
     ### TEST DATA ###
     
     test_player_character = Character('Test Player',color="#FFFFFF")
@@ -92,3 +94,64 @@ init 2 python:
     # only get unique events
     for d in ALL_DAYS:
         d.events = d.events
+        
+    # Test helpers
+    def record_test(description, result, expected_result, accumulated_results):
+        test_entry = {description: ( result == expected_result) }
+        accumulated_results.append(test_entry)
+    
+    battle_tests_results = []
+        
+label run_tests:
+    call battle_tests
+    call event_tests
+    call gametime_tests
+    call helper_tests
+    call mission_tests
+    call player_tests
+    call shop_tests
+    call skill_tests
+    call stage_tests
+    call tile_tests
+    call village_tests
+    
+label battle_tests:
+    
+    # functional testing
+    python:
+        test_battle1 = Battle(id="1", good_team=[test_player_2], bad_team=[test_enemy_1, test_enemy_2], xpos=100, ypos=100, battle_label="b_battle_1")
+        test_battle2 = Battle(id="2", good_team=[test_player_2], bad_team=[], xpos=300, ypos=100, battle_label="b_battle_2")
+        
+        test_battle1.add_good_member(test_player_1)
+        record_test('Add Good Member', test_battle1.good_team, [test_player_1], battle_tests_results)
+        
+        test_battle1.add_good_member(test_player_1)
+        record_test('Add Duplicate Member', test_battle1.good_team, [test_player_1], battle_tests_results)
+        
+        test_battle1.remove_good_member(test_player_1)
+        record_test('Remove Good Member', test_battle1.good_team, [], battle_tests_results)
+        
+        test_battle1.remove_good_member(test_player_1)
+        record_test('Cannot remove non-existant member', test_battle1.good_team, [], battle_tests_results)
+        
+        false_result = test_battle1.finished()
+        record_test('Battle Not finished', false_result, False, battle_tests_results)
+        
+        # set hp to zero for bad team
+        zero_hp_enemy_1 = copy.deepcopy(test_enemy_1)
+        zero_hp_enemy_1.hp = 0
+        zero_hp_enemy_2 = copy.deepcopy(test_enemy_1)
+        zero_hp_enemy_2.hp = 0
+        test_battle1.bad_team = [zero_hp_enemy_1, zero_hp_enemy_2]
+        
+        true_result = test_battle1.finished()
+        record_test('Battle finished', true_result, True, battle_tests_results)
+        
+        other_battles = [test_battle1, test_battle2]
+        
+        test_battle1.cleanup(other_battles)
+        record_test('Cleanup duplicate good team members', test_battle2.good_team, [], battle_tests_results)
+        
+        test_battle1.clean_dead_members()
+        record_test('Cleanup dead good members', test_battle1.good_team, [test_player_2], battle_tests_results)
+        record_test('Cleanup dead bad members', test_battle1.bad_team, [], battle_tests_results)

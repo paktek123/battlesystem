@@ -16,17 +16,18 @@ init -6 python:
             self.follow_on = None
             
         def add_good_member(self, player):
-            self.good_team.append(player)
+            if player not in self.good_team:
+                self.good_team.append(player)
             
         def remove_good_member(self, player):
-            self.good_team.remove(player)
+            if player in self.good_team:
+                self.good_team.remove(player)
             
         def finished(self):
             """
             Return Boolean, if all enemy HPs total to 0 then return True
             """
-            
-            hps = [m.hp for m in self.bad_team]
+            hps = [p.hp for p in self.bad_team]
             
             if sum(hps) > 0:
                 return False
