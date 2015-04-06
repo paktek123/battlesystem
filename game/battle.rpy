@@ -45,15 +45,9 @@ init -6 python:
                     if p in self.good_team:
                         b.good_team.remove(p)
             
-            
         def clean_dead_members(self):
-            for p in self.bad_team:
-                if p.hp < 1:
-                    self.bad_team.remove(p)
-            
-            for p in self.good_team:
-                if p.hp < 1:
-                    self.good_team.remove(p)
+            self.bad_team = [p for p in self.bad_team if p.hp > 0]
+            self.good_team = [p for p in self.good_team if p.hp > 0]
                     
         def fight(self, stage, win_label='generic_win', lose_label='generic_win', draw_label='generic_win', fight_limit=20):
             

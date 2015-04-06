@@ -6,6 +6,8 @@ init -8 python:
 
     from datetime import date, timedelta
     
+    ALL_EVENTS = []
+    
     class Event:
         """
         These events will show up on the calendar
@@ -32,10 +34,10 @@ init -8 python:
             self.count = 1
             self.stop = False
             
-        def date_range(self):
+        def date_range(self, game_time):
             if self.start and self.finish:
-                d1 = date(main_time.year,self.start[1],self.start[0])
-                d2 = date(main_time.year,self.finish[1],self.finish[0])
+                d1 = date(game_time.year,self.start[1],self.start[0])
+                d2 = date(game_time.year,self.finish[1],self.finish[0])
                 dd = [d1 + timedelta(days=x) for x in range((d2-d1).days + 1)]
                 return dd
             

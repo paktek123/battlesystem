@@ -97,30 +97,6 @@ init python:
                   (start_x + x_delta,start_y), (start_x + x_delta,start_y + y_delta), (start_x+x_delta, start_y + 2*y_delta), (start_x+x_delta, start_y + 3*y_delta), (start_x+x_delta,start_y+4*y_delta),
                   (start_x + 2*x_delta,start_y), (start_x + 2*x_delta,start_y + y_delta), (start_x+2*x_delta, start_y + 2*y_delta), (start_x+2*x_delta, start_y + 3*y_delta), (start_x+2*x_delta,start_y+4*y_delta), ]
     
-    ### TIME, DAY AND MONTHS ###
-    months = [copy.deepcopy(Month(m)) for m in range(1,13)]
-    
-    def get_month(number):
-        if number == 13:
-            number = 1
-        elif number == 0:
-            number = 12
-        
-        return [m for m in months if m.number == number][0]
-        
-    def get_current_month():
-        return [m for m in months if m.number == main_time.month][0]
-        
-    def get_today():
-        return [d for d in ALL_DAYS if d.number == main_time.day and d.month.number == main_time.month][0]
-    
-    for m in months:
-        m.days = [copy.deepcopy(Day(d, m)) for d in range(1,31)]
-        
-    ALL_DAYS = []
-    
-    for m in months:
-        ALL_DAYS += m.days
         
     ##############################################################################
     # INITIALIZE ASSETS
@@ -177,14 +153,14 @@ label declare_resources:
     $ e_weapon_discount = Event("Weapon Discount", "WD", frequency=(random.randint(2,30),)) 
     $ e_hospital_discount = Event("Hospital Discount", "HD", frequency=(random.randint(2,30),)) 
     
-    $ ALL_EVENTS = [e_chunin_exams, e_jounin_training, e_jinchurri_attack, e_weapon_discount, e_hospital_discount]
+    $ ALL_EVENTS += [e_chunin_exams, e_jounin_training, e_jinchurri_attack, e_weapon_discount, e_hospital_discount]
     
     # populate events
     python:
         for d in ALL_DAYS:
             for e in ALL_EVENTS:
                 if e.start and e.finish:
-                    for r in e.date_range():
+                    for r in e.date_range(main_time):
                         if r.day == d.number and r.month == d.month.number:
                             d.events.append(e)
                 elif e.frequency:
@@ -354,38 +330,6 @@ label declare_resources:
     $ m_defeat_sam = LabelMission('Defeat Sam', 'mission_defeat_sam', hours=6, rank='C')
     
     $ m_d1 = BasicMission('Farming', hours=12)
-    $ m_d2 = BasicMission('Retrieve Cat', hours=8)
-    $ m_d3 = BasicMission('Organise Festival', hours=10, days=2)
-    $ m_d4 = BasicMission('Construction', hours=20, days=1)
-    $ m_d5 = BasicMission('Paper Work', hours=14)
-    $ m_d6 = BasicMission('Clean Academy', hours=5)
-    $ m_label_test = LabelMission('Label Test', 'labelmissiontest', hours=10)
-    
-    $ m_test_fightmission = SimpleFightMission('Fight Itachi', days=10, rank='C', dialogue=[("", "I found you Itachi!")], 
-                                             fights={'stage': clearing, 
-                                                     'win_label': 'generic_win',
-                                                     'lose_label': 'generic_lose',
-                                                     'enemy': itachi,
-                                                     'tag': []})
-            
-    $ m_test_multifight = MultiPartMission('Test Multi Fight', days=5, rank='B', 
-                                          dialogue=[("scene", "sand_2"), 
-                                                    ("naruto", "Testing dialogue"), 
-                                                    ("fight", 1), 
-                                                    ("naruto", "Now for Fight 2"), 
-                                                    ("fight", 2)],
-                                          fights=[{'stage': clearing, 
-                                                   'win_label': 'generic_win',
-                                                   'lose_label': 'generic_lose',
-                                                   'enemy': itachi,
-                                                   'tag': [],
-                                                   'number': 1},
-                                                  {'stage': clearing, 
-                                                   'win_label': 'generic_win',
-                                                   'lose_label': 'generic_lose',
-                                                   'enemy': itachi,
-                                                   'tag': [kakashi],
-                                                   'number': 2}])
                                                    
     $ ALL_MISSIONS = [m_secure_hospital, m_secure_police_station, m_infiltrate_hold, m_defeat_sam]
     

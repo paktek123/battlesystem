@@ -88,7 +88,7 @@ init -1 python hide:
     ## are the size of the left/right and top/bottom borders,
     ## respectively.
 
-    style.window.background = Frame("textbox.png", 2, 2)
+    style.window.background = Frame("misc/textbox.png", 2, 2)
     #style.say_who_window.background = Frame("textboxwho.png", 2, 2)
 
     ## Margin is space surrounding the window, where the background

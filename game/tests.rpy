@@ -4,7 +4,7 @@
 
 # All the test objects can go in the init block because we don't care about saving in the tests
 
-init 2 python:
+init python:
     
     import copy
     
@@ -18,9 +18,6 @@ init 2 python:
     test_potion_shop = Shop("Hospital", 'test_1', items=[test_heal_paste, test_chakra_paste])
     test_battle1 = Battle(id="1", good_team=[], bad_team=[], xpos=100, ypos=100, battle_label="b_battle_1")
     test_main_time = GameTime(9, 1, 1, 2015)
-    test_ranged_event = Event("Ranged Event", "CE", start=(15, 5), finish=(14, 7), label="chunin_exam")
-    test_frequency_event = Event("Frequency Event", "JT", frequency=(1, ))
-    test_probability_event = Event("Probability Event", "???",chance=0.02, label="jinchurri_attack", occurrence=0)
     #e_weapon_discount = Event("Weapon Discount", "WD", frequency=(random.randint(2,30),)) 
     #e_hospital_discount = Event("Hospital Discount", "HD", frequency=(random.randint(2,30),)) 
     
@@ -39,7 +36,7 @@ init 2 python:
     
     # AI Skill pool
     TEST_SKILL_SET = [test_melee_skill, test_special_skill, test_stun_skill, 
-                      test_damage_reduction, test_chakra_defence, test_reflect, test_dampen, test_yata_mirror
+                      test_damage_reduction, test_chakra_defence, test_reflect, test_dampen, test_yata_mirror,
                       test_knife, test_bat]
     
     # Players
@@ -62,7 +59,7 @@ init 2 python:
     test_player_1.sensei = test_player_sensei
     
     # locations
-    test_location = Location('Test', 'test_label', 'test_background', events=[test_frequency_event])
+    test_location = None #Location('Test', 'test_label', 'test_background', events=[test_frequency_event])
     
     BASE_LOCATIONS = [test_location]
     
@@ -73,27 +70,6 @@ init 2 python:
                              locations=BASE_LOCATIONS, village_tag="middle_town", mission_locations=2, wealth=50)
     
     ALL_VILLAGES = [test_village_1, test_village_2]
-    
-    ALL_EVENTS = [test_ranged_event, test_frequency_event, test_probability_event] #, e_weapon_discount, e_hospital_discount]
-    
-    # populate events
-    for d in ALL_DAYS:
-        for e in ALL_EVENTS:
-            if e.start and e.finish:
-                for r in e.date_range():
-                    if r.day == d.number and r.month == d.month.number:
-                        d.events.append(e)
-            elif e.frequency:
-                for day in e.frequency:
-                    if d.number == day:
-                        d.events.append(e)
-            elif e.chance:
-                if (100*e.chance) > random.randint(1, 101):
-                    d.events.append(e)
-                    
-    # only get unique events
-    for d in ALL_DAYS:
-        d.events = d.events
         
     # Test helpers
     def record_test(description, result, expected_result, accumulated_results):
@@ -101,19 +77,28 @@ init 2 python:
         accumulated_results.append(test_entry)
     
     battle_tests_results = []
+    event_tests_results = []
         
 label run_tests:
     call battle_tests
     call event_tests
-    call gametime_tests
-    call helper_tests
-    call mission_tests
-    call player_tests
-    call shop_tests
-    call skill_tests
-    call stage_tests
-    call tile_tests
-    call village_tests
+    #call gametime_tests
+    #call helper_tests
+    #call mission_tests
+    #call player_tests
+    #call shop_tests
+    #call skill_tests
+    #call stage_tests
+    #call tile_tests
+    #call village_tests
+    
+    show screen test_results("Event", event_tests_results)
+    nar_c "Click for next set of tests..."
+    
+    hide screen test_results
+    show screen test_results("Battle", battle_tests_results)
+    nar_c "Click for next set of tests..."
+    
     
 label battle_tests:
     
@@ -123,16 +108,16 @@ label battle_tests:
         test_battle2 = Battle(id="2", good_team=[test_player_2], bad_team=[], xpos=300, ypos=100, battle_label="b_battle_2")
         
         test_battle1.add_good_member(test_player_1)
-        record_test('Add Good Member', test_battle1.good_team, [test_player_1], battle_tests_results)
+        record_test('Add Good Member', test_battle1.good_team, [test_player_2, test_player_1], battle_tests_results)
         
         test_battle1.add_good_member(test_player_1)
-        record_test('Add Duplicate Member', test_battle1.good_team, [test_player_1], battle_tests_results)
+        record_test('Add Duplicate Member', test_battle1.good_team, [test_player_2, test_player_1], battle_tests_results)
         
         test_battle1.remove_good_member(test_player_1)
-        record_test('Remove Good Member', test_battle1.good_team, [], battle_tests_results)
+        record_test('Remove Good Member', test_battle1.good_team, [test_player_2], battle_tests_results)
         
         test_battle1.remove_good_member(test_player_1)
-        record_test('Cannot remove non-existant member', test_battle1.good_team, [], battle_tests_results)
+        record_test('Cannot remove non-existant member', test_battle1.good_team, [test_player_2], battle_tests_results)
         
         false_result = test_battle1.finished()
         record_test('Battle Not finished', false_result, False, battle_tests_results)
@@ -155,3 +140,69 @@ label battle_tests:
         test_battle1.clean_dead_members()
         record_test('Cleanup dead good members', test_battle1.good_team, [test_player_2], battle_tests_results)
         record_test('Cleanup dead bad members', test_battle1.bad_team, [], battle_tests_results)
+        
+    return
+    
+label event_tests:
+    
+    # functional testing
+    python:
+        test_ranged_event = Event("Ranged Event", "CE", start=(15, 5), finish=(14, 7), label="ranged_event")
+        test_frequency_event = Event("Frequency Event", "JT", frequency=(1, ))
+        test_probability_event = Event("Probability Event", "???", chance=0.02, label="probability_event", occurrence=0)
+        
+        ALL_EVENTS += [test_ranged_event, test_frequency_event, test_probability_event]
+        
+        # populate events
+        for d in ALL_DAYS:
+            for e in ALL_EVENTS:
+                if e.start and e.finish:
+                    for r in e.date_range(test_main_time):
+                        if r.day == d.number and r.month == d.month.number:
+                            d.events.append(e)
+                elif e.frequency:
+                    for day in e.frequency:
+                        if d.number == day:
+                            d.events.append(e)
+                elif e.chance:
+                    if (100*e.chance) > random.randint(1, 101):
+                        d.events.append(e)
+                    
+        # only get unique events
+        for d in ALL_DAYS:
+            d.events = d.events
+        
+        test_date_range = test_ranged_event.date_range(test_main_time)
+        # should generate 61 days (2 months)
+        record_test('Check correct number of date range', len(test_date_range), 61, event_tests_results)
+        
+        # fast forward to ranged event month and day
+        test_main_time.month, test_main_time.day = 6, 15
+        result = is_event_active_today(test_ranged_event, test_main_time)
+        record_test('Check if ranged event active on date', result, True, event_tests_results)
+        
+        # fast forward to ranged event month and day
+        test_main_time.month, test_main_time.day = 8, 16
+        result = is_event_active_today(test_ranged_event, test_main_time)
+        record_test('Check if ranged event is inactive out of range', result, False, event_tests_results)
+        
+        # check freqency event should happen every 1st
+        test_main_time.month, test_main_time.day = 8, 1
+        result = is_event_active_today(test_frequency_event, test_main_time)
+        record_test('Check if frequency event happens every first of month', result, True, event_tests_results)
+        
+        # check freqency event should happen every 1st
+        test_main_time.month, test_main_time.day = 9, 1
+        result = is_event_active_today(test_frequency_event, test_main_time)
+        record_test('Check if frequency event happens every first of month', result, True, event_tests_results)
+        
+        # check freqency event should happen every 2nd
+        test_main_time.month, test_main_time.day = 8, 2
+        result = is_event_active_today(test_frequency_event, test_main_time)
+        record_test('Check if frequency event does not happen every second of month', result, False, event_tests_results)
+        
+        # how do I test probablity events?
+        
+    return
+        
+        

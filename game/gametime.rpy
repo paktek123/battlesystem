@@ -128,3 +128,28 @@ init -9 python:
             
         def __repr__(self):
             return "Day: {}".format(self.number)
+            
+    ### TIME, DAY AND MONTHS ###
+    months = [copy.deepcopy(Month(m)) for m in range(1,13)]
+    
+    def get_month(number):
+        if number == 13:
+            number = 1
+        elif number == 0:
+            number = 12
+        
+        return [m for m in months if m.number == number][0]
+        
+    def get_current_month():
+        return [m for m in months if m.number == main_time.month][0]
+        
+    def get_today(game_time):
+        return [d for d in ALL_DAYS if d.number == game_time.day and d.month.number == game_time.month][0]
+    
+    for m in months:
+        m.days = [copy.deepcopy(Day(d, m)) for d in range(1,31)]
+        
+    ALL_DAYS = []
+    
+    for m in months:
+        ALL_DAYS += m.days

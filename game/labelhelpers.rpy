@@ -303,7 +303,7 @@ label village_redirect:
     
     # check for active events, if active go to their label
     python:
-        if is_event_active_today(e_jinchurri_attack) and e_jinchurri_attack.occurrence < 1:
+        if is_event_active_today(e_jinchurri_attack, main_time) and e_jinchurri_attack.occurrence < 1:
             e_jinchurri_attack.occurrence += 1
             renpy.call(e_jinchurri_attack.label, current_session.main_player, current_session.village)
         else:
@@ -511,7 +511,7 @@ label hospital_injury:
 label village_jounin_station(player, village):
     
     python:
-        if is_event_active_today(e_jounin_training) and main_time.hour in range(6, 18):
+        if is_event_active_today(e_jounin_training, main_time) and main_time.hour in range(6, 18):
             renpy.jump("event_jounin_training")
             
     "Jounin" "Sorry, no training events today, please come back on the 1st of next month between 6AM and 6PM."

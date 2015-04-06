@@ -815,7 +815,20 @@ label trap_redirect:
     $ set_trap_at_pos(player, enemy, clearing, current_session.tile)
     jump enemymove
 
+##### TESTS #####
 
+screen test_results(entity, results):
+    add "space"
+    vbox xmaximum 600 yminimum 200 xpos 0.10 ypos 0.1:
+        text "[entity] Tests"
+        for entry in results:
+            for description, result in entry.iteritems():
+                if result:
+                    $ r = 'OK'
+                    text "{size=-5}[description]....{color=0f0}[r]{/color}{/size}"
+                else:
+                    $ r = 'FAIL'
+                    text "{size=-5}[description]....{color=f00}[r]{/color}{/size}"
 
 ##############################################################################
 # Say
@@ -1007,6 +1020,7 @@ screen main_menu:
         has vbox
 
         textbutton _("Start Game") action Start()
+        textbutton _("Run Tests") action Start('run_tests')
         textbutton _("Load Game") action ShowMenu("load")
         textbutton _("Preferences") action ShowMenu("preferences")
         textbutton _("Help") action Help()

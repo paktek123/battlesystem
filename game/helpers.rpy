@@ -553,8 +553,8 @@ init -1 python:
             if battle.id == id:
                 return battle
                 
-    def is_event_active_today(event):
-        if event.name in [e.name for e in get_today().events]:
+    def is_event_active_today(event, game_time):
+        if event.name in [e.name for e in get_today(game_time).events]:
             return True
         return False
         
