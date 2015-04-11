@@ -46,6 +46,30 @@ init -1 python:
             renpy.hide_screen('worldevents')
             
         renpy.jump(follow_on_label)
+        
+    def populate_events():
+        """
+        Takes the calendar generated days and populates them with events that are 
+        in the relevant date range, frequency or chance
+        """
+        # populate events
+        for d in ALL_DAYS:
+            for e in ALL_EVENTS:
+                if e.start and e.finish:
+                    for r in e.date_range(test_main_time):
+                        if r.day == d.number and r.month == d.month.number:
+                            d.events.append(e)
+                elif e.frequency:
+                    for day in e.frequency:
+                        if d.number == day:
+                            d.events.append(e)
+                elif e.chance:
+                    if (100*e.chance) > random.randint(1, 101):
+                        d.events.append(e)
+                    
+        # only get unique events
+        for d in ALL_DAYS:
+            d.events = d.events
     
     #### FIGHT HELPERS ####
     

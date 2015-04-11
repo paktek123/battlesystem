@@ -7,9 +7,9 @@
 init python:
     
     import copy
+    import datetime
     
     ### TEST DATA ###
-    
     test_player_character = Character('Test Player',color="#FFFFFF")
     test_enemy_character = Character('Test Enemy',color="#FFFFFF")
     test_stage = Stage('Test Stage', 1, 1)
@@ -78,11 +78,12 @@ init python:
     
     battle_tests_results = []
     event_tests_results = []
+    gametime_tests_results = []
         
 label run_tests:
     call battle_tests
     call event_tests
-    #call gametime_tests
+    call gametime_tests
     #call helper_tests
     #call mission_tests
     #call player_tests
@@ -92,6 +93,10 @@ label run_tests:
     #call tile_tests
     #call village_tests
     
+    show screen test_results("GameTime", gametime_tests_results)
+    nar_c "Click for next set of tests..."
+    
+    hide screen test_results
     show screen test_results("Event", event_tests_results)
     nar_c "Click for next set of tests..."
     
@@ -154,23 +159,7 @@ label event_tests:
         ALL_EVENTS += [test_ranged_event, test_frequency_event, test_probability_event]
         
         # populate events
-        for d in ALL_DAYS:
-            for e in ALL_EVENTS:
-                if e.start and e.finish:
-                    for r in e.date_range(test_main_time):
-                        if r.day == d.number and r.month == d.month.number:
-                            d.events.append(e)
-                elif e.frequency:
-                    for day in e.frequency:
-                        if d.number == day:
-                            d.events.append(e)
-                elif e.chance:
-                    if (100*e.chance) > random.randint(1, 101):
-                        d.events.append(e)
-                    
-        # only get unique events
-        for d in ALL_DAYS:
-            d.events = d.events
+        populate_events()
         
         test_date_range = test_ranged_event.date_range(test_main_time)
         # should generate 61 days (2 months)
@@ -205,4 +194,60 @@ label event_tests:
         
     return
         
+label gametime_tests:
+    python:
+        # remember this refers to gametime now REAL time
+        time_now = test_main_time.now()
+        result = (time_now.hour, time.now.hour, time_now.month, time_now.year)
+        record_test('Check if hour, day, minute and year work for now', result, (9, 1, 1, 2015), gametime_tests_results)
+        
+        time_dawn = test_main_time.dawn()
+        result = [(time_now.minute in range(0, 59)), (time_now.hour in range(1,5))]
+        record_test('Check if hour and minute for dawn', result, [True, True], gametime_tests_results)
+        
+        time_morning = test_main_time.morning()
+        result = [(time_now.minute in range(0, 59)), (time_now.hour in range(6,11))]
+        record_test('Check if hour and minute for morning', result, [True, True], gametime_tests_results)
+        
+        time_afternoon = test_main_time.afternoon()
+        result = [(time_now.minute in range(0, 59)), (time_now.hour in range(12,17))]
+        record_test('Check if hour and minute for afternoon', result, [True, True], gametime_tests_results)
+        
+        time_evening = test_main_time.evening()
+        result = [(time_now.minute in range(0, 59)), (time_now.hour in range(18,20))]
+        record_test('Check if hour and minute for evening', result, [True, True], gametime_tests_results)
+        
+        time_night = test_main_time.night()
+        result = [(time_now.minute in range(0, 59)), (time_now.hour in range(21,0))]
+        record_test('Check if hour and minute for night', result, [True, True], gametime_tests_results)
+        
+        time_test = test_main_time.next_month()
+        record_test('Check if month appends', time_test.month, 2, gametime_tests_results)
+        
+        test_main_time.month = 12
+        time_test = test_main_time.next_month()
+        record_test('Check if month appends and goes to next year', (time_test.month, time_test.year), (1, 2016), gametime_tests_results)
+        
+        time_test = test_main_time.next_day()
+        record_test('Check if day appends', time_test.day, 2, gametime_tests_results)
+        
+        test_main_time.day = 30
+        time_test = test_main_time.next_day()
+        record_test('Check if day appends and goes to next month', (time_test.day, time_test.month), (1, 2), gametime_tests_results)
+        
+        test_main_time.hour = 9
+        time_test = test_main_time.next_hour()
+        record_test('Check if hour appends', time_test.hour, 10, gametime_tests_results)
+        
+        test_main_time.hour = 24
+        time_test = test_main_time.next_day()
+        record_test('Check if hour appends and goes to next day', (time_test.hour, time_test.day), (1, 2), gametime_tests_results)
+        
+        test_main_time.minute = 1
+        time_test = test_main_time.next_minute()
+        record_test('Check if minute appends', time_test.minute, 2, gametime_tests_results)
+        
+        test_main_time.minute = 60
+        time_test = test_main_time.next_minute()
+        record_test('Check if minute appends and goes to hour day', (time_test.minute, time_test.hour), (1, 2), gametime_tests_results)
         
