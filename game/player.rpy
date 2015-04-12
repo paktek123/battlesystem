@@ -445,7 +445,7 @@ init -4 python:
             
     class LevelledPlayer(Player):
         def __init__(self, lvl, name='Thug', picname="thug_tile_r", character=None, tilepic="thug_tile_r", hudpic='thug_hud', 
-                     skill_pool=[], special_tags=[], home_village=None, tile=None):
+                     skill_pool=[], special_tags=[], home_village=None, tile=None, battle_ai=[]):
             self.lvl = lvl
             self.name = name
             self.picname = picname
@@ -453,6 +453,7 @@ init -4 python:
             self.tilepic = tilepic
             self.hudpic = hudpic
             self.tile = tile
+            self.battle_ai = battle_ai
             
             self.maxhp = 50 + (10 * self.lvl)
             self.maxchakra = 30 + (5 * self.lvl)
@@ -504,6 +505,7 @@ init -4 python:
                                                  chakra=self.maxchakra, 
                                                  maxchakra=self.maxchakra, 
                                                  tile=self.tile,
+                                                 battle_ai=self.battle_ai,
                                                  strength=self.strength, 
                                                  speed=self.speed, 
                                                  evasion=self.evasion, 

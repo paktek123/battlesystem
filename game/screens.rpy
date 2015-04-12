@@ -819,7 +819,7 @@ label trap_redirect:
 
 screen test_results(entity, results):
     add "space"
-    vbox xmaximum 600 yminimum 200 xpos 0.10 ypos 0.1:
+    vbox xmaximum 600 yminimum 200 xpos 0.10 ypos 0.06:
         text "[entity] Tests"
         for entry in results:
             for description, result in entry.iteritems():

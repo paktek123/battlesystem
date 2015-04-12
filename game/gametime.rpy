@@ -28,7 +28,7 @@ init -9 python:
         def dawn(self):
             minute = random.randint(0, 59)
             self.hour = random.randint(1,5)
-            return "{0}:{} {} {} {}".format(self.hour, minute, self.day, self.months[self.month], self.year)
+            return "{}:{} {} {} {}".format(self.hour, minute, self.day, self.months[self.month], self.year)
             
         def morning(self):
             minute = random.randint(0, 59)
@@ -38,7 +38,7 @@ init -9 python:
         def afternoon(self):
             minute = random.randint(0, 59)
             self.hour = random.randint(12,17)
-            return "{}:} {} {} {}".format(self.hour, minute, self.day, self.months[self.month], self.year)
+            return "{}:{} {} {} {}".format(self.hour, minute, self.day, self.months[self.month], self.year)
             
         def evening(self):
             minute = random.randint(0, 59)
@@ -47,7 +47,7 @@ init -9 python:
             
         def night(self):
             minute = random.randint(0, 59)
-            self.hour = random.randint(21,0)
+            self.hour = random.randint(21,23)
             return "{}:{} {} {} {}".format(self.hour, minute, self.day, self.months[self.month], self.year)
             
         def next_month(self):

@@ -174,7 +174,7 @@ init -1 python:
             return them
         
             If there are 2 tag partners then if one has more hp than the other
-            return that partner, if the same HP return return the first.
+            return that partner, if the same HP return the first.
         
             If None of the above criteria is met return None
         """
@@ -226,9 +226,9 @@ init -1 python:
         PATTERN_HASH = {'d': enemy.defensiveskills,
                         'f': enemy.weapons,
                         'a': enemy.meleeskills + enemy.specialskills + enemy.rangedskills,
-                        'melee': enemy.meleeskills,
-                        'special': enemy.specialskills,
-                        'ranged': enemy.rangedskills}
+                        'm': enemy.meleeskills,
+                        's': enemy.specialskills,
+                        'r': enemy.rangedskills}
         
         try:
             current_skill = random.choice(PATTERN_HASH[random.choice(enemy.battle_ai)])
@@ -390,6 +390,7 @@ init -1 python:
         """
         BETA functionality of blood draining, idea is to have a blood meter appear
         if that drains then that player looses conciousness irrelevant of HP
+        No tests
         """
         if target.is_bleeding():
             target.blood -= target.bleeding_limbs_count() * (5 + renpy.random.randint(0, 2))
@@ -446,6 +447,9 @@ init -1 python:
                 setattr(enemy, s.label, s)
                 
     def remove_traps_from_all_tiles():
+        """
+        BETA not in tests
+        """
         for tile in current_session.stage.tiles:
             remove_trap(tile, current_session.stage)
             
@@ -553,13 +557,11 @@ init -1 python:
         sensei_skills = [skill.label for skill in sensei.all_skills]
         student_skills = [skill.label for skill in student.all_skills]
         skills_to_teach = list(set(sensei_skills) - set(student_skills))
-        renpy.say(student.character, "New skills are {}.".format(len(skills_to_teach)))
         if skills_to_teach:
             new_skill_label = random.choice(skills_to_teach)
             new_skill = copy.deepcopy(getattr(sensei, new_skill_label))
             new_skill.set_to_default()
             learnt_skill = new_skill
-            renpy.say(student.character, "New skill is {}.".format(learnt_skill))
             student.assign_skill(learnt_skill)
             return learnt_skill
         else:

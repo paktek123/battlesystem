@@ -90,7 +90,7 @@ init -10 python:
                     }
     
     class Tile:
-        def __init__(self, position, pos, idle, hover, trap, project_tex):
+        def __init__(self, position, pos, idle, hover, trap, project_tex, stage):
             # these will be dynamic
             self.pos = pos 
             self.idle = idle
@@ -101,30 +101,31 @@ init -10 python:
             self.trap_pic = trap
             self.potential = False
             self.project_tex = project_tex
+            self.stage = stage
             
         def project(self):
-            self.idle = self.project_texture
+            self.idle = self.stage.project_texture
             self.potential = True
             
         def deproject(self):
-            self.hover = self.base_texture
+            self.hover = self.stage.base_texture
             self.potential = False
             
         def activate(self):
-            self.idle = self.active_texture
+            self.idle = self.stage.active_texture
             self.active = True
             
         def deactivate(self):
-            self.idle = self.base_texture
+            self.idle = self.stage.base_texture
             self.active = False
             
         def activate_trap(self):
             self.trap = True
-            self.idle = self.trap_texture
+            self.idle = self.stage.trap_texture
             
         def deactivate_trap(self):
             self.trap = False
-            self.idle = self.base_texture
+            self.idle = self.stage.base_texture
         
         def __repr__(self):
             return "<Tile>: {}".format(self.position)
