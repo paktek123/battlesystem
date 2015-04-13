@@ -67,7 +67,7 @@ init -4 python:
         def rest(self, days):
             if self.injury:
                 self.days_rested += days
-                if self.injury_length == self.days_rested:
+                if self.days_rested >= self.injury_length:
                     self.heal_injury(full=True)
             
         def heal_injury(self, full=True):
@@ -76,6 +76,8 @@ init -4 python:
                 self.injury = False
                 self.injury_length = 0
                 self.days_rested = 0
+                self.bleeding = False
+                self.cripple_count = 0
             else:
                 self.injury_severity -= 1
                 self.injury_length = INJURY_LENGTH[self.injury_severity]
@@ -113,6 +115,7 @@ init -4 python:
             return self.chemistry
             
         def decrease_chemistry(self, exp):
+            # this can go negative
             self.chemistry -= exp
             
             
@@ -385,11 +388,11 @@ init -4 python:
                 if skill.name == name:
                     return skill
                     
-        def remove_skill(self, name):
+        def remove_skill_by_name(self, name):
             for skill in self.all_skills:
                 if skill.name == name:
                     self.all_skills.remove(skill)
-            self.save()
+                    delattr(self, skill.label)
                     
         def assign_all_skills(self):
             for skill in self.all_skills:
@@ -445,7 +448,7 @@ init -4 python:
             
     class LevelledPlayer(Player):
         def __init__(self, lvl, name='Thug', picname="thug_tile_r", character=None, tilepic="thug_tile_r", hudpic='thug_hud', 
-                     skill_pool=[], special_tags=[], home_village=None, tile=None, battle_ai=[]):
+                     skill_pool=[], special_tags=[], home_village=None, tile=None, battle_ai=[], interaction={}):
             self.lvl = lvl
             self.name = name
             self.picname = picname
@@ -454,6 +457,7 @@ init -4 python:
             self.hudpic = hudpic
             self.tile = tile
             self.battle_ai = battle_ai
+            self.interaction = interaction
             
             self.maxhp = 50 + (10 * self.lvl)
             self.maxchakra = 30 + (5 * self.lvl)
@@ -519,6 +523,7 @@ init -4 python:
                                                  defensiveskills=self.defensiveskills, 
                                                  bloodlineskills=[], 
                                                  weapons=self.weapons, 
+                                                 interaction=self.interaction,
                                                  level=self.lvl)
                                                  
             
