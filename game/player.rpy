@@ -54,7 +54,7 @@ init -4 python:
             
         def cripple(self):
             if self.cripple_count > 5:
-                self.cripple = True
+                self.crippled = True
                 
         def injure(self):
             self.injury_severity += 1
@@ -238,10 +238,10 @@ init -4 python:
                     
             return (price, stay_days) # this has to be tuple so renpy string interpolation can pick up
             
-        def injure_limb(self, name):
-            limb = [l for l in self.get_limbs() if l.name == name][0]
-            limb.injure()
-            setattr(self, limb.name, limb)
+        def injure_limb(self, limb):
+            bad_limb = [l for l in self.get_limbs() if l.name == limb.name][0]
+            bad_limb.injure()
+            setattr(self, bad_limb.name, bad_limb)
             
         def increase_limbs_severity(self, injured_limbs):
             for limb in injured_limbs:
@@ -345,7 +345,7 @@ init -4 python:
                 self.chakra = self.maxchakra
             
         def increase_bond(self, bond):
-            self.bond += bond + renpy.random.randint(1,3)
+            self.bond += bond
             if self.bond > MAX_BOND:
                 self.bond = MAX_BOND
             
@@ -362,7 +362,7 @@ init -4 python:
                 self.gain_exp(difference)
                 
         def gain_exp(self, exp):
-            exp += renpy.random.randint(1,10)
+            # add randomness in exp when passing param
             self.exp += exp
             self.level_up()
             return self.exp
@@ -391,7 +391,7 @@ init -4 python:
         def remove_skill_by_name(self, name):
             for skill in self.all_skills:
                 if skill.name == name:
-                    self.all_skills.remove(skill)
+                    self.remove_skill(skill)
                     delattr(self, skill.label)
                     
         def assign_all_skills(self):
@@ -401,7 +401,7 @@ init -4 python:
                 
         def remove_skill(self, skill):
             delattr(self, skill.label)
-            self.all_skills.remove(skill)
+            self.all_skills = [s for s in self.all_skills if s.name != skill.name]
             
         def assign_skill(self, skill):
             setattr(self, skill.label, skill)
@@ -448,8 +448,8 @@ init -4 python:
             
     class LevelledPlayer(Player):
         def __init__(self, lvl, name='Thug', picname="thug_tile_r", character=None, tilepic="thug_tile_r", hudpic='thug_hud', 
-                     skill_pool=[], special_tags=[], home_village=None, tile=None, battle_ai=[], interaction={}):
-            self.lvl = lvl
+                     skill_pool=[], special_tags=[], home_village=None, tile=None, battle_ai=[], interaction={}, weapons=[]):
+            self.level = lvl
             self.name = name
             self.picname = picname
             self.character = character
@@ -459,25 +459,25 @@ init -4 python:
             self.battle_ai = battle_ai
             self.interaction = interaction
             
-            self.maxhp = 50 + (10 * self.lvl)
-            self.maxchakra = 30 + (5 * self.lvl)
-            self.strength = 1.5 * self.lvl
-            self.speed = self.lvl / 2
+            self.maxhp = 50 + (10 * self.level)
+            self.maxchakra = 30 + (5 * self.level)
+            self.strength = 1.5 * self.level
+            self.speed = self.level / 2
             if self.speed > 10:
                 self.speed = 10
             elif self.speed < 1:
                 self.speed = 1
                 
-            self.evasion = self.lvl * 0.8
-            self.defence = self.lvl * 0.6
-            self.stamina = self.lvl * 0.5
-            self.base_hit_rate = 60 + self.lvl
+            self.evasion = self.level * 0.8
+            self.defence = self.level * 0.6
+            self.stamina = self.level * 0.5
+            self.base_hit_rate = 60 + self.level
             
             self.meleeskills = []
             self.specialskills = []
             self.rangedskills = []
             self.defensiveskills = []
-            self.weapons = []
+            self.weapons = weapons
             
             for skill in skill_pool:
                 if skill.skill_type == 'melee':
@@ -524,6 +524,6 @@ init -4 python:
                                                  bloodlineskills=[], 
                                                  weapons=self.weapons, 
                                                  interaction=self.interaction,
-                                                 level=self.lvl)
+                                                 level=self.level)
                                                  
             

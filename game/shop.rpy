@@ -14,7 +14,10 @@ init -1 python:
             self.chakra = chakra
             
         def consume(self, player):
-            self.quantity -= 1
+            if player.has_item(self) and player.get_item(self).quantity > 0:
+                self.quantity -= 1
+            else:
+                return None
             
             if self.health and self.chakra:
                 player.increase_hp(self.health)
@@ -29,11 +32,15 @@ init -1 python:
         def half_price(self):
             self.price = self.price / 2
             
+            return self
+            
         def double_price(self):
             self.price = self.price * 2
+            
+            return self
                 
         def __repr__(self):
-            return "<Item: {} {}>".format(self.name, self.quantity)
+            return "<Item: {} {} {}>".format(self.name, self.price, self.quantity)
             
     class Shop:
         def __init__(self, name, background, keeper=None, items=[]):

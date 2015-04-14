@@ -37,8 +37,7 @@ init python:
     
     # AI Skill pool
     TEST_SKILL_SET = [test_melee_skill, test_special_skill, test_stun_skill, 
-                      test_damage_reduction, test_chakra_defence, test_reflect, test_dampen, test_yata_mirror,
-                      test_knife, test_bat]
+                      test_damage_reduction, test_chakra_defence, test_reflect, test_dampen, test_yata_mirror]
     
     # Players
     test_player_1 = LevelledPlayer(lvl=8, name="Test Player 1", skill_pool=TEST_SKILL_SET, character=test_player_character, 
@@ -84,15 +83,29 @@ label run_tests:
     call gametime_tests
     call helper_tests
     call mission_tests
-    call player_tests
-    #call shop_tests
+    call player_part1_tests
+    call player_part2_tests
+    call player_part3_tests
+    call shop_tests
     #call skill_tests
     #call stage_tests
     #call tile_tests
     #call village_tests
     
     hide screen test_results
-    show screen test_results("Player", player_tests_results)
+    show screen test_results("Shop", shop_tests_results)
+    nar_c "Click for next set of tests..." # change this to a button on the screen
+    
+    hide screen test_results
+    show screen test_results("Player Part 1", player_part1_tests_results)
+    nar_c "Click for next set of tests..." # change this to a button on the screen
+    
+    hide screen test_results
+    show screen test_results("Player Part 2", player_part2_tests_results)
+    nar_c "Click for next set of tests..." # change this to a button on the screen
+    
+    hide screen test_results
+    show screen test_results("Player Part 3", player_part3_tests_results)
     nar_c "Click for next set of tests..." # change this to a button on the screen
     
     hide screen test_results
@@ -317,8 +330,7 @@ label helper_tests:
         
         # AI Skill pool
         TEST_SKILL_SET = [test_melee_skill, test_special_skill, test_stun_skill, 
-                          test_damage_reduction, test_chakra_defence, test_reflect, test_dampen, test_yata_mirror,
-                          test_knife, test_bat]
+                          test_damage_reduction, test_chakra_defence, test_reflect, test_dampen, test_yata_mirror]
         
         STUDENT_SKILL_SET = [test_melee_skill]
     
@@ -394,62 +406,62 @@ label mission_tests:
         
         test_label_mission = LabelMission('Test Label Mission', 'mission_test_label', hours=6, rank='C')
         
-        old_money, old_lvl = test_player_1.ryo, test_player_1.exp
+        old_money, old_exp = test_player_1.ryo, test_player_1.exp
         result = test_label_mission.reward(test_player_1)
-        result = [(test_player_1.ryo > old_money), (test_player_1.lvl > old_lvl)]
+        result = [(test_player_1.ryo > old_money), (test_player_1.exp > old_exp)]
         record_test('Check if reward adds to players exp and money', result, [True, True], mission_tests_results)
         
     return
         
-label player_tests:
+label player_part1_tests:
     
     # functional testing
     python:
-        player_tests_results = []
+        player_part1_tests_results = []
         
         # Limbs
         test_limb = test_player_1.left_leg
         
         test_limb.bleed()
         result = [test_limb.bleeding, (test_limb.cripple_count == 1)]
-        record_test('Bleed causes bleeding to occur and cripple count to go up', result, [True, True], player_tests_results)
+        record_test('Bleed causes bleeding to occur and cripple count to go up', result, [True, True], player_part1_tests_results)
         
         test_limb.stop_bleeding()
         result = test_limb.bleeding
-        record_test('Stop bleeding stops bleeding', result, False, player_tests_results)
+        record_test('Stop bleeding stops bleeding', result, False, player_part1_tests_results)
         
         test_limb.cripple_count = 6
         test_limb.cripple()
-        record_test('Limb cripple works', test_limb.cripple, True, player_tests_results)
+        record_test('Limb cripple works', test_limb.crippled, True, player_part1_tests_results)
         
         test_limb.injure()
         result = [test_limb.injury, (test_limb.injury_severity == 1)]
         # injury length won't be checked it is configurable
-        record_test('Injury causes injury to occur and injury severity count to go up', result, [True, True], player_tests_results)
+        record_test('Injury causes injury to occur and injury severity count to go up', result, [True, True], player_part1_tests_results)
         
         test_limb.injury_severity = 6
         test_limb.injure()
-        record_test('Make sure severity only goes up to 5', test_limb.injury_severity, 5, player_tests_results)
+        record_test('Make sure severity only goes up to 5', test_limb.injury_severity, 5, player_part1_tests_results)
         
         test_limb.rest(365)
-        result = [test_limb.injury_severity, self.injury, self.injury_length, self.days_rested, self.bleeding, self.cripple_count]
-        record_test('Make sure rest heals all', result, [0, False, 0, 0, False, 0], player_tests_results)
+        result = [test_limb.injury_severity, test_limb.injury, test_limb.injury_length, test_limb.days_rested, test_limb.bleeding, test_limb.cripple_count]
+        record_test('Make sure rest heals all', result, [0, False, 0, 0, False, 0], player_part1_tests_results)
         
         # Team tests
         test_team_first = Team("Test Team", test_player_sensei, [test_player_1, test_player_2])
         test_team_first.add_member(test_player_3)
         result = (test_player_3 in test_team_first.members)
-        record_test('Make members can be added', result, True, player_tests_results)
+        record_test('Make members can be added', result, True, player_part1_tests_results)
         
         test_team_first.remove_member(test_player_3)
         result = (test_player_3 in test_team_first.members)
-        record_test('Make members can be removed', result, False, player_tests_results)
+        record_test('Make members can be removed', result, False, player_part1_tests_results)
         
         test_team_first.increase_chemistry(10)
-        record_test('Increase team chemistry', test_team_first.chemistry, 10, player_tests_results)
+        record_test('Increase team chemistry', test_team_first.chemistry, 10, player_part1_tests_results)
         
         test_team_first.decrease_chemistry(10)
-        record_test('Increase team chemistry', test_team_first.chemistry, 0, player_tests_results)
+        record_test('Increase team chemistry', test_team_first.chemistry, 0, player_part1_tests_results)
         
         # Player tests
         test_player_1.head.injure()
@@ -458,7 +470,7 @@ label player_tests:
         test_player_1.chakra = 10
         test_player_1.full_heal()
         result = [test_player_1.head.injury, test_player_1.left_leg.injury, test_player_1.hp, test_player_1.chakra]
-        record_test('Make sure full heal', result, [False, False, test_player1.maxhp, test_player_1.maxchakra], player_tests_results)
+        record_test('Make sure full heal', result, [False, False, test_player_1.maxhp, test_player_1.maxchakra], player_part1_tests_results)
         
         # check if NPC labels work
         interaction_data = {'frequency': (3, 8)}
@@ -469,110 +481,161 @@ label player_tests:
         # should be active on 3 and 8 of every month
         test_main_time.month, test_main_time.day = 1, 3
         result = is_event_active_today(test_player_events.npc_event, test_main_time)
-        record_test('Check if event is active on the third', result, True, player_tests_results)
+        record_test('Check if event is active on the third', result, True, player_part1_tests_results)
         test_main_time.day = 8
         result = is_event_active_today(test_player_events.npc_event, test_main_time)
-        record_test('Check if event is active on the eight of month', result, True, player_tests_results)
+        record_test('Check if event is active on the eight of month', result, True, player_part1_tests_results)
+        
+    return
+
+label player_part2_tests:
+    
+    # functional testing
+    python:
+        player_part2_tests_results = []
+        
+        test_player_1.hp = 20
+        test_player_1.increase_hp(30)
+        record_test('Increase hp works', test_player_1.hp, 50, player_part2_tests_results)
+        
+        test_player_1.hp = 20
+        test_player_1.increase_hp(10000)
+        record_test('Increase hp limits', test_player_1.hp, test_player_1.maxhp, player_part2_tests_results)
+        
+        test_player_1.chakra = 20
+        test_player_1.increase_chakra(30)
+        record_test('Increase chakra works', test_player_1.chakra, 50, player_part2_tests_results)
+        
+        test_player_1.chakra = 20
+        test_player_1.increase_chakra(10000)
+        record_test('Increase chakra limits', test_player_1.chakra, test_player_1.maxchakra, player_part2_tests_results)
+        
+        test_player_1.bond = 20
+        test_player_1.increase_bond(30)
+        record_test('Increase bond works', test_player_1.bond, 50, player_part2_tests_results)
+        
+        test_player_1.bond = 20
+        test_player_1.increase_bond(10000)
+        record_test('Increase bond limits', test_player_1.bond, 100, player_part2_tests_results)
+        
+        # this should go to level 3 and have exp 50 left over, 6 allocation points
+        test_player_1.level, test_player_1.exp = 1, 0
+        test_player_1.gain_exp(550)
+        result = [test_player_1.level, test_player_1.exp, test_player_1.allocation_points]
+        record_test('Check levelling up works', result, [3, 50, 6], player_part2_tests_results)
+        
+        # change direction
+        test_player_1.change_direction('left')
+        record_test('Change direction left', test_player_1.tilepic, "hero_1_tile_l", player_part2_tests_results)
+        test_player_1.change_direction('right')
+        record_test('Change direction right', test_player_1.tilepic, "hero_1_tile_r", player_part2_tests_results)
+        
+        data = test_player_1.get_skill(test_melee_skill)
+        result = (test_melee_skill.name in [s.name for s in test_player_1.all_skills])
+        record_test('Skill is returned', result, True, player_part2_tests_results)
+        
+        test_player_1.remove_skill(test_melee_skill)
+        record_test('Remove skill', hasattr(test_player_1, test_melee_skill.label), False, player_part2_tests_results)
+        
+        test_player_1.assign_skill(test_melee_skill)
+        record_test('Assign skill', hasattr(test_player_1, test_melee_skill.label), True, player_part2_tests_results)
+        
+        test_player_1.apply_skill(test_damage_reduction)
+        result = test_player_1.check_active_skill(test_damage_reduction)
+        record_test('Defensive skill is applied', result, True, player_part2_tests_results)
+        
+        result = test_player_1.active_defensive_skill()
+        record_test('Defensive skill is already applied', result, True, player_part2_tests_results)
+        
+        # fix stats tested in helper
+        
+    return
+    
+label player_part3_tests:
+    
+    python:
+        player_part3_tests_results = []
         
         test_player_1.head.injure()
-        test_player_1.injury_severity = 2
+        test_player_1.head.injury_severity = 2
         result = test_player_1.get_injury_bill()
-        record_test('Check if injury bill works', result, (2000, 7), player_tests_results)
+        record_test('Check if injury bill works', result, (2000, 7), player_part3_tests_results)
         
         # heal all injuries
         test_player_1.full_heal()
         test_player_1.injure_limb(test_player_1.right_leg)
-        record_test('Player injure limb works', test_player_1.right_leg.injury, True, player_tests_results)
+        record_test('Player injure limb works', test_player_1.right_leg.injury, True, player_part3_tests_results)
         
         result = test_player_1.get_injured_limbs()
-        record_test('Get injured limb works', result, [test_player_1.right_leg], player_tests_results)
+        record_test('Get injured limb works', result, [test_player_1.right_leg], player_part3_tests_results)
         
         # Item tests
         test_item = ShopItem("Test Heal Paste", 300, 30, health=30)
         # by default player has 1000 money
         test_player_1.buy_item(test_item)
         result = test_player_1.has_item(test_item)
-        record_test('Buying item works', result, True, player_tests_results)
+        record_test('Buying item works', result, True, player_part3_tests_results)
         
         test_player_1.buy_item(test_item)
         result = test_player_1.get_item(test_item)
-        record_test('Multiple buy will append item', result.quantity, 2, player_tests_results)
+        record_test('Multiple buy will append item', result.quantity, 2, player_part3_tests_results)
         
         test_player_1.remove_item(test_item)
         result = test_player_1.has_item(test_item)
-        record_test('Remove item works', result, False, player_tests_results)
+        record_test('Remove item works', result, False, player_part3_tests_results)
         
         # Weapon tests
-        test_weapon = Weapon(name='Bat', price=50, range=3, chakra_cost=10, damage=30)
+        # Set quantity to 0 for test weapon
+        test_weapon = Weapon(name='Bat', price=50, range=3, chakra_cost=10, damage=30, quantity=0)
         # by default player has 1000 money
         test_player_1.buy_weapon(test_weapon)
         result = test_player_1.has_weapon(test_weapon)
-        record_test('Buying weapon works', result, True, player_tests_results)
+        record_test('Buying weapon works', result, True, player_part3_tests_results)
         
         test_player_1.buy_weapon(test_weapon)
         result = test_player_1.get_weapon(test_weapon)
-        record_test('Multiple buy will append weapon', result.quantity, 2, player_tests_results)
+        
+        record_test('Multiple buy will append weapon', result.quantity, 2, player_part3_tests_results)
         
         test_player_1.remove_weapon(test_weapon)
         result = test_player_1.has_weapon(test_weapon)
-        record_test('Remove weapon works', result, False, player_tests_results)
+        record_test('Remove weapon works', result, False, player_part3_tests_results)
         
         test_player_1.team = test_team_first
         test_player_1.set_sensei()
-        record_test('Setting sensei works', test_player_1.sensei, test_player_sensei, player_tests_results)
-        
-        test_player_1.hp = 20
-        test_player_1.increase_hp(30)
-        record_test('Increase hp works', test_player_1.hp, 50, player_tests_results)
-        
-        test_player_1.hp = 20
-        test_player_1.increase_hp(10000)
-        record_test('Increase hp limits', test_player_1.hp, test_player_1.maxhp, player_tests_results)
-        
-        test_player_1.chakra = 20
-        test_player_1.increase_chakra(30)
-        record_test('Increase chakra works', test_player_1.chakra, 50, player_tests_results)
-        
-        test_player_1.chakra = 20
-        test_player_1.increase_chakra(10000)
-        record_test('Increase chakra limits', test_player_1.chakra, test_player_1.maxchakra, player_tests_results)
-        
-        test_player_1.bond = 20
-        test_player_1.increase_bond(30)
-        record_test('Increase bond works', test_player_1.bond, 50, player_tests_results)
-        
-        test_player_1.bond = 20
-        test_player_1.increase_bond(10000)
-        record_test('Increase bond limits', test_player_1.bond, 100, player_tests_results)
-        
-        # this should go to level 2 and have exp 50 left over
-        test_player_1.gain_exp(350)
-        result = [test_player_1.lvl, test_player_1.exp, test_player_1.allocation_points]
-        record_test('Check levelling up works', result, [2, 50, 6], player_tests_results)
-        
-        # change direction
-        test_player_1.change_direction('left')
-        record_test('Change direction left', test_player_1.tilepic, "{}_l".format(self.tilepic), player_tests_results)
-        test_player_1.change_direction('right')
-        record_test('Change direction right', test_player_1.tilepic, "{}_r".format(self.tilepic), player_tests_results)
-        
-        data = test_player_1.get_skill(test_melee_skill)
-        result = (test_melee_skill.name in [s.name for s in test_player_1.all_skills])
-        record_test('Skill is returned', result, True, player_tests_results)
-        
-        test_player_1.remove_skill(test_melee_skill)
-        record_test('Remove skill', hasattr(test_player_1, test_melee_skill.label), False, player_tests_results)
-        
-        test_player_1.assign_skill(test_melee_skill)
-        record_test('Assign skill', hasattr(test_player_1, test_melee_skill.label), True, player_tests_results)
-        
-        test_player_1.apply_skill(test_damage_reduction)
-        result = test_player_1.check_skill_active(test_damage_reduction)
-        record_test('Defensive skill is applied', result, True, player_tests_results)
-        
-        result = test_player_1.active_defensive_skill()
-        record_test('Defensive skill is already applied', result, True, player_tests_results)
-        
-        # fix stats tested in helper
+        record_test('Setting sensei works', test_player_1.sensei, test_team_first.sensei, player_part3_tests_results)
         
     return
+    
+label shop_tests:
+    
+    python:
+        shop_tests_results = []
+        
+        # Item tests
+        test_item = ShopItem("Test Heal Paste", price=300, health=30)
+        
+        test_player_1.buy_item(test_item)
+        test_player_1.hp = 30
+        test_item = test_player_1.get_item(test_item)
+        test_item.consume(test_player_1)
+        record_test('Consume item works', [test_player_1.hp, test_item.quantity], [60, 0], shop_tests_results)
+        
+        test_item.half_price()
+        record_test('Half price works', test_item.price, 150, shop_tests_results)
+        
+        test_item.double_price()
+        record_test('Double price works', test_item.price, 300, shop_tests_results)
+        
+        test_shop = Shop("Hospital", 'test_1', items=[test_item, copy.deepcopy(test_item)])
+        
+        test_shop.half_prices()
+        result = [i.price for i in test_shop.items]
+        record_test('Shop half price works', result, [150, 150], shop_tests_results)
+        
+        test_shop.double_prices()
+        result = [i.price for i in test_shop.items]
+        record_test('Shop double price works', result, [300, 300], shop_tests_results)
+        
+    return
+        
