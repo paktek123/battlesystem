@@ -28,8 +28,7 @@ init -2 python:
             self.exp = 0
             
         def unlock(self, player):
-            new_skill = self
-            player.assign_skill(new_skill)
+            player.assign_skill(self)
             
         def unusable_reason(self, player, enemy):
             if not self.is_chakra_requirement_met(player):
@@ -49,7 +48,10 @@ init -2 python:
                 return True
             return False
             
-        def has_quantity(self, player):
+        def has_quantity(self):
+            """
+            Applies to weapons only
+            """
             if hasattr(self, 'quantity'):
                 if self.quantity > 0:
                     return True
@@ -74,6 +76,7 @@ init -2 python:
             self.exp += exp
             if self.exp >= self.unlock_exp:
                 self.exp = self.unlock_exp
+                # assign the skill to player
                 self.unlock(current_session.main_player)
             return self.exp
             
@@ -96,9 +99,13 @@ init -2 python:
                     renpy.say(player.character, "I am injured but I will still use the skill, it will make my injury worse.")
                     player.increase_limbs_severity(injured_limbs)
                 
+            # this is for enemy moves mainly
             if player.chakra < self.chakra_cost:
                 renpy.say(player.character, "I don't have enough chakra")
                 return
+                
+            if self.stun:
+                self.stun_enemy(enemy)
             
             if self.hit_successful(player, enemy):
                 renpy.say(player.character, "{}".format(self.name))
@@ -122,7 +129,7 @@ init -2 python:
         def append_to_skill(self):
             self.used += 1
             
-        def deal_damage(self, player, target):
+        def deal_damage(self, player, target, dialogue=True):
             
             self.append_to_skill()
             
@@ -141,20 +148,26 @@ init -2 python:
                 target.dampen.used += 1
                 
             if check_active_skill(target, "reflect"):
-                renpy.say(target.character, "Reflect!".format(target.name))
-                player.hp -= int((self.damage - player.defence)) 
+                if dialogue:
+                    renpy.say(target.character, "Reflect!".format(target.name))
+                    
+                damage = int((self.damage - player.defence)) 
+                player.hp -= damage
                 target.reflect.used += 1
-                target.damage_dealt = int((self.damage - player.defence)) 
-                return
+                target.damage_dealt = damage
+                return damage
             elif check_active_skill(target, "ignore"):
-                renpy.say(target.character, "Your skills won't affect me!".format(target.name))
+                if dialogue:
+                    renpy.say(target.character, "Your skills won't affect me!".format(target.name))
                 damage = 0
-                target.yatamirror.used += 1
+                target.ignore.used += 1
             else:
                 # only offensive skills
                 if self.skill_type in ('ranged', 'melee', 'weapon', 'special', 'attack'):
                     target.hp -= int(damage)
                     player.damage_dealt = int(damage)
+                    
+            return damage
             
            
         def hit_successful(self, player, enemy):
@@ -165,7 +178,7 @@ init -2 python:
             else:
                 return False
                 
-        def stun(self, player, enemy):
+        def stun_enemy(self, enemy):
             enemy.stunned = True
             return 
             

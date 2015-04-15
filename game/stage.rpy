@@ -12,6 +12,9 @@ init -3:
 
 init -3 python:
     class Stage:
+        """
+        Define base textures for tiles and generate the tiles
+        """
         def __init__(self, name, pull, range, 
                      base_texture="clearing_base_texture", active_texture="clearing_active_texture", 
                      project_texture="clearing_project_texture", trap_texture="clearing_trap_texture"):

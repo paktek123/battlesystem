@@ -12,7 +12,7 @@ init python:
     ### TEST DATA ###
     test_player_character = Character('Test Player',color="#FFFFFF")
     test_enemy_character = Character('Test Enemy',color="#FFFFFF")
-    test_stage = Stage('Test Stage', 1, 1)
+    test_stage = Stage('Test Stage', 10, 10)
     test_heal_paste = ShopItem("Test Heal Paste", 300, 30, health=30)
     test_chakra_paste = ShopItem("Test Chakra Paste", 300, 40, chakra=30)
     test_potion_shop = Shop("Hospital", 'test_1', items=[test_heal_paste, test_chakra_paste])
@@ -59,6 +59,7 @@ init python:
     test_player_1.sensei = test_player_sensei
     
     # locations
+    # Commented out because test_frequency event does not exist
     test_location = None #Location('Test', 'test_label', 'test_background', events=[test_frequency_event])
     
     BASE_LOCATIONS = [test_location]
@@ -87,46 +88,64 @@ label run_tests:
     call player_part2_tests
     call player_part3_tests
     call shop_tests
-    #call skill_tests
-    #call stage_tests
-    #call tile_tests
-    #call village_tests
+    call skill_tests
+    call stage_tile_tests
+    #call village_location_tests
+    
+    hide screen test_results
+    show screen test_results("Stage / Tile", stage_tile_tests_results)
+    
+    $ renpy.pause(360.0)
+    
+    hide screen test_results
+    show screen test_results("Skill", skill_tests_results)
+    
+    $ renpy.pause(360.0)
     
     hide screen test_results
     show screen test_results("Shop", shop_tests_results)
-    nar_c "Click for next set of tests..." # change this to a button on the screen
+    
+    $ renpy.pause(360.0)
     
     hide screen test_results
     show screen test_results("Player Part 1", player_part1_tests_results)
-    nar_c "Click for next set of tests..." # change this to a button on the screen
+    
+    $ renpy.pause(360.0)
     
     hide screen test_results
     show screen test_results("Player Part 2", player_part2_tests_results)
-    nar_c "Click for next set of tests..." # change this to a button on the screen
+    
+    $ renpy.pause(360.0)
     
     hide screen test_results
     show screen test_results("Player Part 3", player_part3_tests_results)
-    nar_c "Click for next set of tests..." # change this to a button on the screen
+    
+    $ renpy.pause(360.0)
     
     hide screen test_results
     show screen test_results("Mission", mission_tests_results)
-    nar_c "Click for next set of tests..." # change this to a button on the screen
+    
+    $ renpy.pause(360.0)
     
     hide screen test_results
     show screen test_results("Helper", helper_tests_results)
-    nar_c "Click for next set of tests..." # change this to a button on the screen
+    
+    $ renpy.pause(360.0)
     
     hide screen test_results
     show screen test_results("GameTime", gametime_tests_results)
-    nar_c "Click for next set of tests..."
+    
+    $ renpy.pause(360.0)
     
     hide screen test_results
     show screen test_results("Event", event_tests_results)
-    nar_c "Click for next set of tests..."
+    
+    $ renpy.pause(360.0)
     
     hide screen test_results
     show screen test_results("Battle", battle_tests_results)
-    nar_c "Click for next set of tests..."
+    
+    $ renpy.pause(360.0)
     
     
 label battle_tests:
@@ -594,8 +613,14 @@ label player_part3_tests:
         
         test_player_1.buy_weapon(test_weapon)
         result = test_player_1.get_weapon(test_weapon)
-        
         record_test('Multiple buy will append weapon', result.quantity, 2, player_part3_tests_results)
+        
+        get_test_weapon = test_player_1.get_weapon(test_weapon)
+        result = get_test_weapon.has_quantity()
+        record_test('Weapon is usable if quantity', result, True, player_part3_tests_results)
+        get_test_weapon.quantity = 0
+        result = get_test_weapon.has_quantity()
+        record_test('Weapon is usable if no quantity', result, False, player_part3_tests_results)
         
         test_player_1.remove_weapon(test_weapon)
         result = test_player_1.has_weapon(test_weapon)
@@ -637,5 +662,156 @@ label shop_tests:
         result = [i.price for i in test_shop.items]
         record_test('Shop double price works', result, [300, 300], shop_tests_results)
         
+        test_weapon = Weapon(name='Knife', price=30, range=2, chakra_cost=5, damage=25)
+        
+        test_weapon.half_price()
+        record_test('Half price weapon works', test_weapon.price, 15, shop_tests_results)
+        
+        test_weapon.double_price()
+        record_test('Double price weapon works', test_weapon.price, 30, shop_tests_results)
+        
+    return
+    
+label skill_tests:
+    python:
+        skill_tests_results = []
+        
+        # Skills
+        test_melee_skill_new = Skill(name='Test New Skill', skill_type='melee', label="new_skill", range=2, damage=20, exp=10)
+        test_special_skill = Skill(name="Blast Kick", skill_type="special", label="blast_kick", range=3, chakra_cost=30, damage=60, unlock_exp=300)
+        test_stun_skill = Skill('Substitution', 'ranged', "stun_skill", 8, 20, 15, 0, stun=True)
+        test_damage_reduction = Skill('Focus', 'defence', 'damagereduction', 12, 1, 10, duration=2, unlock_exp=300)
+        test_chakra_defence = Skill('Chakra Defence', 'defence', 'chakradefence', 12, 2, 15, duration=3, unlock_exp=500)
+        test_reflect = Skill('Reflect', 'defence', 'reflect', 12, 20, 20, duration=2, unlock_exp=1500)
+        test_dampen = Skill('Dampen', 'defence', 'dampen', 6, 30, 30, duration=3, unlock_exp=2000)
+        test_yata_mirror = Skill('Yata Mirror', 'defence', 'ignore', 12, 50, 50, duration=2, unlock_exp=2500)
+        
+        test_melee_skill_new.set_to_default()
+        result = [test_melee_skill_new.exp, test_melee_skill_new.tech, test_melee_skill_new.active]
+        record_test('Set to default works', result, [0, 0, False], skill_tests_results)
+        
+        test_melee_skill_new.unlock(test_player_1)
+        result = hasattr(test_player_1, test_melee_skill_new.label)
+        record_test('Unlock skill works', result, True, skill_tests_results)
+        
+        test_player_1.chakra = 20
+        result = test_player_1.blast_kick.is_chakra_requirement_met(test_player_1)
+        record_test('Chakra requirement not met', result, False, skill_tests_results)
+        
+        test_player_1.chakra = 40
+        result = test_player_1.blast_kick.is_chakra_requirement_met(test_player_1)
+        record_test('Chakra requirement met', result, True, skill_tests_results)
+        
+        test_player_1.tile = test_stage.tile1
+        test_player_2.tile = test_stage.tile12
+        result = test_player_1.blast_kick.is_within_range(test_player_1, test_player_2)
+        record_test('Range requirement met', result, False, skill_tests_results)
+        
+        test_player_2.tile = test_stage.tile3
+        result = test_player_1.blast_kick.is_within_range(test_player_1, test_player_2)
+        record_test('Range requirement not met', result, True, skill_tests_results)
+        
+        result = test_player_1.blast_kick.is_unlocked()
+        record_test('Unlock requirement not met', result, False, skill_tests_results)
+        
+        current_session.main_player = test_player_1
+        test_player_1.blast_kick.gain_exp(1000)
+        result = test_player_1.blast_kick.is_unlocked()
+        record_test('Unlock requirement is met', result, True, skill_tests_results)
+        
+        test_player_1.blast_kick.activate()
+        record_test('Skill activation works', test_player_1.blast_kick.active, True, skill_tests_results)
+        
+        test_player_1.blast_kick.deactivate()
+        record_test('Skill deactivation works', test_player_1.blast_kick.active, False, skill_tests_results)
+        
+        test_player_1.blast_kick.append_to_skill()
+        record_test('Append to skill works', test_player_1.blast_kick.used, 1, skill_tests_results)
+        
+        result = test_player_1.blast_kick.deal_damage(test_player_1, test_player_2)
+        record_test('Special attacks direct damage, no affects', result, (test_player_1.blast_kick.damage - test_player_2.defence), skill_tests_results)
+        
+        # this covers range attacks too (same logic)
+        result = test_player_1.new_skill.deal_damage(test_player_1, test_player_2)
+        record_test('Melee attacks direct damage, no affects', result, (test_player_1.new_skill.damage - test_player_2.defence), skill_tests_results)
+        
+        test_player_2.damagereduction.activate()
+        # tests check_active_skill too
+        result = ( test_player_1.new_skill.deal_damage(test_player_1, test_player_2) < (test_player_1.new_skill.damage - test_player_2.defence) )
+        record_test('Damage reduction works', result, True, skill_tests_results)
+        
+        test_player_2.damagereduction.deactivate()
+        test_player_2.chakradefence.activate()
+        result = ( test_player_1.new_skill.deal_damage(test_player_1, test_player_2) < (test_player_1.new_skill.damage - test_player_2.defence) )
+        record_test('Chakra reduction works', result, True, skill_tests_results)
+        
+        test_player_2.chakradefence.deactivate()
+        test_player_1.dampen.activate()
+        result = ( test_player_1.new_skill.deal_damage(test_player_1, test_player_2) == (test_player_1.new_skill.damage - test_player_2.defence) / 2 )
+        record_test('Dampen works', result, True, skill_tests_results)
+        
+        test_player_1.dampen.deactivate()
+        test_player_2.reflect.activate()
+        result = test_player_1.new_skill.deal_damage(test_player_1, test_player_2, dialogue=False)
+        record_test('Reflect works', result, test_player_2.damage_dealt, skill_tests_results)
+        
+        test_player_2.reflect.deactivate()
+        test_player_2.ignore.activate()
+        result = ( test_player_1.new_skill.deal_damage(test_player_1, test_player_2, dialogue=False) == 0 )
+        record_test('Ignore works', result, True, skill_tests_results)
+        
+        test_player_1.assign_skill(test_stun_skill)
+        test_player_1.stun_skill.stun_enemy(test_player_2)
+        record_test('Stunning works', test_player_2.stunned, True, skill_tests_results)
+        
     return
         
+label stage_tile_tests:
+    python:
+        stage_tile_tests_results = []
+        
+        test_player_1.hp = 50
+        test_player_1.hp -= test_stage.remove_chakra()
+        result = ( test_player_1.hp < 50)
+        record_test('Stage pull works', result, True, stage_tile_tests_results)
+        
+        test_tile = test_stage.tile1
+        test_tile.project()
+        result = [test_tile.idle, test_tile.potential]
+        record_test('Tile projection works', result, [test_stage.project_texture, True], stage_tile_tests_results)
+        
+        test_tile.deproject()
+        result = [test_tile.hover, test_tile.potential]
+        record_test('Tile deprojection works', result, [test_stage.base_texture, False], stage_tile_tests_results)
+        
+        test_tile.activate()
+        result = [test_tile.idle, test_tile.active]
+        record_test('Tile activation works', result, [test_stage.active_texture, True], stage_tile_tests_results)
+        
+        test_tile.deactivate()
+        result = [test_tile.idle, test_tile.active]
+        record_test('Tile deactivation works', result, [test_stage.base_texture, False], stage_tile_tests_results)
+        
+        test_tile.activate_trap()
+        result = [test_tile.idle, test_tile.trap]
+        record_test('Trap activation works', result, [test_stage.trap_texture, True], stage_tile_tests_results)
+        
+        remove_trap(test_tile, test_stage)
+        result = [test_tile.idle, test_tile.trap]
+        record_test('Trap deactivation works', result, [test_stage.base_texture, False], stage_tile_tests_results)
+        
+        result = get_tile_from_position(2, test_stage)
+        record_test('Get tile from position works', result.position, 2, stage_tile_tests_results)
+        
+    return
+        
+label village_location_tests:
+    python:
+        village_location_tests_results = []
+        
+        # No real logical tests here because they need dialogue to be effectively tested
+        # Hopefully in the future there are more stuff to enter
+        
+        pass
+        
+    return

@@ -119,6 +119,7 @@ init -10 python:
             self.idle = self.stage.base_texture
             self.active = False
             
+        # BETA features
         def activate_trap(self):
             self.trap = True
             self.idle = self.stage.trap_texture
