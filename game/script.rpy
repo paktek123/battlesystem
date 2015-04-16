@@ -3,22 +3,6 @@
 
 init -1:
     
-    $ maxhp_increase = 0
-    $ maxchakra_increase = 0
-    $ exp_increase = 0
-    $ bond_increase = 0
-    $ moved = False
-    $ battle_turn = 0
-    
-    image black_fade = "backgrounds/black.png" #Solid((0, 0, 0, 150))
-    image black_fade_small = Solid((0, 0, 0, 150), area=(0.4, 0.7, 0.6,0.4))
-    image black_fade_time = Solid((0, 0, 0, 150), area=(0, 0, 0.28,0.1))
-    image black_fade_text = Solid((0, 0, 0, 150), area=(0, 0, 500,100))
-    image black_fade_inventory = Solid((0, 0, 0, 150), area=(0, 0, 0.33,0.3))
-    image black_fade_battle = Solid((0, 0, 0, 150), area=(0, 0, 0.2,0.2))
-    image world_marker = im.Scale("marker.png", 33, 35)
-    image stats_idle = Solid((0, 0, 0, 200), area=(0.62, 0.0, 300,150))
-    
     # 120, 150 for large enemies
     #image dragon_tile_l = im.Scale("attack_1.png", 120, 150)
     
