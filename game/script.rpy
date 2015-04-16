@@ -59,16 +59,6 @@ init python:
     i_heal_paste = ShopItem("Heal Paste", 300, 30, health=30)
     i_chakra_paste = ShopItem("Chakra Paste", 300, 40, chakra=30)
     
-    # screen vars
-    screen_on = False
-    calendar_on = False
-    
-    battle1 = Battle(id="1", good_team=[], bad_team=[], xpos=100, ypos=100, battle_label="b_battle_1")
-    battle2 = Battle(id="2", good_team=[], bad_team=[], xpos=300, ypos=100, battle_label="b_battle_2")
-    battle_last = Battle(id="last", good_team=[], bad_team=[], xpos=500, ypos=100, battle_label="b_battle_last")
-    
-    ALL_BATTLES = [battle1, battle2, battle_last]
-    
 
 ### DYNAMIC RESOURCES WITHIN THE GAME ###
 ### THESE NEED TO BE HERE IN ORDER TO PERSIST ON A SAVE ###
